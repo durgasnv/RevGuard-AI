@@ -6,6 +6,8 @@ from collections.abc import Callable
 
 from fastapi import FastAPI, HTTPException
 
+from app.ai.diagnosis_agent import diagnose_report
+from app.ai.llm_client import llm_from_env
 from app.data.synthetic_generator import generate_batch
 from app.detection.engine import DetectionReport, detect
 from app.schemas.transactions import Transaction
@@ -13,6 +15,7 @@ from app.schemas.transactions import Transaction
 app = FastAPI(title="Revenue Recovery Control Tower", version="0.1.0")
 
 _STORE: list[Transaction] = []
+_LAST_REPORT: DetectionReport | None = None
 
 
 @app.get("/health")
@@ -43,6 +46,24 @@ def transactions(status: str | None = None) -> list[Transaction]:
 
 @app.get("/detect", response_model=DetectionReport)
 def run_detection() -> DetectionReport:
+    global _LAST_REPORT
     if not _STORE:
         raise HTTPException(status_code=409, detail="no transactions ingested yet; call /ingest first")
-    return detect(_STORE)
+    _LAST_REPORT = detect(_STORE)
+    return _LAST_REPORT
+
+
+@app.get("/diagnose")
+def diagnose(top_n: int = 10) -> dict:
+    """AI root-cause diagnoses for the highest-impact clusters (FR-06)."""
+    if not _STORE:
+        raise HTTPException(status_code=409, detail="no transactions ingested yet; call /ingest first")
+    report = _LAST_REPORT or detect(_STORE)
+    if report.transactions_analyzed != len(_STORE):
+        report = detect(_STORE)
+    diagnoses = diagnose_report(report, _STORE, llm=llm_from_env(), top_n=top_n)
+    return {
+        "report_id": report.report_id,
+        "llm_active": llm_from_env() is not None,
+        "diagnoses": [d.model_dump() for d in diagnoses],
+    }
