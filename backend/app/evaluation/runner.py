@@ -43,6 +43,9 @@ def _map_status(response: ProviderResponse) -> ActionOutcome:
     return mapping[response.status]
 
 
+NON_FINANCIAL_ACTIONS = {RecoveryAction.STOP, RecoveryAction.ESCALATE_HUMAN}
+
+
 def run_plan(
     plan: list[tuple[Transaction, RecoveryAction]],
     provider: PaymentProvider,
@@ -53,6 +56,22 @@ def run_plan(
     audit: list[AuditEvent] = []
 
     for txn, action in plan:
+        evidence = {
+            "transaction_id": txn.transaction_id,
+            "amount_inr": txn.amount_inr,
+            "failure_code": txn.failure_code,
+        }
+
+        if action in NON_FINANCIAL_ACTIONS:
+            outcome = (ActionOutcome.STOPPED if action is RecoveryAction.STOP
+                       else ActionOutcome.ESCALATED)
+            audit.append(_audit(
+                actor=actor, txn=txn, action=action,
+                reason=f"non-financial action {action.value}",
+                policy_result="allowed", outcome=outcome, evidence=evidence,
+            ))
+            continue
+
         request = ProviderRequest(
             idempotency_key=f"{provider.name()}:{action.value}:{txn.transaction_id}",
             action=action,  # type: ignore[arg-type]
@@ -60,17 +79,13 @@ def run_plan(
         )
         response = provider.execute(request)
         results.append((txn, action, response))
+        evidence["provider_reference"] = response.provider_reference
         audit.append(_audit(
             actor=actor, txn=txn, action=action,
             reason=response.reason or response.status.value,
             policy_result="blocked" if response.status.value == "duplicate" else "allowed",
-            outcome=_map_status(response) if action is not RecoveryAction.STOP else ActionOutcome.STOPPED,
-            evidence={
-                "transaction_id": txn.transaction_id,
-                "amount_inr": txn.amount_inr,
-                "failure_code": txn.failure_code,
-                "provider_reference": response.provider_reference,
-            },
+            outcome=_map_status(response),
+            evidence=evidence,
         ))
 
     return results, audit
