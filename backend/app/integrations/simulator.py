@@ -20,8 +20,13 @@ from app.integrations.base import (
 
 
 class PaymentSimulator(PaymentProvider):
-    def __init__(self, seed: int = 42):
+    def __init__(self, seed: int = 42, fair: bool = False):
+        self._seed = seed
         self._rng = random.Random(seed)
+        # fair mode derives draws from (seed, idempotency key) so the same
+        # transaction+action resolves identically for every strategy —
+        # order-independent comparisons (Phase 7 requirement).
+        self._fair = fair
         # transaction ids that always fail when acted upon (failure-injection demo)
         self.injected_failure_ids: set[str] = set()
         self._seen_keys: dict[str, ProviderResponse] = {}
@@ -58,16 +63,14 @@ class PaymentSimulator(PaymentProvider):
                 reason=f"{request.action.value} not viable for {txn.failure_code}",
             )
 
-        # NOTIFY resolves as "customer completed payment after communication";
-        # retry/link resolve through direct payment attempts.
-        if request.action is ProviderAction.NOTIFY_CUSTOMER:
-            label = "customer_responded_and_paid"
+        if self._fair:
+            draw_rng = random.Random(f"{self._seed}:{request.idempotency_key}")
         else:
-            label = "payment_attempt_failed"
-        if self._rng.random() < prob:
+            draw_rng = self._rng
+        if draw_rng.random() < prob:
             return self._respond(request, ProviderStatus.RECOVERED,
                                  recovered_amount_inr=txn.amount_inr)
-        return self._respond(request, ProviderStatus.FAILED, reason=label)
+        return self._respond(request, ProviderStatus.FAILED, reason="payment_attempt_failed")
 
     @staticmethod
     def _respond(request: ProviderRequest, status: ProviderStatus,

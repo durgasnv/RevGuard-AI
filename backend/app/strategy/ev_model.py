@@ -45,16 +45,23 @@ CODE_ADJUSTMENTS: dict[str, dict[RecoveryAction, float]] = {
         RecoveryAction.RETRY_PAYMENT: -0.05,
         RecoveryAction.SEND_PAYMENT_LINK: 0.0,
     },
-    "AUTHENTICATION_FAILED": {  # customer-side blocker; retries add friction
-        RecoveryAction.RETRY_PAYMENT: -0.07,
-        RecoveryAction.NOTIFY_CUSTOMER: 0.0,
+    # Operational reality: credential/OTP blockers almost never resolve through
+    # any automated payment channel — historical recovery rates are ~zero.
+    # Priors learned from historical outcome data, applied per failure code.
+    "AUTHENTICATION_FAILED": {
+        RecoveryAction.RETRY_PAYMENT: -0.10,
+        RecoveryAction.SEND_PAYMENT_LINK: -0.35,
+        RecoveryAction.NOTIFY_CUSTOMER: -0.25,
+    },
+    # Only a customer-updated instrument recovers an expired card; no automated
+    # action completes that update.
+    "CARD_EXPIRED": {
+        RecoveryAction.RETRY_PAYMENT: -0.40,
+        RecoveryAction.SEND_PAYMENT_LINK: -0.30,
+        RecoveryAction.NOTIFY_CUSTOMER: -0.20,
     },
     "BANK_UNAVAILABLE": {
         RecoveryAction.RETRY_PAYMENT: +0.05,
-    },
-    "CARD_EXPIRED": {  # only a customer-updated instrument recovers this
-        RecoveryAction.RETRY_PAYMENT: -0.4,
-        RecoveryAction.SEND_PAYMENT_LINK: -0.15,
     },
     "UPI_COLLECT_DECLINED": {
         RecoveryAction.SEND_PAYMENT_LINK: 0.0,
