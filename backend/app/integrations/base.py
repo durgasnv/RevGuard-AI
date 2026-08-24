@@ -17,6 +17,7 @@ from app.schemas.transactions import Transaction
 class ProviderAction(str, Enum):
     RETRY_PAYMENT = "RETRY_PAYMENT"
     SEND_PAYMENT_LINK = "SEND_PAYMENT_LINK"
+    NOTIFY_CUSTOMER = "NOTIFY_CUSTOMER"
 
 
 class ProviderStatus(str, Enum):

@@ -58,11 +58,16 @@ class PaymentSimulator(PaymentProvider):
                 reason=f"{request.action.value} not viable for {txn.failure_code}",
             )
 
+        # NOTIFY resolves as "customer completed payment after communication";
+        # retry/link resolve through direct payment attempts.
+        if request.action is ProviderAction.NOTIFY_CUSTOMER:
+            label = "customer_responded_and_paid"
+        else:
+            label = "payment_attempt_failed"
         if self._rng.random() < prob:
             return self._respond(request, ProviderStatus.RECOVERED,
                                  recovered_amount_inr=txn.amount_inr)
-        return self._respond(request, ProviderStatus.FAILED,
-                             reason="payment_attempt_failed")
+        return self._respond(request, ProviderStatus.FAILED, reason=label)
 
     @staticmethod
     def _respond(request: ProviderRequest, status: ProviderStatus,

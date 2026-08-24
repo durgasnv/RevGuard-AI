@@ -43,6 +43,15 @@ class RazorpayTestClient(PaymentProvider):
         try:
             if request.action is ProviderAction.RETRY_PAYMENT:
                 return self._retry(request)
+            if request.action is ProviderAction.NOTIFY_CUSTOMER:
+                # merchant-approved comms are out-of-band in test mode
+                return ProviderResponse(
+                    idempotency_key=request.idempotency_key,
+                    status=ProviderStatus.FAILED,
+                    reason="notify_dispatched_outcome_via_webhook",
+                    raw={"provider": "razorpay_test",
+                         "action": "NOTIFY_CUSTOMER"},
+                )
             return self._payment_link(request)
         except httpx.HTTPError as exc:  # NFR-03: API failures must not crash flow
             return ProviderResponse(
@@ -51,7 +60,6 @@ class RazorpayTestClient(PaymentProvider):
                 reason=f"razorpay_unreachable: {exc}",
                 raw={"provider": "razorpay_test"},
             )
-
     def _retry(self, request: ProviderRequest) -> ProviderResponse:
         txn = request.transaction
         resp = self._http.post(
