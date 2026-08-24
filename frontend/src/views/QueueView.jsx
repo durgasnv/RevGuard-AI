@@ -41,9 +41,9 @@ export default function QueueView({ state, onRun }) {
         <Card title="Last Execution Outcome">
           <div className="flex flex-wrap gap-3 text-xs">
             <span className="rounded-lg bg-emerald-500/10 px-3 py-1.5 text-emerald-300">
-              Recovered <b className="num">{inr(execution.recovered_inr)}</b>
+              Recovered <b className="num">{inr(execution.recovered_inr ?? 0)}</b>
             </span>
-            {Object.entries(execution.counts_by_outcome).map(([k, v]) => (
+            {Object.entries(execution.outcome_counts || {}).map(([k, v]) => (
               <span key={k} className="rounded-lg bg-slate-800/60 px-3 py-1.5 text-slate-300 capitalize">
                 {k.replace(/_/g, ' ')}: <b className="num">{v}</b>
               </span>

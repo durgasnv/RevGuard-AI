@@ -116,8 +116,14 @@ def decide(txn: Transaction) -> StrategyDecision:
 def build_plan(
     transactions: list[Transaction],
     report: DetectionReport | None = None,
+    diagnoses: dict[str, object] | None = None,
 ) -> StrategyPlan:
-    """Full-batch plan with a queue ranked by expected recovery value."""
+    """Full-batch plan with a queue ranked by expected recovery value.
+
+    `diagnoses` maps cluster_id → Diagnosis; when supplied, each decision is
+    cross-checked against the AI diagnosis for its cluster and the reason
+    records agreement or divergence (diagnosis→strategy connection).
+    """
     global _CLUSTER_INDEX
     _CLUSTER_INDEX = {
         (c.failure_category.value, c.failure_codes[0] if c.failure_codes else ""): c
@@ -127,6 +133,9 @@ def build_plan(
     decisions = [
         decide(t) for t in transactions if t.status.value == "failed"
     ]
+
+    if diagnoses:
+        _annotate_with_diagnoses(decisions, diagnoses)
 
     queued = [d for d in decisions
               if d.outcome is DecisionOutcome.QUEUED]
@@ -146,3 +155,28 @@ def build_plan(
         escalations=escalations + needs_approval,
         stops=stops,
     )
+
+
+def _annotate_with_diagnoses(decisions: list[StrategyDecision],
+                             diagnoses: dict[str, object]) -> None:
+    """Append diagnosis concurrence/divergence notes to decision reasons."""
+    from app.schemas.transactions import RecoveryAction
+
+    for key, cluster in _CLUSTER_INDEX.items():
+        diag = diagnoses.get(cluster.cluster_id)
+        if diag is None:
+            continue
+        recommended = getattr(diag, "recommended_action", None)
+        source = getattr(getattr(diag, "source", None), "value", "unknown")
+        for d in decisions:
+            if (d.failure_category, d.failure_code) != key:
+                continue
+            if recommended is None:
+                continue
+            if d.action is recommended:
+                d.reason += f" · {source} diagnosis concurs"
+            elif d.action in (RecoveryAction.RETRY_PAYMENT,
+                              RecoveryAction.SEND_PAYMENT_LINK,
+                              RecoveryAction.NOTIFY_CUSTOMER):
+                d.reason += (f" · diverges from {source} diagnosis "
+                             f"({recommended.value}); EV ranking governs")
