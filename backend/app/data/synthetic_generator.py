@@ -72,7 +72,40 @@ def _txn(
     )
 
 
-def generate_batch(n_total: int = 600, seed: int = SEED) -> list[Transaction]:
+# Distribution profiles: budget fractions of failed volume per scenario.
+# "standard" mirrors observed production-like mix; others stress specific
+# failure distributions so evaluation cannot cherry-pick a friendly mix.
+PROFILES = {
+    "standard": {
+        "upi_burst": 0.18, "insufficient_funds": 0.16,
+        "sub_retry_exhausted": 0.13, "auth_repeat": 0.09,
+        "high_value_risk": 0.07, "one_off_transient": 0.19,
+        "integration": 0.07, "method_degradation": 0.11,
+    },
+    "upi_degradation_heavy": {
+        "upi_burst": 0.38, "insufficient_funds": 0.10,
+        "sub_retry_exhausted": 0.08, "auth_repeat": 0.06,
+        "high_value_risk": 0.05, "one_off_transient": 0.14,
+        "integration": 0.05, "method_degradation": 0.14,
+    },
+    "high_value_risk_heavy": {
+        "upi_burst": 0.12, "insufficient_funds": 0.10,
+        "sub_retry_exhausted": 0.10, "auth_repeat": 0.08,
+        "high_value_risk": 0.28, "one_off_transient": 0.16,
+        "integration": 0.08, "method_degradation": 0.08,
+    },
+    "waste_prone": {
+        "upi_burst": 0.10, "insufficient_funds": 0.22,
+        "sub_retry_exhausted": 0.18, "auth_repeat": 0.20,
+        "high_value_risk": 0.06, "one_off_transient": 0.10,
+        "integration": 0.04, "method_degradation": 0.10,
+    },
+}
+
+
+def generate_batch(
+    n_total: int = 600, seed: int = SEED, profile: str = "standard"
+) -> list[Transaction]:
     """Generate n_total transactions across all Phase 0 scenarios."""
     rng = random.Random(seed)
     base_time = datetime.now(timezone.utc)
@@ -85,16 +118,8 @@ def generate_batch(n_total: int = 600, seed: int = SEED) -> list[Transaction]:
     failed_target = n_total - len(txns)
 
     # Scenario budgets as fractions of failed volume
-    budgets = {
-        "upi_burst": int(failed_target * 0.18),
-        "insufficient_funds": int(failed_target * 0.16),
-        "sub_retry_exhausted": int(failed_target * 0.13),
-        "auth_repeat": int(failed_target * 0.09),
-        "high_value_risk": int(failed_target * 0.07),
-        "one_off_transient": int(failed_target * 0.19),
-        "integration": int(failed_target * 0.07),
-        "method_degradation": int(failed_target * 0.11),
-    }
+    budgets = {name: int(failed_target * frac)
+               for name, frac in PROFILES[profile].items()}
 
     burst_start = base_time - timedelta(hours=30)
     burst_end = base_time - timedelta(hours=22)
