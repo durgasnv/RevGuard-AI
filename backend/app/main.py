@@ -38,11 +38,16 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
+_CORS_ORIGINS = os.environ.get(
+    "REVGUARD_CORS_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173",
+).split(",")
+
 app = FastAPI(title="Revenue Recovery Control Tower", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=_CORS_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -458,3 +463,11 @@ def run_summary(period: str = "current") -> dict:
         evidence={"period": period, "alerts": summary["alerts"]},
     )
     return summary
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    host = os.environ.get("REVGUARD_HOST", "0.0.0.0")
+    port = int(os.environ.get("REVGUARD_PORT", "8000"))
+    uvicorn.run("app.main:app", host=host, port=port, reload=True)
