@@ -28,6 +28,29 @@ FAILURE_CODE_CATEGORY: dict[str, FailureCategory] = {
     "INVALID_REQUEST": FailureCategory.BUSINESS_INTEGRATION,
     "CONFIG_ERROR": FailureCategory.BUSINESS_INTEGRATION,
     "MERCHANT_ONBOARDING": FailureCategory.BUSINESS_INTEGRATION,
+    # biometric failures
+    "FACE_MATCH_FAILED": FailureCategory.BIOMETRIC_FAILURE,
+    "FINGERPRINT_FAILED": FailureCategory.BIOMETRIC_FAILURE,
+    "OTP_EXPIRED": FailureCategory.BIOMETRIC_FAILURE,
+    "PIN_BLOCKED": FailureCategory.BIOMETRIC_FAILURE,
+    "BIOMETRIC_TIMEOUT": FailureCategory.BIOMETRIC_FAILURE,
+    # device/hardware errors
+    "CARD_READ_ERROR": FailureCategory.DEVICE_HARDWARE,
+    "CHIP_READ_FAILED": FailureCategory.DEVICE_HARDWARE,
+    "SWIPE_ERROR": FailureCategory.DEVICE_HARDWARE,
+    "NFC_FAILED": FailureCategory.DEVICE_HARDWARE,
+    "PRINTER_LOW": FailureCategory.DEVICE_HARDWARE,
+    # account restrictions
+    "ACCOUNT_FROZEN": FailureCategory.ACCOUNT_RESTRICTION,
+    "DEMAT_BLOCKED": FailureCategory.ACCOUNT_RESTRICTION,
+    "TRADING_SUSPENDED": FailureCategory.ACCOUNT_RESTRICTION,
+    "KYC_PENDING": FailureCategory.ACCOUNT_RESTRICTION,
+    "COMPLIANCE_HOLD": FailureCategory.ACCOUNT_RESTRICTION,
+    # 3D Secure failures
+    "3DS_FAILED": FailureCategory.THREE_DS_AUTHENTICATION,
+    "ACS_UNAVAILABLE": FailureCategory.THREE_DS_AUTHENTICATION,
+    "CARDHOLDER_CANCELLED_3DS": FailureCategory.THREE_DS_AUTHENTICATION,
+    "3DS_TIMEOUT": FailureCategory.THREE_DS_AUTHENTICATION,
 }
 
 # Codes where repeated attempts indicate retry exhaustion rather than the

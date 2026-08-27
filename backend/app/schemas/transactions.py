@@ -15,6 +15,10 @@ class FailureCategory(str, Enum):
     RETRY_EXHAUSTED = "retry_exhausted"
     RISK_RELATED = "risk_related"
     BUSINESS_INTEGRATION = "business_integration"
+    BIOMETRIC_FAILURE = "biometric_failure"
+    DEVICE_HARDWARE = "device_hardware"
+    ACCOUNT_RESTRICTION = "account_restriction"
+    THREE_DS_AUTHENTICATION = "3ds_authentication"
 
 
 class TxnStatus(str, Enum):

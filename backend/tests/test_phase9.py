@@ -1,22 +1,5 @@
 """End-to-end API flow tests (Phase 9): every stage connected + audited."""
 
-import pytest
-from fastapi.testclient import TestClient
-
-from app.main import app
-
-
-@pytest.fixture()
-def client():
-    return TestClient(app)
-
-
-@pytest.fixture()
-def seeded(client):
-    client.post("/reset")
-    client.post("/ingest/synthetic?n_total=300")
-    return client
-
 
 def test_full_pipeline_flow(seeded):
     r = seeded.get("/detect")

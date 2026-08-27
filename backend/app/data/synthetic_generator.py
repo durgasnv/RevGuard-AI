@@ -77,28 +77,36 @@ def _txn(
 # failure distributions so evaluation cannot cherry-pick a friendly mix.
 PROFILES = {
     "standard": {
-        "upi_burst": 0.18, "insufficient_funds": 0.16,
-        "sub_retry_exhausted": 0.13, "auth_repeat": 0.09,
-        "high_value_risk": 0.07, "one_off_transient": 0.19,
-        "integration": 0.07, "method_degradation": 0.11,
+        "upi_burst": 0.14, "insufficient_funds": 0.12,
+        "sub_retry_exhausted": 0.10, "auth_repeat": 0.07,
+        "high_value_risk": 0.05, "one_off_transient": 0.15,
+        "integration": 0.05, "method_degradation": 0.09,
+        "biometric_failure": 0.08, "device_hardware": 0.06,
+        "account_restriction": 0.04, "three_ds_failure": 0.05,
     },
     "upi_degradation_heavy": {
-        "upi_burst": 0.38, "insufficient_funds": 0.10,
-        "sub_retry_exhausted": 0.08, "auth_repeat": 0.06,
-        "high_value_risk": 0.05, "one_off_transient": 0.14,
-        "integration": 0.05, "method_degradation": 0.14,
+        "upi_burst": 0.30, "insufficient_funds": 0.08,
+        "sub_retry_exhausted": 0.06, "auth_repeat": 0.04,
+        "high_value_risk": 0.04, "one_off_transient": 0.11,
+        "integration": 0.04, "method_degradation": 0.11,
+        "biometric_failure": 0.08, "device_hardware": 0.06,
+        "account_restriction": 0.04, "three_ds_failure": 0.04,
     },
     "high_value_risk_heavy": {
-        "upi_burst": 0.12, "insufficient_funds": 0.10,
-        "sub_retry_exhausted": 0.10, "auth_repeat": 0.08,
-        "high_value_risk": 0.28, "one_off_transient": 0.16,
-        "integration": 0.08, "method_degradation": 0.08,
+        "upi_burst": 0.10, "insufficient_funds": 0.08,
+        "sub_retry_exhausted": 0.08, "auth_repeat": 0.06,
+        "high_value_risk": 0.22, "one_off_transient": 0.12,
+        "integration": 0.06, "method_degradation": 0.06,
+        "biometric_failure": 0.08, "device_hardware": 0.06,
+        "account_restriction": 0.05, "three_ds_failure": 0.03,
     },
     "waste_prone": {
-        "upi_burst": 0.10, "insufficient_funds": 0.22,
-        "sub_retry_exhausted": 0.18, "auth_repeat": 0.20,
-        "high_value_risk": 0.06, "one_off_transient": 0.10,
-        "integration": 0.04, "method_degradation": 0.10,
+        "upi_burst": 0.08, "insufficient_funds": 0.17,
+        "sub_retry_exhausted": 0.14, "auth_repeat": 0.16,
+        "high_value_risk": 0.04, "one_off_transient": 0.08,
+        "integration": 0.03, "method_degradation": 0.08,
+        "biometric_failure": 0.08, "device_hardware": 0.06,
+        "account_restriction": 0.04, "three_ds_failure": 0.04,
     },
 }
 
@@ -208,6 +216,55 @@ def generate_batch(
             failure_code=rng.choice(["INVALID_REQUEST", "CONFIG_ERROR"]),
             category=FailureCategory.BUSINESS_INTEGRATION,
             gt_action_probabilities={},
+        )
+        txns.append(t)
+
+    for _ in range(budgets["biometric_failure"]):
+        code = rng.choice(["FACE_MATCH_FAILED", "FINGERPRINT_FAILED",
+                           "OTP_EXPIRED", "PIN_BLOCKED", "BIOMETRIC_TIMEOUT"])
+        t = _txn(
+            rng, base_time, TxnStatus.FAILED, method="upi",
+            failure_code=code, category=FailureCategory.BIOMETRIC_FAILURE,
+            gt_action_probabilities={
+                "NOTIFY_CUSTOMER": round(rng.uniform(0.35, 0.55), 3),
+            },
+        )
+        txns.append(t)
+
+    for _ in range(budgets["device_hardware"]):
+        code = rng.choice(["CARD_READ_ERROR", "CHIP_READ_FAILED",
+                           "SWIPE_ERROR", "NFC_FAILED"])
+        t = _txn(
+            rng, base_time, TxnStatus.FAILED, method="card",
+            failure_code=code, category=FailureCategory.DEVICE_HARDWARE,
+            gt_action_probabilities={
+                "RETRY_PAYMENT": round(rng.uniform(0.40, 0.60), 3),
+                "SEND_PAYMENT_LINK": round(rng.uniform(0.15, 0.30), 3),
+            },
+        )
+        txns.append(t)
+
+    for _ in range(budgets["account_restriction"]):
+        code = rng.choice(["ACCOUNT_FROZEN", "TRADING_SUSPENDED",
+                           "KYC_PENDING", "COMPLIANCE_HOLD"])
+        t = _txn(
+            rng, base_time, TxnStatus.FAILED,
+            failure_code=code, category=FailureCategory.ACCOUNT_RESTRICTION,
+            gt_action_probabilities={},
+        )
+        t.amount_inr = round(rng.uniform(10_000, 80_000), 2)
+        txns.append(t)
+
+    for _ in range(budgets["three_ds_failure"]):
+        code = rng.choice(["3DS_FAILED", "ACS_UNAVAILABLE",
+                           "CARDHOLDER_CANCELLED_3DS", "3DS_TIMEOUT"])
+        t = _txn(
+            rng, base_time, TxnStatus.FAILED, method="card",
+            failure_code=code, category=FailureCategory.THREE_DS_AUTHENTICATION,
+            gt_action_probabilities={
+                "RETRY_PAYMENT": round(rng.uniform(0.35, 0.55), 3),
+                "SEND_PAYMENT_LINK": round(rng.uniform(0.20, 0.35), 3),
+            },
         )
         txns.append(t)
 
