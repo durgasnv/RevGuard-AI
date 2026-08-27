@@ -1,18 +1,23 @@
-export function SeverityBadge({ severity }) {
-  const tones = {
+import type { ReactNode } from 'react'
+import type { Severity, Action, Outcome } from '../types'
+
+export function SeverityBadge({ severity }: { severity: Severity }) {
+  const tones: Record<Severity, string> = {
     high: 'bg-red-500/15 text-red-400 border-red-500/30',
     medium: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
     low: 'bg-slate-500/15 text-slate-400 border-slate-500/30',
   }
   return (
-    <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${tones[severity] || tones.low}`}>
+    <span
+      className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${tones[severity]}`}
+    >
       {severity}
     </span>
   )
 }
 
-export function ActionPill({ action }) {
-  const map = {
+export function ActionPill({ action }: { action: Action }) {
+  const map: Record<Action, string> = {
     RETRY_PAYMENT: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
     SEND_PAYMENT_LINK: 'bg-violet-500/15 text-violet-300 border-violet-500/30',
     NOTIFY_CUSTOMER: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
@@ -21,14 +26,16 @@ export function ActionPill({ action }) {
   }
   const label = action?.replace(/_/g, ' ').toLowerCase()
   return (
-    <span className={`inline-flex items-center whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium ${map[action] || map.STOP}`}>
+    <span
+      className={`inline-flex items-center whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium ${map[action]}`}
+    >
       {label}
     </span>
   )
 }
 
-export function OutcomeTag({ outcome }) {
-  const map = {
+export function OutcomeTag({ outcome }: { outcome: Outcome }) {
+  const map: Record<Outcome, string> = {
     recovered: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
     failed: 'text-red-400 bg-red-500/10 border-red-500/30',
     escalated: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
@@ -36,14 +43,15 @@ export function OutcomeTag({ outcome }) {
     blocked_by_policy: 'text-orange-400 bg-orange-500/10 border-orange-500/30',
   }
   return (
-    <span className={`rounded border px-1.5 py-0.5 text-[10px] font-medium ${map[outcome] || map.stopped}`}>
+    <span className={`rounded border px-1.5 py-0.5 text-[10px] font-medium ${map[outcome]}`}>
       {outcome?.replace(/_/g, ' ')}
     </span>
   )
 }
 
-export function ConfidenceBar({ value }) {
-  const tone = value >= 0.75 ? 'bg-emerald-400' : value >= 0.55 ? 'bg-blue-400' : 'bg-amber-400'
+export function ConfidenceBar({ value }: { value: number }) {
+  const tone =
+    value >= 0.75 ? 'bg-emerald-400' : value >= 0.55 ? 'bg-blue-400' : 'bg-amber-400'
   return (
     <div className="flex items-center gap-1.5">
       <div className="h-1.5 w-14 overflow-hidden rounded-full bg-slate-700">
@@ -54,7 +62,17 @@ export function ConfidenceBar({ value }) {
   )
 }
 
-export function KpiCard({ label, value, sub, tone = 'slate' }) {
+export function KpiCard({
+  label,
+  value,
+  sub,
+  tone = 'slate',
+}: {
+  label: string
+  value: string | number
+  sub?: string
+  tone?: 'red' | 'green' | 'blue' | 'amber' | 'slate'
+}) {
   const tones = {
     red: 'border-red-500/25 bg-red-500/[0.04]',
     green: 'border-emerald-500/25 bg-emerald-500/[0.04]',
@@ -71,9 +89,19 @@ export function KpiCard({ label, value, sub, tone = 'slate' }) {
   )
 }
 
-export function Card({ title, children, right }) {
+export function Card({
+  title,
+  children,
+  right,
+  className,
+}: {
+  title?: string
+  children: ReactNode
+  right?: ReactNode
+  className?: string
+}) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+    <div className={`rounded-xl border border-slate-800 bg-slate-900/50 p-4 ${className ?? ''}`}>
       {title && (
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-slate-300">{title}</h3>
