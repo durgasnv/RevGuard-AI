@@ -1,4 +1,4 @@
-import type { HealthResponse, DetectReport, DiagnoseReport, AppState, Evaluation, Transaction, SummaryResponse } from './types'
+import type { HealthResponse, DetectReport, DiagnoseReport, AppState, Evaluation, Transaction, SummaryResponse, AnalyzeReport } from './types'
 
 const j = async <T,>(r: Response): Promise<T> => {
   if (!r.ok) {
@@ -29,6 +29,13 @@ export const api = {
   transactions: (status?: string) =>
     get<Transaction[]>(`/api/transactions${status ? `?status=${status}` : ''}`),
   summary: () => get<SummaryResponse>('/api/summary'),
+  analyze: (file: File, format: string) => {
+    return fetch(`/api/analyze?format=${format}`, {
+      method: 'POST',
+      body: file,
+      headers: { 'Content-Type': 'application/octet-stream' },
+    }).then((r) => j<AnalyzeReport>(r))
+  },
 }
 
 export const inr = (v: number) =>

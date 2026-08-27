@@ -465,6 +465,102 @@ def run_summary(period: str = "current") -> dict:
     return summary
 
 
+@app.post("/analyze")
+async def analyze_upload(
+    request: Request,
+    format: str = "razorpay_csv",
+) -> dict:
+    """Upload a file and get a full analysis in one call.
+
+    Formats: razorpay_csv, generic_csv, excel.
+    Returns: transactions summary, detection clusters, diagnoses, and notification summary.
+    Does NOT modify the global store — isolated analysis.
+    """
+    body = await request.body()
+    if not body:
+        raise HTTPException(status_code=400, detail="empty file upload")
+
+    # ── Parse ──────────────────────────────────────────────────────
+    if format == "excel":
+        try:
+            import openpyxl
+        except ImportError:
+            raise HTTPException(status_code=501,
+                                detail="openpyxl not installed; pip install openpyxl")
+        import io as _io
+        wb = openpyxl.load_workbook(_io.BytesIO(body), read_only=True, data_only=True)
+        ws = wb.active
+        if ws is None:
+            raise HTTPException(status_code=422, detail="Excel file has no active sheet")
+        rows = list(ws.iter_rows(values_only=True))
+        if len(rows) < 2:
+            raise HTTPException(status_code=422, detail="Excel file has no data rows")
+        header = [str(h).strip() if h else f"col_{i}" for i, h in enumerate(rows[0])]
+        csv_lines = [",".join(header)]
+        for row in rows[1:]:
+            cells = [str(c).strip() if c is not None else "" for c in row]
+            csv_lines.append(",".join(cells))
+        content = "\n".join(csv_lines)
+        batch = parse_csv(content)
+    else:
+        try:
+            content = body.decode("utf-8")
+        except UnicodeDecodeError:
+            raise HTTPException(status_code=400, detail="file must be UTF-8 encoded")
+        batch = parse_razorpay_csv(content) if format == "razorpay_csv" else parse_csv(content)
+
+    if not batch:
+        raise HTTPException(status_code=422, detail="no valid transactions found in file")
+    if len(batch) > MAX_BATCH_SIZE:
+        raise HTTPException(status_code=413,
+                            detail=f"batch too large ({len(batch)} rows); cap is {MAX_BATCH_SIZE}")
+
+    # ── Detect ─────────────────────────────────────────────────────
+    report = detect(batch)
+
+    # ── Diagnose ───────────────────────────────────────────────────
+    llm = llm_from_env()
+    diagnoses = diagnose_report(report, batch, llm=llm, top_n=min(len(report.clusters), 20))
+
+    # ── Summary ────────────────────────────────────────────────────
+    summary = generate_summary(batch, period_label="uploaded")
+
+    # ── Build response ─────────────────────────────────────────────
+    failed = [t for t in batch if t.status.value == "failed"]
+    succeeded = [t for t in batch if t.status.value == "success"]
+
+    # Category breakdown for the upload
+    cat_counter: dict[str, int] = {}
+    for t in failed:
+        cat = t.failure_category.value if t.failure_category else "uncategorized"
+        cat_counter[cat] = cat_counter.get(cat, 0) + 1
+
+    method_counter: dict[str, int] = {}
+    for t in batch:
+        method_counter[t.payment_method] = method_counter.get(t.payment_method, 0) + 1
+
+    return {
+        "upload": {
+            "total_transactions": len(batch),
+            "failed": len(failed),
+            "succeeded": len(succeeded),
+            "success_rate_pct": round(100 * len(succeeded) / len(batch), 1) if batch else 0,
+            "total_amount_inr": round(sum(t.amount_inr for t in batch), 2),
+            "lost_amount_inr": round(sum(t.amount_inr for t in failed), 2),
+            "by_method": method_counter,
+            "by_category": cat_counter,
+        },
+        "detection": {
+            "clusters": [c.model_dump(mode="json") for c in report.clusters],
+            "revenue_at_risk_inr": report.revenue_at_risk_inr,
+            "expected_recoverable_inr": report.expected_recoverable_inr,
+            "unrecoverable_inr": report.unrecoverable_inr,
+        },
+        "diagnoses": [d.model_dump(mode="json") for d in diagnoses],
+        "notification_summary": summary,
+    }
+
+
 if __name__ == "__main__":
     import uvicorn
 

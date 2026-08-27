@@ -194,3 +194,84 @@ class TestTransactions:
         resp = client.get("/transactions")
         assert resp.status_code == 200
         assert len(resp.json()) >= 1
+
+
+class TestAnalyze:
+    def setup_method(self):
+        client.post("/reset")
+
+    def _generic_csv(self) -> bytes:
+        content = (
+            "transaction_id,amount_inr,currency,payment_method,status,failure_code,failure_category,timestamp,retry_count\n"
+            "txn_a_001,500,INR,upi,failed,bad_account,customer_related,2025-08-01T10:00:00,1\n"
+            "txn_a_002,1200,INR,card,success,,,2025-08-01T11:00:00,0\n"
+            "txn_a_003,800,INR,netbanking,failed,gateway_timeout,transient,2025-08-01T12:00:00,0\n"
+        )
+        return content.encode("utf-8")
+
+    def test_analyze_generic_csv(self):
+        resp = client.post(
+            "/analyze?format=generic_csv",
+            content=self._generic_csv(),
+            headers={"Content-Type": "application/octet-stream"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["upload"]["total_transactions"] == 3
+        assert data["upload"]["failed"] == 2
+        assert data["upload"]["succeeded"] == 1
+        assert data["detection"]["clusters"]
+        assert data["detection"]["revenue_at_risk_inr"] > 0
+        assert len(data["diagnoses"]) > 0
+        assert "notification_summary" in data
+
+    def test_analyze_empty_file(self):
+        resp = client.post(
+            "/analyze?format=generic_csv",
+            content=b"",
+            headers={"Content-Type": "application/octet-stream"},
+        )
+        assert resp.status_code == 400
+
+    def test_analyze_no_valid_rows(self):
+        resp = client.post(
+            "/analyze?format=generic_csv",
+            content=b"transaction_id,amount_inr\n",
+            headers={"Content-Type": "application/octet-stream"},
+        )
+        assert resp.status_code == 422
+
+    def test_analyze_does_not_mutate_store(self):
+        client.post("/ingest/synthetic?n_total=50")
+        before = client.get("/transactions")
+        client.post(
+            "/analyze?format=generic_csv",
+            content=self._generic_csv(),
+            headers={"Content-Type": "application/octet-stream"},
+        )
+        after = client.get("/transactions")
+        assert len(before.json()) == len(after.json())
+
+    def test_analyze_excel(self):
+        try:
+            import openpyxl
+        except ImportError:
+            pytest.skip("openpyxl not installed")
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.append(["transaction_id", "amount_inr", "currency", "payment_method",
+                    "status", "failure_code", "failure_category", "timestamp", "retry_count"])
+        ws.append(["txn_x_001", 900, "INR", "wallet", "failed", "insufficient_funds",
+                    "customer_related", "2025-08-01T10:00:00", 0])
+        buf = io.BytesIO()
+        wb.save(buf)
+        buf.seek(0)
+        resp = client.post(
+            "/analyze?format=excel",
+            content=buf.read(),
+            headers={"Content-Type": "application/octet-stream"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["upload"]["total_transactions"] == 1
+        assert data["upload"]["failed"] == 1

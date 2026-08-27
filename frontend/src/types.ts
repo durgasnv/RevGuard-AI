@@ -129,3 +129,38 @@ export interface SummaryResponse {
   failed: number
   by_category: Record<string, number>
 }
+
+export interface AnalyzeUpload {
+  total_transactions: number
+  failed: number
+  succeeded: number
+  success_rate_pct: number
+  total_amount_inr: number
+  lost_amount_inr: number
+  by_method: Record<string, number>
+  by_category: Record<string, number>
+}
+
+export interface AnalyzeDetection {
+  clusters: Cluster[]
+  revenue_at_risk_inr: number
+  expected_recoverable_inr: number
+  unrecoverable_inr: number
+}
+
+export interface AnalyzeDiagnosis {
+  cluster_id: string
+  root_cause: string
+  contributing_factors: string[]
+  recommended_action: Action
+  confidence: number
+  requires_human: boolean
+  source: string
+}
+
+export interface AnalyzeReport {
+  upload: AnalyzeUpload
+  detection: AnalyzeDetection
+  diagnoses: AnalyzeDiagnosis[]
+  notification_summary: Record<string, unknown>
+}

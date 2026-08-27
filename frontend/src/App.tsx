@@ -5,12 +5,14 @@ import AuditView from './views/AuditView'
 import LeakageView from './views/LeakageView'
 import OverviewView from './views/OverviewView'
 import QueueView from './views/QueueView'
+import AnalyzeView from './views/AnalyzeView'
 
 const TABS = [
   { id: 'overview', label: 'Overview' },
   { id: 'leakage', label: 'Revenue Leakage' },
   { id: 'queue', label: 'Recovery Queue' },
   { id: 'audit', label: 'Audit Trail' },
+  { id: 'analyze', label: 'Upload & Analyze' },
 ] as const
 
 type TabId = (typeof TABS)[number]['id']
@@ -137,6 +139,7 @@ export default function App() {
       {tab === 'leakage' && <LeakageView detectReport={detectReport} />}
       {tab === 'queue' && <QueueView state={state} onRun={runRecovery} />}
       {tab === 'audit' && <AuditView state={state} />}
+      {tab === 'analyze' && <AnalyzeView />}
 
       <footer className="mt-8 border-t border-slate-800/60 pt-3 text-[11px] text-slate-600">
         Test-mode simulation only — no real-money transactions (SC-01). All financial actions bounded
