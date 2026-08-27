@@ -73,6 +73,41 @@ function Logo() {
   )
 }
 
+function ThemeToggle({
+  theme,
+  setTheme,
+}: {
+  theme: 'light' | 'dark'
+  setTheme: (t: 'light' | 'dark') => void
+}) {
+  return (
+    <div className="inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100/90 dark:bg-slate-900 p-0.5 shadow-xs">
+      <button
+        onClick={() => setTheme('light')}
+        className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
+          theme === 'light'
+            ? 'bg-white text-slate-900 shadow-sm'
+            : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+        }`}
+      >
+        <span>☀️</span>
+        <span>Light</span>
+      </button>
+      <button
+        onClick={() => setTheme('dark')}
+        className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
+          theme === 'dark'
+            ? 'bg-blue-600 text-white shadow-sm'
+            : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+        }`}
+      >
+        <span>🌙</span>
+        <span>Dark</span>
+      </button>
+    </div>
+  )
+}
+
 export default function App() {
   const [tab, setTab] = useState<TabId>('overview')
   const [boot, setBoot] = useState<'checking' | 'empty' | 'ready'>('checking')
@@ -80,7 +115,8 @@ export default function App() {
   const [state, setState] = useState<AppState | null>(null)
   const [busy, setBusy] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    return (localStorage.getItem('revguard_theme') as 'light' | 'dark') || 'light'
+    const saved = localStorage.getItem('revguard_theme')
+    return saved === 'dark' ? 'dark' : 'light'
   })
 
   useEffect(() => {
@@ -91,10 +127,6 @@ export default function App() {
     }
     localStorage.setItem('revguard_theme', theme)
   }, [theme])
-
-  const toggleTheme = useCallback(() => {
-    setTheme((t) => (t === 'light' ? 'dark' : 'light'))
-  }, [])
 
   const refresh = useCallback(async () => {
     const [report, st] = await Promise.all([api.detect(), api.state()])
@@ -144,7 +176,10 @@ export default function App() {
 
   if (boot === 'empty') {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 px-6 py-12">
+      <div className="relative flex min-h-screen flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 px-6 py-12">
+        <div className="absolute top-6 right-6">
+          <ThemeToggle theme={theme} setTheme={setTheme} />
+        </div>
         <div className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm dark:shadow-elevated text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600 text-2xl font-black text-white shadow-sm">
             R
@@ -229,8 +264,14 @@ export default function App() {
           })}
         </nav>
 
+        {/* Sidebar Theme Switcher */}
+        <div className="mb-3 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-xs">
+          <span className="text-[11px] text-slate-400 font-medium">Appearance</span>
+          <ThemeToggle theme={theme} setTheme={setTheme} />
+        </div>
+
         {/* Sidebar System Telemetry Box */}
-        <div className="mt-auto rounded-lg border border-slate-800 bg-slate-900/90 p-3 text-xs">
+        <div className="rounded-lg border border-slate-800 bg-slate-900/90 p-3 text-xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 font-semibold text-emerald-400">
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
@@ -272,16 +313,9 @@ export default function App() {
             </div>
 
             {/* Header Actions & Theme Toggle */}
-            <div className="flex items-center gap-2">
-              {/* Theme Toggle Button */}
-              <button
-                onClick={toggleTheme}
-                title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-750 bg-white dark:bg-slate-850 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                <span>{theme === 'light' ? '🌙' : '☀️'}</span>
-                <span className="hidden sm:inline">{theme === 'light' ? 'Dark' : 'Light'}</span>
-              </button>
+            <div className="flex items-center gap-2.5">
+              {/* Prominent Theme Segmented Pill */}
+              <ThemeToggle theme={theme} setTheme={setTheme} />
 
               <button
                 onClick={runRecovery}
@@ -354,6 +388,7 @@ export default function App() {
     </div>
   )
 }
+
 
 function inrShort(v: number) {
   return new Intl.NumberFormat('en-IN', {
