@@ -25,98 +25,142 @@ export default function LeakageView({
   if (!detectReport) return null
 
   return (
-    <Card
-      title={`Revenue Leakage — ${detectReport.clusters.length} clusters ranked by impact`}
-    >
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-500">
-              <th className="py-2 pr-3">Severity</th>
-              <th className="py-2 pr-3">Cluster</th>
-              <th className="py-2 pr-3 text-right">Txns</th>
-              <th className="py-2 pr-3 text-right">Revenue at Risk</th>
-              <th className="py-2 pr-3">Methods</th>
-              <th className="py-2 pr-3">AI Diagnosis</th>
-            </tr>
-          </thead>
-          <tbody>
-            {detectReport.clusters.map((c) => {
-              const d = diagnoses[c.cluster_id]
-              const open = openId === c.cluster_id
-              return (
-                <Fragment key={c.cluster_id}>
-                  <tr
-                    onClick={() => setOpenId(open ? null : c.cluster_id)}
-                    className="cursor-pointer border-b border-slate-800/60 hover:bg-slate-800/30"
-                  >
-                    <td className="py-2.5 pr-3">
-                      <SeverityBadge severity={c.severity} />
-                    </td>
-                    <td className="py-2.5 pr-3 font-medium text-slate-200">{c.title}</td>
-                    <td className="num py-2.5 pr-3 text-right text-slate-400">{c.txn_count}</td>
-                    <td className="num py-2.5 pr-3 text-right font-semibold text-red-300">
-                      {inr(c.revenue_at_risk_inr)}
-                    </td>
-                    <td className="py-2.5 pr-3 text-[11px] uppercase text-slate-500">
-                      {c.payment_methods.join(', ')}
-                    </td>
-                    <td className="py-2.5 pr-3">{d && <ConfidenceBar value={d.confidence} />}</td>
-                  </tr>
-                  {open && (
-                    <tr className="border-b border-slate-800/60 bg-slate-900/80">
-                      <td colSpan={6} className="p-4">
-                        {d ? (
-                          <div className="space-y-3">
-                            <div>
-                              <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                                Root cause · source: {d.source.replace('_', ' ')}
+    <div className="space-y-4">
+      <Card
+        title={`Revenue Leakage Clusters (${detectReport.clusters.length})`}
+        subtitle="Ranked by total revenue at risk with AI root-cause diagnostics"
+        icon="▤"
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-white/[0.08] text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                <th className="py-3 pr-3">Severity</th>
+                <th className="py-3 pr-3">Cluster Title</th>
+                <th className="py-3 pr-3 text-right">Transactions</th>
+                <th className="py-3 pr-3 text-right">Revenue at Risk</th>
+                <th className="py-3 pr-3">Payment Methods</th>
+                <th className="py-3 pr-3">AI Confidence</th>
+                <th className="py-3 pr-3 text-center">Details</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/[0.04]">
+              {detectReport.clusters.map((c) => {
+                const d = diagnoses[c.cluster_id]
+                const open = openId === c.cluster_id
+                return (
+                  <Fragment key={c.cluster_id}>
+                    <tr
+                      onClick={() => setOpenId(open ? null : c.cluster_id)}
+                      className={`cursor-pointer transition-colors duration-150 ${
+                        open ? 'bg-blue-500/[0.07]' : 'hover:bg-slate-800/40'
+                      }`}
+                    >
+                      <td className="py-3 pr-3">
+                        <SeverityBadge severity={c.severity} />
+                      </td>
+                      <td className="py-3 pr-3 font-semibold text-slate-100">{c.title}</td>
+                      <td className="num py-3 pr-3 text-right text-slate-300 font-medium">{c.txn_count}</td>
+                      <td className="num py-3 pr-3 text-right font-bold text-rose-300">
+                        {inr(c.revenue_at_risk_inr)}
+                      </td>
+                      <td className="py-3 pr-3 text-[11px] uppercase tracking-wide text-slate-400">
+                        {c.payment_methods.join(', ')}
+                      </td>
+                      <td className="py-3 pr-3">{d && <ConfidenceBar value={d.confidence} />}</td>
+                      <td className="py-3 pr-3 text-center text-xs text-slate-500">
+                        <span
+                          className={`inline-block transition-transform duration-200 ${
+                            open ? 'rotate-180 text-blue-400' : ''
+                          }`}
+                        >
+                          ▼
+                        </span>
+                      </td>
+                    </tr>
+
+                    {open && (
+                      <tr className="border-b border-blue-500/20 bg-slate-900/90">
+                        <td colSpan={7} className="p-5">
+                          {d ? (
+                            <div className="space-y-4 rounded-xl border border-white/[0.06] bg-slate-950/60 p-4">
+                              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] pb-3">
+                                <div>
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
+                                    Root Cause Analysis
+                                  </span>
+                                  <span className="ml-2 rounded bg-slate-800 px-2 py-0.5 text-[10px] font-mono text-slate-400">
+                                    Source: {d.source.replace('_', ' ')}
+                                  </span>
+                                </div>
+                                <span className="text-xs text-slate-400">
+                                  Estimated confidence:{' '}
+                                  <b className="num text-white">{(d.confidence * 100).toFixed(0)}%</b>
+                                </span>
                               </div>
-                              <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-300">
+
+                              <p className="max-w-4xl text-sm leading-relaxed text-slate-200">
                                 {d.root_cause}
                               </p>
-                            </div>
-                            {d.contributing_factors?.length > 0 && (
-                              <div className="flex flex-wrap gap-1.5">
-                                {d.contributing_factors.map((f, i) => (
-                                  <span
-                                    key={i}
-                                    className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-400"
-                                  >
-                                    {f}
-                                  </span>
-                                ))}
+
+                              {d.contributing_factors?.length > 0 && (
+                                <div>
+                                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                    Contributing Factors
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {d.contributing_factors.map((f, i) => (
+                                      <span
+                                        key={i}
+                                        className="rounded-lg border border-slate-700/80 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-300"
+                                      >
+                                        {f}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {c.evidence?.length > 0 && (
+                                <div>
+                                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                    Pattern Evidence
+                                  </div>
+                                  <div className="space-y-1">
+                                    {c.evidence.map((e, i) => (
+                                      <div key={i} className="flex items-start gap-2 text-xs text-slate-300">
+                                        <span className="text-blue-400">→</span>
+                                        <span>{e}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="pt-2 text-[10px] font-mono text-slate-500">
+                                Sample Transactions: {c.sample_transaction_ids.join(', ')}
                               </div>
-                            )}
-                            <div className="space-y-1">
+                            </div>
+                          ) : (
+                            <div className="space-y-1.5 p-2">
                               {c.evidence.map((e, i) => (
                                 <div key={i} className="text-xs text-slate-400">
                                   — {e}
                                 </div>
                               ))}
                             </div>
-                            <div className="text-[11px] text-slate-600">
-                              sample: {c.sample_transaction_ids.join(', ')}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="space-y-1">
-                            {c.evidence.map((e, i) => (
-                              <div key={i} className="text-xs text-slate-400">
-                                — {e}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  )}
-                </Fragment>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-    </Card>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
   )
 }
+
