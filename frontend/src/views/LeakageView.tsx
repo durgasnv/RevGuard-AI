@@ -33,7 +33,7 @@ export default function LeakageView({
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-800 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              <tr className="border-b border-slate-200 dark:border-slate-800 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 <th className="py-3 pr-3">Severity</th>
                 <th className="py-3 pr-3">Cluster Title</th>
                 <th className="py-3 pr-3 text-right">Transactions</th>
@@ -43,7 +43,7 @@ export default function LeakageView({
                 <th className="py-3 pr-3 text-center">Details</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/80">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
               {detectReport.clusters.map((c) => {
                 const d = diagnoses[c.cluster_id]
                 const open = openId === c.cluster_id
@@ -52,25 +52,25 @@ export default function LeakageView({
                     <tr
                       onClick={() => setOpenId(open ? null : c.cluster_id)}
                       className={`cursor-pointer transition-colors ${
-                        open ? 'bg-blue-600/10' : 'hover:bg-slate-850/60'
+                        open ? 'bg-blue-50/70 dark:bg-blue-600/10' : 'hover:bg-slate-50 dark:hover:bg-slate-850/60'
                       }`}
                     >
                       <td className="py-3 pr-3">
                         <SeverityBadge severity={c.severity} />
                       </td>
-                      <td className="py-3 pr-3 font-semibold text-white">{c.title}</td>
-                      <td className="num py-3 pr-3 text-right text-slate-300 font-medium">{c.txn_count}</td>
-                      <td className="num py-3 pr-3 text-right font-bold text-rose-400">
+                      <td className="py-3 pr-3 font-semibold text-slate-900 dark:text-white">{c.title}</td>
+                      <td className="num py-3 pr-3 text-right text-slate-600 dark:text-slate-300 font-medium">{c.txn_count}</td>
+                      <td className="num py-3 pr-3 text-right font-bold text-rose-600 dark:text-rose-400">
                         {inr(c.revenue_at_risk_inr)}
                       </td>
-                      <td className="py-3 pr-3 text-[11px] uppercase tracking-wide text-slate-400">
+                      <td className="py-3 pr-3 text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {c.payment_methods.join(', ')}
                       </td>
                       <td className="py-3 pr-3">{d && <ConfidenceBar value={d.confidence} />}</td>
-                      <td className="py-3 pr-3 text-center text-xs text-slate-500">
+                      <td className="py-3 pr-3 text-center text-xs text-slate-400">
                         <span
                           className={`inline-block transition-transform duration-200 ${
-                            open ? 'rotate-180 text-blue-400' : ''
+                            open ? 'rotate-180 text-blue-600 dark:text-blue-400' : ''
                           }`}
                         >
                           ▼
@@ -79,39 +79,39 @@ export default function LeakageView({
                     </tr>
 
                     {open && (
-                      <tr className="border-b border-slate-800 bg-slate-900">
+                      <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900">
                         <td colSpan={7} className="p-4">
                           {d ? (
-                            <div className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/80 p-4">
-                              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+                            <div className="space-y-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/80 p-4 shadow-sm">
+                              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
                                 <div>
-                                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
                                     Root Cause Analysis
                                   </span>
-                                  <span className="ml-2 rounded bg-slate-800 px-2 py-0.5 text-[10px] font-mono text-slate-400">
+                                  <span className="ml-2 rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-mono text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                                     Source: {d.source.replace('_', ' ')}
                                   </span>
                                 </div>
-                                <span className="text-xs text-slate-400">
+                                <span className="text-xs text-slate-500 dark:text-slate-400">
                                   Estimated confidence:{' '}
-                                  <b className="num text-white">{(d.confidence * 100).toFixed(0)}%</b>
+                                  <b className="num text-slate-900 dark:text-white">{(d.confidence * 100).toFixed(0)}%</b>
                                 </span>
                               </div>
 
-                              <p className="max-w-4xl text-xs leading-relaxed text-slate-200">
+                              <p className="max-w-4xl text-xs leading-relaxed text-slate-700 dark:text-slate-200">
                                 {d.root_cause}
                               </p>
 
                               {d.contributing_factors?.length > 0 && (
                                 <div>
-                                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                     Contributing Factors
                                   </div>
                                   <div className="flex flex-wrap gap-1.5">
                                     {d.contributing_factors.map((f, i) => (
                                       <span
                                         key={i}
-                                        className="rounded-md border border-slate-800 bg-slate-850 px-2.5 py-0.5 text-xs text-slate-300"
+                                        className="rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 px-2.5 py-0.5 text-xs text-slate-700 dark:text-slate-300"
                                       >
                                         {f}
                                       </span>
@@ -122,13 +122,13 @@ export default function LeakageView({
 
                               {c.evidence?.length > 0 && (
                                 <div>
-                                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                     Pattern Evidence
                                   </div>
                                   <div className="space-y-1">
                                     {c.evidence.map((e, i) => (
-                                      <div key={i} className="flex items-start gap-2 text-xs text-slate-300">
-                                        <span className="text-blue-400">→</span>
+                                      <div key={i} className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
+                                        <span className="text-blue-500">→</span>
                                         <span>{e}</span>
                                       </div>
                                     ))}
@@ -136,14 +136,14 @@ export default function LeakageView({
                                 </div>
                               )}
 
-                              <div className="pt-1 text-[10px] font-mono text-slate-500">
+                              <div className="pt-1 text-[10px] font-mono text-slate-400 dark:text-slate-500">
                                 Sample Transactions: {c.sample_transaction_ids.join(', ')}
                               </div>
                             </div>
                           ) : (
                             <div className="space-y-1 p-2">
                               {c.evidence.map((e, i) => (
-                                <div key={i} className="text-xs text-slate-400">
+                                <div key={i} className="text-xs text-slate-500 dark:text-slate-400">
                                   — {e}
                                 </div>
                               ))}
@@ -162,5 +162,6 @@ export default function LeakageView({
     </div>
   )
 }
+
 
 

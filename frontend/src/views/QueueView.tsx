@@ -25,8 +25,8 @@ export default function QueueView({
   if (!plan)
     return (
       <Card title="Recovery Queue">
-        <div className="py-12 text-center text-sm text-slate-400">
-          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg border border-slate-800 bg-slate-850 text-base text-slate-400">
+        <div className="py-12 text-center text-sm text-slate-500 dark:text-slate-400">
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-850 text-base text-slate-600 dark:text-slate-400">
             ⚡
           </div>
           No active recovery plan generated yet. Run a recovery cycle from the top header to populate.
@@ -52,35 +52,35 @@ export default function QueueView({
       {/* Top 4 KPI metrics */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Card>
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Queued For Action
           </div>
-          <div className="num mt-1.5 text-2xl font-bold text-blue-400">{plan.queue.length}</div>
+          <div className="num mt-1.5 text-2xl font-bold text-blue-600 dark:text-blue-400">{plan.queue.length}</div>
           <div className="mt-1 text-[11px] text-slate-500">Autonomous executions</div>
         </Card>
         <Card>
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Expected Recovery
           </div>
-          <div className="num mt-1.5 text-2xl font-bold text-emerald-400">
+          <div className="num mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
             {inr(plan.total_expected_recovery_inr)}
           </div>
           <div className="mt-1 text-[11px] text-slate-500">EV-weighted potential</div>
         </Card>
         <Card>
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Escalations / Review
           </div>
-          <div className="num mt-1.5 text-2xl font-bold text-amber-400">
+          <div className="num mt-1.5 text-2xl font-bold text-amber-600 dark:text-amber-400">
             {plan.escalations.length}
           </div>
           <div className="mt-1 text-[11px] text-slate-500">Requires human review</div>
         </Card>
         <Card>
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Stopped (Fatigue Cap)
           </div>
-          <div className="num mt-1.5 text-2xl font-bold text-slate-400">{plan.stops.length}</div>
+          <div className="num mt-1.5 text-2xl font-bold text-slate-700 dark:text-slate-400">{plan.stops.length}</div>
           <div className="mt-1 text-[11px] text-slate-500">Customer fatigue prevented</div>
         </Card>
       </div>
@@ -88,20 +88,20 @@ export default function QueueView({
       {execution && (
         <Card title="Last Execution Outcome">
           <div className="flex flex-wrap items-center gap-3 text-xs">
-            <span className="flex items-center gap-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 font-medium text-emerald-300">
+            <span className="flex items-center gap-1.5 rounded-lg border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 font-semibold text-emerald-700 dark:text-emerald-300">
               <span>Recovered Revenue:</span>
-              <b className="num font-bold text-emerald-400">{inr(execution.recovered_inr ?? 0)}</b>
+              <b className="num font-bold text-emerald-800 dark:text-emerald-400">{inr(execution.recovered_inr ?? 0)}</b>
             </span>
             {Object.entries(execution.outcome_counts ?? {}).map(([k, v]) => (
               <span
                 key={k}
-                className="rounded-lg border border-slate-800 bg-slate-850 px-3 py-1.5 text-slate-300 capitalize"
+                className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 px-3 py-1.5 text-slate-700 dark:text-slate-300 capitalize font-medium"
               >
-                {k.replace(/_/g, ' ')}: <b className="num text-white font-semibold">{v}</b>
+                {k.replace(/_/g, ' ')}: <b className="num text-slate-900 dark:text-white font-semibold">{v}</b>
               </span>
             ))}
-            <span className="ml-auto text-xs text-slate-400">
-              Audit Events Generated: <b className="num text-white">{execution.audit_trail.length}</b>
+            <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">
+              Audit Events Generated: <b className="num text-slate-900 dark:text-white">{execution.audit_trail.length}</b>
             </span>
           </div>
         </Card>
@@ -115,7 +115,7 @@ export default function QueueView({
             <button
               onClick={approveAll}
               disabled={approving}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-amber-500 active:bg-amber-700 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-amber-700 active:bg-amber-800 disabled:opacity-50"
             >
               {approving ? (
                 <>
@@ -123,9 +123,7 @@ export default function QueueView({
                   Approving…
                 </>
               ) : (
-                <>
-                  <span>Approve {pendingApprovals.length} high-value items</span>
-                </>
+                <span>Approve {pendingApprovals.length} high-value items</span>
               )}
             </button>
           )
@@ -134,7 +132,7 @@ export default function QueueView({
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-800 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              <tr className="border-b border-slate-200 dark:border-slate-800 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 <th className="py-3 pr-3">#</th>
                 <th className="py-3 pr-3">Transaction ID</th>
                 <th className="py-3 pr-3 text-right">Amount</th>
@@ -146,29 +144,29 @@ export default function QueueView({
                 <th className="py-3 pr-3">Gate</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/80">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
               {plan.queue.slice(0, 25).map((d) => (
                 <tr
                   key={d.transaction_id}
-                  className="transition-colors hover:bg-slate-850/60"
+                  className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-850/60"
                 >
-                  <td className="num py-3 pr-3 text-xs font-bold text-slate-500">{d.rank}</td>
-                  <td className="py-3 pr-3 font-mono text-xs text-slate-300">
+                  <td className="num py-3 pr-3 text-xs font-bold text-slate-400 dark:text-slate-500">{d.rank}</td>
+                  <td className="py-3 pr-3 font-mono text-xs text-slate-600 dark:text-slate-300">
                     {d.transaction_id.slice(0, 14)}…
                   </td>
-                  <td className="num py-3 pr-3 text-right font-semibold text-white">
+                  <td className="num py-3 pr-3 text-right font-semibold text-slate-900 dark:text-white">
                     {inr(d.amount_inr)}
                   </td>
-                  <td className="py-3 pr-3 font-mono text-[11px] text-slate-400">
+                  <td className="py-3 pr-3 font-mono text-[11px] text-slate-500 dark:text-slate-400">
                     {d.failure_code}
                   </td>
                   <td className="py-3 pr-3">
                     <ActionPill action={d.action} />
                   </td>
-                  <td className="num py-3 pr-3 text-right text-slate-300 font-medium">
+                  <td className="num py-3 pr-3 text-right text-slate-600 dark:text-slate-300 font-medium">
                     {d.recovery_probability.toFixed(2)}
                   </td>
-                  <td className="num py-3 pr-3 text-right font-bold text-emerald-400">
+                  <td className="num py-3 pr-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
                     {inr(d.expected_recovery_value_inr)}
                   </td>
                   <td className="py-3 pr-3">
@@ -176,11 +174,11 @@ export default function QueueView({
                   </td>
                   <td className="py-3 pr-3 text-[11px]">
                     {d.requires_approval ? (
-                      <span className="inline-flex items-center gap-1 rounded bg-amber-500/10 px-2 py-0.5 font-medium text-amber-300 border border-amber-500/20">
+                      <span className="inline-flex items-center gap-1 rounded bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 font-medium text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/20">
                         Review
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-400 border border-emerald-500/20">
+                      <span className="inline-flex items-center gap-1 rounded bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
                         Auto
                       </span>
                     )}
@@ -190,7 +188,7 @@ export default function QueueView({
             </tbody>
           </table>
           {plan.queue.length > 25 && (
-            <div className="pt-3 text-center text-xs text-slate-500">
+            <div className="pt-3 text-center text-xs text-slate-400">
               + {plan.queue.length - 25} more queued actions below the priority threshold
             </div>
           )}
@@ -205,19 +203,19 @@ export default function QueueView({
             {plan.escalations.slice(0, 10).map((d) => (
               <div
                 key={d.transaction_id}
-                className="flex items-center gap-3 rounded-lg border border-amber-500/20 bg-amber-500/[0.04] p-3 text-xs"
+                className="flex items-center gap-3 rounded-lg border border-amber-200 dark:border-amber-500/20 bg-amber-50/50 dark:bg-amber-500/[0.04] p-3 text-xs"
               >
-                <span className="text-amber-400 font-bold">⚐</span>
-                <span className="font-mono text-slate-300">
+                <span className="text-amber-600 dark:text-amber-400 font-bold">⚐</span>
+                <span className="font-mono text-slate-700 dark:text-slate-300">
                   {d.transaction_id.slice(0, 14)}…
                 </span>
-                <span className="num ml-auto font-bold text-white">{inr(d.amount_inr)}</span>
+                <span className="num ml-auto font-bold text-slate-900 dark:text-white">{inr(d.amount_inr)}</span>
                 <ActionPill action={d.action} />
-                <span className="max-w-md truncate text-slate-400">{d.reason}</span>
+                <span className="max-w-md truncate text-slate-500 dark:text-slate-400">{d.reason}</span>
               </div>
             ))}
             {plan.escalations.length > 10 && (
-              <div className="pt-1 text-center text-xs text-slate-500">
+              <div className="pt-1 text-center text-xs text-slate-400">
                 + {plan.escalations.length - 10} more escalations
               </div>
             )}
@@ -233,13 +231,13 @@ export default function QueueView({
             {plan.stops.slice(0, 8).map((d) => (
               <div
                 key={d.transaction_id}
-                className="flex items-center gap-2.5 rounded-lg border border-slate-800 bg-slate-850 p-2.5 text-xs"
+                className="flex items-center gap-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-2.5 text-xs"
               >
-                <span className="font-mono text-slate-400">
+                <span className="font-mono text-slate-500 dark:text-slate-400">
                   {d.transaction_id.slice(0, 14)}…
                 </span>
-                <span className="num ml-auto font-medium text-slate-300">{inr(d.amount_inr)}</span>
-                <span className="max-w-xs truncate text-slate-500">{d.reason}</span>
+                <span className="num ml-auto font-medium text-slate-700 dark:text-slate-300">{inr(d.amount_inr)}</span>
+                <span className="max-w-xs truncate text-slate-400 dark:text-slate-500">{d.reason}</span>
               </div>
             ))}
           </div>
@@ -248,5 +246,6 @@ export default function QueueView({
     </div>
   )
 }
+
 
 

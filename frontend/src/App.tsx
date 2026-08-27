@@ -63,7 +63,7 @@ function Logo() {
       <div className="min-w-0 leading-tight">
         <div className="flex items-center gap-1.5">
           <span className="text-sm font-bold text-white tracking-tight">RevGuard</span>
-          <span className="rounded bg-blue-500/15 px-1.5 py-0.2 text-[10px] font-semibold text-blue-400 border border-blue-500/20">
+          <span className="rounded bg-blue-500/20 px-1.5 py-0.2 text-[10px] font-semibold text-blue-300 border border-blue-400/30">
             AI
           </span>
         </div>
@@ -79,6 +79,22 @@ export default function App() {
   const [detectReport, setDetectReport] = useState<DetectReport | null>(null)
   const [state, setState] = useState<AppState | null>(null)
   const [busy, setBusy] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    return (localStorage.getItem('revguard_theme') as 'light' | 'dark') || 'light'
+  })
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+    localStorage.setItem('revguard_theme', theme)
+  }, [theme])
+
+  const toggleTheme = useCallback(() => {
+    setTheme((t) => (t === 'light' ? 'dark' : 'light'))
+  }, [])
 
   const refresh = useCallback(async () => {
     const [report, st] = await Promise.all([api.detect(), api.state()])
@@ -117,9 +133,9 @@ export default function App() {
 
   if (boot === 'checking') {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-950">
-        <div className="flex items-center gap-3 text-xs font-medium text-slate-400">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-700 border-t-blue-500" />
+      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="flex items-center gap-3 text-xs font-medium text-slate-500 dark:text-slate-400">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600 dark:border-slate-700 dark:border-t-blue-500" />
           <span>Connecting to RevGuard Control Tower…</span>
         </div>
       </div>
@@ -128,38 +144,38 @@ export default function App() {
 
   if (boot === 'empty') {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-6 py-12">
-        <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-elevated text-center">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 px-6 py-12">
+        <div className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm dark:shadow-elevated text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600 text-2xl font-black text-white shadow-sm">
             R
           </div>
-          <h1 className="mt-5 text-2xl font-bold tracking-tight text-white">
+          <h1 className="mt-5 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
             RevGuard Control Tower
           </h1>
-          <p className="mt-2 text-xs leading-relaxed text-slate-400">
+          <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
             Autonomous revenue recovery engine for payment ecosystems. Detects silent failure
             clusters, diagnoses root causes, and executes policy-bounded recovery actions.
           </p>
 
           <div className="mt-6 grid grid-cols-3 gap-2.5 text-left">
-            <div className="rounded-lg border border-slate-800 bg-slate-850 p-3">
-              <div className="text-[11px] font-semibold text-blue-400">1. Detection</div>
-              <div className="mt-0.5 text-[10px] text-slate-400">Pattern clustering</div>
+            <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-3">
+              <div className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">1. Detection</div>
+              <div className="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">Pattern clustering</div>
             </div>
-            <div className="rounded-lg border border-slate-800 bg-slate-850 p-3">
-              <div className="text-[11px] font-semibold text-indigo-400">2. AI Diagnosis</div>
-              <div className="mt-0.5 text-[10px] text-slate-400">Root-cause reasoning</div>
+            <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-3">
+              <div className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">2. AI Diagnosis</div>
+              <div className="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">Root-cause reasoning</div>
             </div>
-            <div className="rounded-lg border border-slate-800 bg-slate-850 p-3">
-              <div className="text-[11px] font-semibold text-emerald-400">3. Guarded Action</div>
-              <div className="mt-0.5 text-[10px] text-slate-400">SC-01 safe execution</div>
+            <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-3">
+              <div className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">3. Guarded Action</div>
+              <div className="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">SC-01 safe execution</div>
             </div>
           </div>
 
           <button
             onClick={loadDemo}
             disabled={busy}
-            className="mt-6 w-full rounded-lg bg-blue-600 py-3 text-xs font-semibold text-white transition-colors hover:bg-blue-500 active:bg-blue-700 disabled:opacity-50"
+            className="mt-6 w-full rounded-lg bg-blue-600 py-3 text-xs font-semibold text-white transition-colors hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50"
           >
             {busy ? 'Generating Synthetic Demo Batch…' : 'Load Demo Batch (600 Transactions)'}
           </button>
@@ -171,12 +187,12 @@ export default function App() {
   const currentNav = NAV.find((n) => n.id === tab)
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-200">
-      {/* Clean Sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-800 bg-[#0e121b] p-4 lg:flex">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-[#0b0e14] text-slate-900 dark:text-slate-200 transition-colors">
+      {/* Enterprise Navy Sidebar */}
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-800 bg-[#0f172a] p-4 text-slate-300 lg:flex">
         <Logo />
 
-        <div className="mt-6 mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+        <div className="mt-6 mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
           Navigation
         </div>
 
@@ -190,8 +206,8 @@ export default function App() {
                 onClick={() => setTab(item.id)}
                 className={`group flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs transition-colors ${
                   active
-                    ? 'bg-blue-600/10 text-white font-semibold border-l-2 border-blue-500'
-                    : 'text-slate-400 hover:bg-slate-850/60 hover:text-slate-200'
+                    ? 'bg-blue-600/20 text-white font-semibold border-l-2 border-blue-400'
+                    : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-200'
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -202,7 +218,7 @@ export default function App() {
                 {badgeValue !== null && badgeValue !== undefined && (
                   <span
                     className={`num ml-2 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
-                      active ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-800 text-slate-400'
+                      active ? 'bg-blue-500/30 text-blue-200' : 'bg-slate-800 text-slate-400'
                     }`}
                   >
                     {badgeValue}
@@ -231,7 +247,7 @@ export default function App() {
       {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Sticky Header Bar */}
-        <header className="sticky top-0 z-20 border-b border-slate-800 bg-[#0e121b]/95 backdrop-blur">
+        <header className="sticky top-0 z-20 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#0e121b]/95 backdrop-blur transition-colors">
           <div className="flex items-center justify-between gap-3 px-4 py-3 lg:px-8">
             <div className="lg:hidden">
               <Logo />
@@ -239,28 +255,38 @@ export default function App() {
 
             {/* Breadcrumb / Title */}
             <div className="hidden items-center gap-2 text-xs lg:flex">
-              <span className="text-slate-500">RevGuard</span>
-              <span className="text-slate-600">/</span>
-              <span className="font-semibold text-white">{currentNav?.label}</span>
+              <span className="text-slate-500 dark:text-slate-400 font-medium">RevGuard</span>
+              <span className="text-slate-400 dark:text-slate-600">/</span>
+              <span className="font-semibold text-slate-900 dark:text-white">{currentNav?.label}</span>
             </div>
 
             {/* Telemetry pill */}
-            <div className="hidden items-center gap-2 rounded-md border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs lg:flex">
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
-              <span className="text-slate-400">Store:</span>
-              <span className="font-medium text-slate-200">
+            <div className="hidden items-center gap-2 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 text-xs lg:flex">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="text-slate-500 dark:text-slate-400">Store:</span>
+              <span className="font-medium text-slate-700 dark:text-slate-200">
                 {detectReport
                   ? `${detectReport.failed_count} failed · ${inrShort(detectReport.revenue_at_risk_inr)} at risk`
                   : 'Ready'}
               </span>
             </div>
 
-            {/* Header Actions */}
+            {/* Header Actions & Theme Toggle */}
             <div className="flex items-center gap-2">
+              {/* Theme Toggle Button */}
+              <button
+                onClick={toggleTheme}
+                title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-750 bg-white dark:bg-slate-850 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <span>{theme === 'light' ? '🌙' : '☀️'}</span>
+                <span className="hidden sm:inline">{theme === 'light' ? 'Dark' : 'Light'}</span>
+              </button>
+
               <button
                 onClick={runRecovery}
                 disabled={busy}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-blue-500 active:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 active:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {busy ? (
                   <>
@@ -280,7 +306,7 @@ export default function App() {
                   await api.reset()
                   location.reload()
                 }}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-750 bg-slate-850 px-3 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-750 bg-white dark:bg-slate-850 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-white"
               >
                 <span>↺</span>
                 <span>Reset</span>
@@ -289,7 +315,7 @@ export default function App() {
           </div>
 
           {/* Mobile Navigation Bar */}
-          <nav className="flex gap-1 overflow-x-auto px-4 pb-2.5 lg:hidden border-t border-slate-850 pt-2">
+          <nav className="flex gap-1 overflow-x-auto px-4 pb-2.5 lg:hidden border-t border-slate-200 dark:border-slate-800 pt-2">
             {NAV.map((item) => (
               <button
                 key={item.id}
@@ -297,7 +323,7 @@ export default function App() {
                 className={`whitespace-nowrap rounded px-2.5 py-1 text-xs font-medium transition-colors ${
                   tab === item.id
                     ? 'bg-blue-600 text-white'
-                    : 'text-slate-400 hover:text-slate-200'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
                 <span className="mr-1">{item.icon}</span>
@@ -319,7 +345,7 @@ export default function App() {
         </main>
 
         {/* Global Footer */}
-        <footer className="border-t border-slate-800/80 bg-[#0e121b] px-4 py-3 text-center text-xs text-slate-500 lg:px-8">
+        <footer className="border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#0e121b] px-4 py-3 text-center text-xs text-slate-500 dark:text-slate-500 lg:px-8 transition-colors">
           <span>RevGuard-AI · Autonomous Revenue Recovery Control Tower</span>
           <span className="mx-2">·</span>
           <span>Razorpay Payments Gateway Ecosystem</span>
@@ -337,5 +363,6 @@ function inrShort(v: number) {
     maximumFractionDigits: 1,
   }).format(v)
 }
+
 
 
