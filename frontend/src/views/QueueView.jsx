@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { inr } from '../api'
+import { api, inr } from '../api'
 import { ActionPill, Card, ConfidenceBar } from '../components/ui'
 
 export default function QueueView({ state, onRun }) {
@@ -17,8 +17,11 @@ export default function QueueView({ state, onRun }) {
   async function approveAll() {
     setApproving(true)
     try {
-      await fetch('/api/run?' + pendingApprovals.map((d) => `approve=${d.transaction_id}`).join('&'), { method: 'POST' })
+      const ids = pendingApprovals.map((d) => d.transaction_id)
+      await api.run(ids)
       onRun?.()
+    } catch (e) {
+      console.error('approveAll failed:', e)
     } finally {
       setApproving(false)
     }

@@ -103,11 +103,11 @@ class ActionExecutor:
             key = f"{self.provider.name()}:{action.value}:{txn.transaction_id}"
             verdict = self.guard.check(txn, action, key)
 
-            if verdict.verdict is not Verdict.ALLOWED:
+            if verdict.verdict != Verdict.ALLOWED:
                 outcome = _VERDICT_TO_OUTCOME[verdict.verdict]
                 if outcome is None:  # non-financial: STOP/ESCALATE semantics
                     outcome = (ActionOutcome.STOPPED
-                               if action is RecoveryAction.STOP
+                               if action == RecoveryAction.STOP
                                else ActionOutcome.ESCALATED)
                 results.append(ActionResult(
                     transaction_id=txn.transaction_id, action=action,
@@ -128,7 +128,7 @@ class ActionExecutor:
                 policy_rule="pass", policy_verdict="allowed",
                 outcome=outcome,
                 recovered_amount_inr=response.recovered_amount_inr
-                if response.status is ProviderStatus.RECOVERED else 0.0,
+                if response.status == ProviderStatus.RECOVERED else 0.0,
                 reason=response.reason or response.status.value))
             audit.append(_audit(actor, txn, action,
                                 response.reason or response.status.value,

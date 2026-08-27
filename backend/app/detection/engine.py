@@ -23,8 +23,12 @@ RECOVERY_PRIOR: dict[FailureCategory, float] = {
     FailureCategory.CUSTOMER_RELATED: 0.30,
     FailureCategory.PAYMENT_METHOD_RELATED: 0.30,
     FailureCategory.RETRY_EXHAUSTED: 0.35,
+    FailureCategory.BIOMETRIC_FAILURE: 0.15,
+    FailureCategory.DEVICE_HARDWARE: 0.40,
+    FailureCategory.THREE_DS_AUTHENTICATION: 0.35,
     FailureCategory.RISK_RELATED: 0.0,
     FailureCategory.BUSINESS_INTEGRATION: 0.0,
+    FailureCategory.ACCOUNT_RESTRICTION: 0.0,
 }
 
 BURST_WINDOW_HOURS = 8
@@ -103,7 +107,7 @@ def detect(transactions: list[Transaction]) -> DetectionReport:
                 f"temporal burst: {len(txns)} failures within "
                 f"{span_hours:.1f}h (~{rate_per_hour:.1f}/h) — degradation suspected"
             )
-        if category is FailureCategory.RETRY_EXHAUSTED:
+        if category == FailureCategory.RETRY_EXHAUSTED:
             evidence.append(
                 "retry paths exhausted (retry_count ≥ policy limit); "
                 "auto-retry would duplicate work"

@@ -41,9 +41,9 @@ class RazorpayTestClient(PaymentProvider):
 
     def execute(self, request: ProviderRequest) -> ProviderResponse:
         try:
-            if request.action is ProviderAction.RETRY_PAYMENT:
+            if request.action == ProviderAction.RETRY_PAYMENT:
                 return self._retry(request)
-            if request.action is ProviderAction.NOTIFY_CUSTOMER:
+            if request.action == ProviderAction.NOTIFY_CUSTOMER:
                 # merchant-approved comms are out-of-band in test mode
                 return ProviderResponse(
                     idempotency_key=request.idempotency_key,

@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from 'react'
-import { inr } from '../api'
+import { api, inr } from '../api'
 import { Card, ConfidenceBar, SeverityBadge } from '../components/ui'
 
 export default function LeakageView({ detectReport }) {
@@ -7,19 +7,15 @@ export default function LeakageView({ detectReport }) {
   const [openId, setOpenId] = useState(null)
 
   useEffect(() => {
-    api_diagnose()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  function api_diagnose() {
-    fetch('/api/diagnose?top_n=100')
-      .then((r) => r.json())
+    api.diagnose(100)
       .then((d) => {
         const map = {}
         for (const diag of d.diagnoses) map[diag.cluster_id] = diag
         setDiagnoses(map)
       })
-  }
+      .catch((e) => console.error('diagnose failed:', e))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (!detectReport) return null
 

@@ -63,12 +63,14 @@ def decide(txn: Transaction) -> StrategyDecision:
 
     # Rule 1 — policy-mandated human review categories.
     if category in (FailureCategory.RISK_RELATED,
-                    FailureCategory.BUSINESS_INTEGRATION):
+                    FailureCategory.BUSINESS_INTEGRATION,
+                    FailureCategory.ACCOUNT_RESTRICTION):
         base.action = RecoveryAction.ESCALATE_HUMAN
         base.outcome = DecisionOutcome.ESCALATED
         base.requires_approval = True
         base.reason = (
-            "risk-related decline" if category is FailureCategory.RISK_RELATED
+            "risk-related decline" if category == FailureCategory.RISK_RELATED
+            else "account restricted" if category == FailureCategory.ACCOUNT_RESTRICTION
             else "integration/config defect"
         ) + "; automated financial actions prohibited by policy"
         return base
@@ -160,8 +162,6 @@ def build_plan(
 def _annotate_with_diagnoses(decisions: list[StrategyDecision],
                              diagnoses: dict[str, object]) -> None:
     """Append diagnosis concurrence/divergence notes to decision reasons."""
-    from app.schemas.transactions import RecoveryAction
-
     for key, cluster in _CLUSTER_INDEX.items():
         diag = diagnoses.get(cluster.cluster_id)
         if diag is None:
@@ -173,7 +173,7 @@ def _annotate_with_diagnoses(decisions: list[StrategyDecision],
                 continue
             if recommended is None:
                 continue
-            if d.action is recommended:
+            if d.action == recommended:
                 d.reason += f" · {source} diagnosis concurs"
             elif d.action in (RecoveryAction.RETRY_PAYMENT,
                               RecoveryAction.SEND_PAYMENT_LINK,

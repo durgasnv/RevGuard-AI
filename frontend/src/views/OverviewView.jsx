@@ -13,8 +13,7 @@ export default function OverviewView({ detectReport, goLeakage }) {
 
   useEffect(() => {
     api.evaluate().then(setEvaluation).catch((e) => setError(String(e)))
-    fetch('/api/transactions?status=failed')
-      .then((r) => r.json())
+    api.transactions('failed')
       .then((txns) => {
         const byDay = {}
         for (const t of txns) {
@@ -23,6 +22,7 @@ export default function OverviewView({ detectReport, goLeakage }) {
         }
         setDailyFailures(Object.entries(byDay).map(([day, n]) => ({ day, n })))
       })
+      .catch((e) => setError(String(e)))
   }, [])
 
   if (!detectReport) return null

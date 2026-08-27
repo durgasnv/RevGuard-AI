@@ -37,6 +37,8 @@ export default function App() {
       await api.run()
       setState(await api.state())
       setBoot('ready')
+    } catch (e) {
+      console.error('loadDemo failed:', e)
     } finally {
       setBusy(false)
     }

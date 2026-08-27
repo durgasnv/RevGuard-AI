@@ -37,7 +37,7 @@ def heuristic_diagnose(ctx: ClusterContext) -> Diagnosis:
     ev = _evidence_confidence(ctx)
     factors: list[str] = [f"failure code {code}", f"{ctx.txn_count} affected transactions"]
 
-    if category is FailureCategory.RISK_RELATED:
+    if category == FailureCategory.RISK_RELATED:
         return Diagnosis(
             cluster_id=ctx.cluster_id,
             root_cause=(f"Risk/fraud controls are blocking card payments "
@@ -52,7 +52,7 @@ def heuristic_diagnose(ctx: ClusterContext) -> Diagnosis:
             source=DiagnosisSource.HEURISTIC_FALLBACK,
         )
 
-    if category is FailureCategory.BUSINESS_INTEGRATION:
+    if category == FailureCategory.BUSINESS_INTEGRATION:
         return Diagnosis(
             cluster_id=ctx.cluster_id,
             root_cause=("Integration or configuration defect on the merchant side; "
@@ -65,7 +65,63 @@ def heuristic_diagnose(ctx: ClusterContext) -> Diagnosis:
             source=DiagnosisSource.HEURISTIC_FALLBACK,
         )
 
-    if category is FailureCategory.RETRY_EXHAUSTED:
+    if category == FailureCategory.ACCOUNT_RESTRICTION:
+        return Diagnosis(
+            cluster_id=ctx.cluster_id,
+            root_cause=(f"Account-level restriction (code {code}) blocking transactions; "
+                        "regulatory/compliance issue that no automated payment action "
+                        "can resolve."),
+            contributing_factors=factors + ["account-level block", "compliance review needed"],
+            recommended_action=RecoveryAction.ESCALATE_HUMAN,
+            confidence=_clamp(0.90),
+            requires_human=True,
+            evidence_refs=ctx.sample_failure_evidence,
+            source=DiagnosisSource.HEURISTIC_FALLBACK,
+        )
+
+    if category == FailureCategory.BIOMETRIC_FAILURE:
+        return Diagnosis(
+            cluster_id=ctx.cluster_id,
+            root_cause=(f"Biometric authentication step failed ({code}); "
+                        "customer must re-authenticate using an alternative method "
+                        "(fingerprint, OTP, or PIN)."),
+            contributing_factors=factors + ["biometric auth required", "alternative method available"],
+            recommended_action=RecoveryAction.NOTIFY_CUSTOMER,
+            confidence=_clamp(0.70 * ev),
+            requires_human=False,
+            evidence_refs=ctx.sample_failure_evidence,
+            source=DiagnosisSource.HEURISTIC_FALLBACK,
+        )
+
+    if category == FailureCategory.DEVICE_HARDWARE:
+        return Diagnosis(
+            cluster_id=ctx.cluster_id,
+            root_cause=(f"Terminal/device hardware error ({code}); payment instrument "
+                        "is valid but the reader failed. Retry on a different terminal "
+                        "or route via QR code."),
+            contributing_factors=factors + ["terminal-side issue", "instrument valid"],
+            recommended_action=RecoveryAction.RETRY_PAYMENT,
+            confidence=_clamp(0.60 * ev),
+            requires_human=False,
+            evidence_refs=ctx.sample_failure_evidence,
+            source=DiagnosisSource.HEURISTIC_FALLBACK,
+        )
+
+    if category == FailureCategory.THREE_DS_AUTHENTICATION:
+        return Diagnosis(
+            cluster_id=ctx.cluster_id,
+            root_cause=(f"3D Secure authentication failed ({code}); customer's bank "
+                        "ACS was unavailable or the customer cancelled the 3DS prompt. "
+                        "Retry after a short delay or send a payment link."),
+            contributing_factors=factors + ["3DS step failure", "bank ACS dependent"],
+            recommended_action=RecoveryAction.RETRY_PAYMENT,
+            confidence=_clamp(0.55 * ev),
+            requires_human=False,
+            evidence_refs=ctx.sample_failure_evidence,
+            source=DiagnosisSource.HEURISTIC_FALLBACK,
+        )
+
+    if category == FailureCategory.RETRY_EXHAUSTED:
         return Diagnosis(
             cluster_id=ctx.cluster_id,
             root_cause=(f"Automatic retry path exhausted (avg retries="
@@ -80,7 +136,7 @@ def heuristic_diagnose(ctx: ClusterContext) -> Diagnosis:
             source=DiagnosisSource.HEURISTIC_FALLBACK,
         )
 
-    if category is FailureCategory.TRANSIENT:
+    if category == FailureCategory.TRANSIENT:
         if ctx.burst_detected:
             cause = (f"Gateway/network degradation window of ~{ctx.window_hours}h "
                      f"affecting {'/'.join(list(ctx.payment_method_share)[:2])}; "
@@ -104,7 +160,7 @@ def heuristic_diagnose(ctx: ClusterContext) -> Diagnosis:
             source=DiagnosisSource.HEURISTIC_FALLBACK,
         )
 
-    if category is FailureCategory.CUSTOMER_RELATED:
+    if category == FailureCategory.CUSTOMER_RELATED:
         if code == "INSUFFICIENT_FUNDS":
             return Diagnosis(
                 cluster_id=ctx.cluster_id,

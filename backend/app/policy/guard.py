@@ -87,14 +87,14 @@ class PolicyGuard:
                 reason="duplicate action prevented (idempotency key seen)",
                 rule="duplicate_prevention")
 
-        if action is RecoveryAction.RETRY_PAYMENT:
+        if action == RecoveryAction.RETRY_PAYMENT:
             category = txn.failure_category
             if txn.failure_code in HARD_NON_RETRYABLE_CODES:
                 return PolicyVerdict(
                     verdict=Verdict.BLOCKED,
                     reason=f"code {txn.failure_code} is hard non-retryable",
                     rule="hard_non_retryable")
-            if category and category.value not in RETRYABLE_CATEGORIES \
+            if (category and category.value not in RETRYABLE_CATEGORIES) \
                     or category in (FailureCategory.RISK_RELATED,
                                     FailureCategory.BUSINESS_INTEGRATION):
                 return PolicyVerdict(

@@ -40,10 +40,12 @@ requires_human=true; integration defects cannot be fixed by payment actions."""
 
 def _parse_llm_json(raw: str) -> dict:
     text = raw.strip()
-    if text.startswith("```"):
-        text = text.split("```")[1]
-        if text.startswith("json"):
-            text = text[4:]
+    if "```" in text:
+        parts = text.split("```")
+        if len(parts) >= 3:
+            text = parts[1]
+            if text.startswith("json"):
+                text = text[4:]
     start, end = text.find("{"), text.rfind("}")
     if start == -1 or end == -1:
         raise ValueError("no json object in llm output")

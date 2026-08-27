@@ -63,7 +63,7 @@ def run_plan(
         }
 
         if action in NON_FINANCIAL_ACTIONS:
-            outcome = (ActionOutcome.STOPPED if action is RecoveryAction.STOP
+            outcome = (ActionOutcome.STOPPED if action == RecoveryAction.STOP
                        else ActionOutcome.ESCALATED)
             audit.append(_audit(
                 actor=actor, txn=txn, action=action,

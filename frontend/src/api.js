@@ -14,6 +14,7 @@ export const api = {
   state: () => fetch('/api/state').then(j),
   evaluate: () => fetch('/api/evaluate', { method: 'POST' }).then(j),
   reset: () => fetch('/api/reset', { method: 'POST' }).then(j),
+  transactions: (status) => fetch(`/api/transactions${status ? `?status=${status}` : ''}`).then(j),
 }
 
 export const inr = (v) =>
