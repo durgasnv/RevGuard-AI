@@ -21,56 +21,53 @@ const NAV: NavItem[] = [
   {
     id: 'overview',
     label: 'Overview',
-    icon: '◈',
-    desc: 'Executive revenue health',
+    icon: '📊',
+    desc: 'Revenue health & recovery rate',
   },
   {
     id: 'leakage',
     label: 'Revenue Leakage',
-    icon: '▤',
-    desc: 'Clusters ranked by impact',
+    icon: '🔍',
+    desc: 'Failure pattern clusters',
     badge: (report) => (report?.clusters.length ? report.clusters.length : null),
   },
   {
     id: 'queue',
     label: 'Recovery Queue',
-    icon: '⑂',
-    desc: 'Gated, EV-ranked actions',
+    icon: '⚡',
+    desc: 'EV-ranked action worklist',
     badge: (_r, state) => (state?.plan?.queue.length ? state.plan.queue.length : null),
   },
   {
     id: 'audit',
     label: 'Audit Trail',
-    icon: '≣',
-    desc: 'Immutable decision log',
+    icon: '📋',
+    desc: 'Consequential decision logs',
     badge: (_r, state) =>
       state?.execution?.audit_trail.length ? state.execution.audit_trail.length : null,
   },
   {
     id: 'analyze',
     label: 'Upload & Analyze',
-    icon: '⇪',
-    desc: 'Instant CSV / Excel audit',
+    icon: '📁',
+    desc: 'Custom CSV / Excel audit',
   },
 ]
 
 function Logo() {
   return (
     <div className="flex items-center gap-3">
-      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 via-indigo-600 to-emerald-500 text-lg font-black text-white shadow-lg shadow-blue-900/40 ring-1 ring-white/20">
-        <span className="drop-shadow-sm">R</span>
-        <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-slate-950 bg-emerald-400" />
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-base font-black text-white shadow-sm">
+        R
       </div>
-      <div className="min-w-0">
-        <div className="flex items-center gap-1.5 leading-none">
-          <span className="text-base font-bold tracking-tight text-white">
-            Rev<span className="text-gradient">Guard</span>
-          </span>
-          <span className="rounded bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-blue-400 ring-1 ring-blue-500/20">
+      <div className="min-w-0 leading-tight">
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm font-bold text-white tracking-tight">RevGuard</span>
+          <span className="rounded bg-blue-500/15 px-1.5 py-0.2 text-[10px] font-semibold text-blue-400 border border-blue-500/20">
             AI
           </span>
         </div>
-        <div className="mt-1 text-[11px] font-medium text-slate-400">Recovery Control Tower</div>
+        <div className="text-[11px] text-slate-400">Recovery Control Tower</div>
       </div>
     </div>
   )
@@ -121,11 +118,9 @@ export default function App() {
   if (boot === 'checking') {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-950">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500/30 border-t-blue-500" />
-          <div className="text-xs font-medium tracking-wide text-slate-400">
-            Connecting to RevGuard Control Tower…
-          </div>
+        <div className="flex items-center gap-3 text-xs font-medium text-slate-400">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-700 border-t-blue-500" />
+          <span>Connecting to RevGuard Control Tower…</span>
         </div>
       </div>
     )
@@ -133,80 +128,59 @@ export default function App() {
 
   if (boot === 'empty') {
     return (
-      <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 py-12">
-        {/* Ambient background glow */}
-        <div className="pointer-events-none absolute -top-40 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-blue-600/15 blur-[120px]" />
-        <div className="pointer-events-none absolute -bottom-40 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-emerald-600/10 blur-[120px]" />
-
-        <div className="animate-rise relative z-10 flex max-w-xl flex-col items-center text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-emerald-400 text-3xl font-black text-white shadow-2xl shadow-blue-900/50 ring-1 ring-white/20">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-6 py-12">
+        <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-elevated text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600 text-2xl font-black text-white shadow-sm">
             R
           </div>
-          <h1 className="mt-6 text-3xl font-bold tracking-tight text-white lg:text-4xl">
-            Rev<span className="text-gradient">Guard AI</span>
+          <h1 className="mt-5 text-2xl font-bold tracking-tight text-white">
+            RevGuard Control Tower
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-slate-400">
-            Next-generation revenue recovery control tower for payments ecosystems. Detects silent
-            leakage clusters, triggers AI-driven diagnostics, and executes policy-bounded recoveries.
+          <p className="mt-2 text-xs leading-relaxed text-slate-400">
+            Autonomous revenue recovery engine for payment ecosystems. Detects silent failure
+            clusters, diagnoses root causes, and executes policy-bounded recovery actions.
           </p>
 
-          <div className="mt-8 grid w-full grid-cols-1 gap-3 text-left sm:grid-cols-3">
-            <div className="rounded-xl border border-white/[0.08] bg-slate-900/50 p-3.5 backdrop-blur-sm">
-              <div className="text-xs font-semibold text-blue-400">01. Leakage Discovery</div>
-              <div className="mt-1 text-[11px] text-slate-400">
-                Pattern matching & statistical clustering of failures
-              </div>
+          <div className="mt-6 grid grid-cols-3 gap-2.5 text-left">
+            <div className="rounded-lg border border-slate-800 bg-slate-850 p-3">
+              <div className="text-[11px] font-semibold text-blue-400">1. Detection</div>
+              <div className="mt-0.5 text-[10px] text-slate-400">Pattern clustering</div>
             </div>
-            <div className="rounded-xl border border-white/[0.08] bg-slate-900/50 p-3.5 backdrop-blur-sm">
-              <div className="text-xs font-semibold text-purple-400">02. AI Root Cause</div>
-              <div className="mt-1 text-[11px] text-slate-400">
-                Context-aware diagnostic reasoning & probability scoring
-              </div>
+            <div className="rounded-lg border border-slate-800 bg-slate-850 p-3">
+              <div className="text-[11px] font-semibold text-indigo-400">2. AI Diagnosis</div>
+              <div className="mt-0.5 text-[10px] text-slate-400">Root-cause reasoning</div>
             </div>
-            <div className="rounded-xl border border-white/[0.08] bg-slate-900/50 p-3.5 backdrop-blur-sm">
-              <div className="text-xs font-semibold text-emerald-400">03. Guarded Execution</div>
-              <div className="mt-1 text-[11px] text-slate-400">
-                Deterministic policy gates (SC-01) with full audit trail
-              </div>
+            <div className="rounded-lg border border-slate-800 bg-slate-850 p-3">
+              <div className="text-[11px] font-semibold text-emerald-400">3. Guarded Action</div>
+              <div className="mt-0.5 text-[10px] text-slate-400">SC-01 safe execution</div>
             </div>
           </div>
 
           <button
             onClick={loadDemo}
             disabled={busy}
-            className="animate-pulse-soft mt-8 inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 px-6 py-3.5 text-sm font-semibold text-white shadow-xl shadow-blue-900/40 transition-all hover:scale-[1.02] hover:shadow-blue-800/60 disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-6 w-full rounded-lg bg-blue-600 py-3 text-xs font-semibold text-white transition-colors hover:bg-blue-500 active:bg-blue-700 disabled:opacity-50"
           >
-            {busy ? (
-              <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                Generating Synthetic Batch…
-              </>
-            ) : (
-              <>
-                <span>✦</span> Load Demo Batch (600 transactions)
-              </>
-            )}
+            {busy ? 'Generating Synthetic Demo Batch…' : 'Load Demo Batch (600 Transactions)'}
           </button>
-
-          <div className="mt-4 text-[11px] text-slate-500">
-            Generates realistic Razorpay card, UPI, netbanking & wallet events
-          </div>
         </div>
       </div>
     )
   }
 
+  const currentNav = NAV.find((n) => n.id === tab)
+
   return (
-    <div className="flex min-h-screen">
-      {/* Modern Sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-white/[0.07] bg-slate-950/70 p-4 backdrop-blur-xl lg:flex">
+    <div className="flex min-h-screen bg-slate-950 text-slate-200">
+      {/* Clean Sidebar */}
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-800 bg-[#0e121b] p-4 lg:flex">
         <Logo />
 
-        <div className="mt-6 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+        <div className="mt-6 mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
           Navigation
         </div>
 
-        <nav className="mt-2 flex flex-1 flex-col gap-1.5">
+        <nav className="flex flex-1 flex-col gap-1">
           {NAV.map((item) => {
             const active = tab === item.id
             const badgeValue = item.badge?.(detectReport, state)
@@ -214,34 +188,21 @@ export default function App() {
               <button
                 key={item.id}
                 onClick={() => setTab(item.id)}
-                className={`group flex items-center justify-between rounded-xl px-3 py-2.5 text-left transition-all duration-200 ${
+                className={`group flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs transition-colors ${
                   active
-                    ? 'border border-blue-500/30 bg-blue-500/10 text-white shadow-sm shadow-blue-500/10'
-                    : 'border border-transparent text-slate-400 hover:border-white/[0.05] hover:bg-slate-900/60 hover:text-slate-200'
+                    ? 'bg-blue-600/10 text-white font-semibold border-l-2 border-blue-500'
+                    : 'text-slate-400 hover:bg-slate-850/60 hover:text-slate-200'
                 }`}
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs transition-colors ${
-                      active
-                        ? 'bg-blue-500/20 text-blue-300'
-                        : 'bg-slate-900 text-slate-400 group-hover:bg-slate-800 group-hover:text-slate-300'
-                    }`}
-                  >
-                    {item.icon}
-                  </span>
-                  <div className="min-w-0">
-                    <span className="block text-xs font-semibold tracking-tight">{item.label}</span>
-                    <span className="block truncate text-[10px] text-slate-500">{item.desc}</span>
-                  </div>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="text-sm opacity-90">{item.icon}</span>
+                  <span className="truncate">{item.label}</span>
                 </div>
 
                 {badgeValue !== null && badgeValue !== undefined && (
                   <span
-                    className={`num ml-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                      active
-                        ? 'bg-blue-500/20 text-blue-300'
-                        : 'bg-slate-800 text-slate-400 group-hover:bg-slate-700 group-hover:text-slate-300'
+                    className={`num ml-2 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                      active ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-800 text-slate-400'
                     }`}
                   >
                     {badgeValue}
@@ -252,19 +213,17 @@ export default function App() {
           })}
         </nav>
 
-        {/* Sidebar System Telemetry Badge */}
-        <div className="mt-auto rounded-xl border border-white/[0.07] bg-slate-900/60 p-3 text-[11px] backdrop-blur-sm">
+        {/* Sidebar System Telemetry Box */}
+        <div className="mt-auto rounded-lg border border-slate-800 bg-slate-900/90 p-3 text-xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 font-semibold text-emerald-400">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
               SC-01 Safe Mode
             </div>
-            <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-medium text-emerald-400 border border-emerald-500/20">
-              Active
-            </span>
+            <span className="text-[10px] font-mono text-slate-400">Enforced</span>
           </div>
-          <p className="mt-1 text-[10px] leading-relaxed text-slate-400">
-            Deterministic execution boundary active. No unauthorized mutations.
+          <p className="mt-1 text-[11px] text-slate-400">
+            Simulated environment with deterministic policy boundaries.
           </p>
         </div>
       </aside>
@@ -272,39 +231,41 @@ export default function App() {
       {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Sticky Header Bar */}
-        <header className="sticky top-0 z-20 border-b border-white/[0.07] bg-slate-950/80 backdrop-blur-xl">
+        <header className="sticky top-0 z-20 border-b border-slate-800 bg-[#0e121b]/95 backdrop-blur">
           <div className="flex items-center justify-between gap-3 px-4 py-3 lg:px-8">
             <div className="lg:hidden">
               <Logo />
             </div>
 
-            {/* Live Telemetry Pill (Desktop) */}
-            <div className="hidden items-center gap-3 lg:flex">
-              <div className="flex items-center gap-2 rounded-full border border-white/[0.07] bg-slate-900/60 px-3 py-1.5 text-xs text-slate-300 backdrop-blur-md">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-                </span>
-                <span className="font-medium text-slate-400">Control Tower:</span>
-                <span className="font-semibold text-white">
-                  {detectReport
-                    ? `${detectReport.failed_count} failed txns · ${inrShort(detectReport.revenue_at_risk_inr)} at risk`
-                    : 'System Ready'}
-                </span>
-              </div>
+            {/* Breadcrumb / Title */}
+            <div className="hidden items-center gap-2 text-xs lg:flex">
+              <span className="text-slate-500">RevGuard</span>
+              <span className="text-slate-600">/</span>
+              <span className="font-semibold text-white">{currentNav?.label}</span>
+            </div>
+
+            {/* Telemetry pill */}
+            <div className="hidden items-center gap-2 rounded-md border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs lg:flex">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              <span className="text-slate-400">Store:</span>
+              <span className="font-medium text-slate-200">
+                {detectReport
+                  ? `${detectReport.failed_count} failed · ${inrShort(detectReport.revenue_at_risk_inr)} at risk`
+                  : 'Ready'}
+              </span>
             </div>
 
             {/* Header Actions */}
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <button
                 onClick={runRecovery}
                 disabled={busy}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-emerald-950/50 transition-all duration-200 hover:from-emerald-500 hover:to-teal-500 hover:shadow-emerald-900/60 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-blue-500 active:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {busy ? (
                   <>
                     <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    <span>Executing…</span>
+                    <span>Running…</span>
                   </>
                 ) : (
                   <>
@@ -319,7 +280,7 @@ export default function App() {
                   await api.reset()
                   location.reload()
                 }}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700/80 bg-slate-800/40 px-3 py-2 text-xs font-medium text-slate-300 backdrop-blur-sm transition-all hover:border-slate-600 hover:bg-slate-700/50 hover:text-white active:scale-[0.98]"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-750 bg-slate-850 px-3 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
               >
                 <span>↺</span>
                 <span>Reset</span>
@@ -327,19 +288,19 @@ export default function App() {
             </div>
           </div>
 
-          {/* Mobile Navigation Tabs */}
-          <nav className="flex gap-1.5 overflow-x-auto px-4 pb-2.5 lg:hidden">
+          {/* Mobile Navigation Bar */}
+          <nav className="flex gap-1 overflow-x-auto px-4 pb-2.5 lg:hidden border-t border-slate-850 pt-2">
             {NAV.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setTab(item.id)}
-                className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                className={`whitespace-nowrap rounded px-2.5 py-1 text-xs font-medium transition-colors ${
                   tab === item.id
-                    ? 'border border-blue-500/30 bg-blue-500/15 text-blue-200'
-                    : 'border border-transparent text-slate-400 hover:text-slate-200'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <span className="mr-1.5">{item.icon}</span>
+                <span className="mr-1">{item.icon}</span>
                 {item.label}
               </button>
             ))}
@@ -358,14 +319,10 @@ export default function App() {
         </main>
 
         {/* Global Footer */}
-        <footer className="border-t border-white/[0.06] bg-slate-950/40 px-4 py-3.5 text-center text-[11px] text-slate-500 backdrop-blur-sm lg:px-8">
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-            <span>RevGuard-AI · Autonomous Revenue Recovery Control Tower</span>
-            <span className="hidden sm:inline">·</span>
-            <span>Engineered for the Razorpay Payment Gateway Ecosystem</span>
-            <span className="hidden sm:inline">·</span>
-            <span className="text-emerald-400/90 font-medium">SC-01 Safe Simulation Mode</span>
-          </div>
+        <footer className="border-t border-slate-800/80 bg-[#0e121b] px-4 py-3 text-center text-xs text-slate-500 lg:px-8">
+          <span>RevGuard-AI · Autonomous Revenue Recovery Control Tower</span>
+          <span className="mx-2">·</span>
+          <span>Razorpay Payments Gateway Ecosystem</span>
         </footer>
       </div>
     </div>
@@ -380,4 +337,5 @@ function inrShort(v: number) {
     maximumFractionDigits: 1,
   }).format(v)
 }
+
 

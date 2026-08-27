@@ -1,32 +1,29 @@
 import type { ReactNode } from 'react'
 import type { Severity, Action, Outcome } from '../types'
 
-/* ── Design Tokens & Badges ──────────────────────────────────────── */
+/* ── Badges & Status Indicators ──────────────────────────────────── */
 
 const severityConfig: Record<
   Severity,
-  { bg: string; text: string; border: string; dot: string; glow: string }
+  { bg: string; text: string; border: string; dot: string }
 > = {
   high: {
     bg: 'bg-rose-500/10',
     text: 'text-rose-400',
-    border: 'border-rose-500/30',
-    dot: 'bg-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.6)]',
-    glow: 'shadow-rose-950/30',
+    border: 'border-rose-500/20',
+    dot: 'bg-rose-500',
   },
   medium: {
     bg: 'bg-amber-500/10',
     text: 'text-amber-300',
-    border: 'border-amber-500/30',
-    dot: 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]',
-    glow: 'shadow-amber-950/30',
+    border: 'border-amber-500/20',
+    dot: 'bg-amber-500',
   },
   low: {
     bg: 'bg-slate-500/10',
     text: 'text-slate-300',
-    border: 'border-slate-500/30',
-    dot: 'bg-slate-400 shadow-[0_0_8px_rgba(148,163,184,0.5)]',
-    glow: 'shadow-slate-950/30',
+    border: 'border-slate-500/20',
+    dot: 'bg-slate-400',
   },
 }
 
@@ -34,7 +31,7 @@ export function SeverityBadge({ severity }: { severity: Severity }) {
   const conf = severityConfig[severity] ?? severityConfig.low
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors ${conf.bg} ${conf.text} ${conf.border}`}
+      className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium ${conf.bg} ${conf.text} ${conf.border}`}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${conf.dot}`} />
       <span className="capitalize">{severity}</span>
@@ -42,74 +39,68 @@ export function SeverityBadge({ severity }: { severity: Severity }) {
   )
 }
 
-const actionMap: Record<Action, { cls: string; icon: string }> = {
+const actionConfig: Record<Action, { cls: string; icon: string }> = {
   RETRY_PAYMENT: {
-    cls: 'bg-blue-500/10 text-blue-300 border-blue-500/30 hover:bg-blue-500/15',
+    cls: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
     icon: '↻',
   },
   SEND_PAYMENT_LINK: {
-    cls: 'bg-purple-500/10 text-purple-300 border-purple-500/30 hover:bg-purple-500/15',
-    icon: '⧉',
+    cls: 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20',
+    icon: '↗',
   },
   NOTIFY_CUSTOMER: {
-    cls: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/15',
+    cls: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20',
     icon: '✉',
   },
   ESCALATE_HUMAN: {
-    cls: 'bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/15',
-    icon: '⚑',
+    cls: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
+    icon: '⚐',
   },
   STOP: {
-    cls: 'bg-slate-700/20 text-slate-400 border-slate-600/30 hover:bg-slate-700/30',
-    icon: '■',
+    cls: 'bg-slate-800 text-slate-400 border-slate-700',
+    icon: '—',
   },
 }
 
 export function ActionPill({ action }: { action: Action }) {
-  const meta = actionMap[action] ?? actionMap.STOP
+  const conf = actionConfig[action] ?? actionConfig.STOP
   const formattedText = action.replace(/_/g, ' ').toLowerCase()
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-medium tracking-tight backdrop-blur-sm transition-all ${meta.cls}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 py-1 text-[11px] font-medium ${conf.cls}`}
     >
-      <span className="text-[10px] opacity-75">{meta.icon}</span>
+      <span className="text-[10px] font-bold opacity-80">{conf.icon}</span>
       <span className="capitalize">{formattedText}</span>
     </span>
   )
 }
 
-const outcomeMap: Record<Outcome, { cls: string; icon: string }> = {
+const outcomeConfig: Record<Outcome, { cls: string }> = {
   recovered: {
-    cls: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)]',
-    icon: '✓',
+    cls: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
   },
   failed: {
-    cls: 'bg-rose-500/10 text-rose-300 border-rose-500/30',
-    icon: '✕',
+    cls: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
   },
   escalated: {
-    cls: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
-    icon: '⚠',
+    cls: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
   },
   stopped: {
-    cls: 'bg-slate-700/20 text-slate-400 border-slate-600/30',
-    icon: '■',
+    cls: 'bg-slate-800 text-slate-400 border-slate-700',
   },
   blocked_by_policy: {
-    cls: 'bg-orange-500/10 text-orange-300 border-orange-500/30',
-    icon: '🛡',
+    cls: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
   },
 }
 
 export function OutcomeTag({ outcome }: { outcome: Outcome }) {
-  const conf = outcomeMap[outcome] ?? outcomeMap.stopped
+  const conf = outcomeConfig[outcome] ?? outcomeConfig.stopped
   const text = outcome?.replace(/_/g, ' ') || 'unknown'
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-medium capitalize backdrop-blur-sm ${conf.cls}`}
+      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium capitalize ${conf.cls}`}
     >
-      <span className="text-[9px] opacity-70">{conf.icon}</span>
       {text}
     </span>
   )
@@ -117,24 +108,24 @@ export function OutcomeTag({ outcome }: { outcome: Outcome }) {
 
 export function ConfidenceBar({ value }: { value: number }) {
   const percentage = Math.round(value * 100)
-  const tone =
+  const barColor =
     value >= 0.75
-      ? 'from-emerald-500 to-teal-400'
+      ? 'bg-emerald-500'
       : value >= 0.55
-        ? 'from-blue-500 to-cyan-400'
-        : 'from-amber-500 to-yellow-400'
+        ? 'bg-blue-500'
+        : 'bg-amber-500'
   const textColor =
     value >= 0.75
-      ? 'text-emerald-300'
+      ? 'text-emerald-400'
       : value >= 0.55
-        ? 'text-blue-300'
-        : 'text-amber-300'
+        ? 'text-blue-400'
+        : 'text-amber-400'
 
   return (
     <div className="flex items-center gap-2">
-      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-800/90 ring-1 ring-white/5">
+      <div className="h-1.5 w-14 overflow-hidden rounded-full bg-slate-800">
         <div
-          className={`h-full rounded-full bg-gradient-to-r ${tone} transition-all duration-500`}
+          className={`h-full rounded-full ${barColor}`}
           style={{ width: `${Math.max(0, Math.min(100, percentage))}%` }}
         />
       </div>
@@ -145,7 +136,7 @@ export function ConfidenceBar({ value }: { value: number }) {
   )
 }
 
-/* ── Card ───────────────────────────────────────────────────────── */
+/* ── Container Card ──────────────────────────────────────────────── */
 
 export function Card({
   title,
@@ -154,7 +145,6 @@ export function Card({
   right,
   className,
   icon,
-  hoverable = true,
 }: {
   title?: string
   subtitle?: string
@@ -162,27 +152,26 @@ export function Card({
   right?: ReactNode
   className?: string
   icon?: ReactNode
-  hoverable?: boolean
 }) {
   return (
     <section
-      className={`animate-rise relative overflow-hidden rounded-2xl border border-white/[0.07] bg-slate-900/50 p-5 shadow-xl shadow-black/30 backdrop-blur-md transition-all duration-300 ${
-        hoverable
-          ? 'hover:-translate-y-0.5 hover:border-slate-700/80 hover:shadow-2xl hover:shadow-black/50'
-          : ''
-      } ${className ?? ''}`}
+      className={`rounded-xl border border-slate-800 bg-[#111622] p-5 shadow-card transition-colors hover:border-slate-750 ${
+        className ?? ''
+      }`}
     >
       {(title || right) && (
         <header className="mb-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {icon && (
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-300 shadow-sm shadow-blue-500/10">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-750 bg-slate-850 text-xs font-semibold text-slate-300">
                 {icon}
               </span>
             )}
             <div>
-              {title && <h3 className="text-sm font-semibold tracking-tight text-slate-100">{title}</h3>}
-              {subtitle && <p className="mt-0.5 text-[11px] text-slate-400">{subtitle}</p>}
+              {title && (
+                <h3 className="text-sm font-semibold tracking-tight text-white">{title}</h3>
+              )}
+              {subtitle && <p className="mt-0.5 text-xs text-slate-400">{subtitle}</p>}
             </div>
           </div>
           {right}
@@ -193,45 +182,15 @@ export function Card({
   )
 }
 
-/* ── KPI / Stat Card ────────────────────────────────────────────── */
+/* ── KPI / Metric Card ───────────────────────────────────────────── */
 
-const kpiTones = {
-  red: {
-    gradient: 'from-rose-500/15 via-rose-500/5 to-transparent',
-    border: 'hover:border-rose-500/30',
-    iconBg: 'bg-rose-500/15 text-rose-300 border-rose-500/20',
-    accentText: 'text-rose-400',
-  },
-  green: {
-    gradient: 'from-emerald-500/15 via-emerald-500/5 to-transparent',
-    border: 'hover:border-emerald-500/30',
-    iconBg: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20',
-    accentText: 'text-emerald-400',
-  },
-  blue: {
-    gradient: 'from-blue-500/15 via-blue-500/5 to-transparent',
-    border: 'hover:border-blue-500/30',
-    iconBg: 'bg-blue-500/15 text-blue-300 border-blue-500/20',
-    accentText: 'text-blue-400',
-  },
-  amber: {
-    gradient: 'from-amber-500/15 via-amber-500/5 to-transparent',
-    border: 'hover:border-amber-500/30',
-    iconBg: 'bg-amber-500/15 text-amber-300 border-amber-500/20',
-    accentText: 'text-amber-400',
-  },
-  purple: {
-    gradient: 'from-purple-500/15 via-purple-500/5 to-transparent',
-    border: 'hover:border-purple-500/30',
-    iconBg: 'bg-purple-500/15 text-purple-300 border-purple-500/20',
-    accentText: 'text-purple-400',
-  },
-  slate: {
-    gradient: 'from-slate-700/15 via-slate-700/5 to-transparent',
-    border: 'hover:border-slate-600/30',
-    iconBg: 'bg-slate-800 text-slate-300 border-slate-700/40',
-    accentText: 'text-slate-400',
-  },
+const kpiAccents = {
+  red: 'border-t-2 border-t-rose-500/80',
+  green: 'border-t-2 border-t-emerald-500/80',
+  blue: 'border-t-2 border-t-blue-500/80',
+  amber: 'border-t-2 border-t-amber-500/80',
+  purple: 'border-t-2 border-t-indigo-500/80',
+  slate: 'border-t-2 border-t-slate-600',
 }
 
 export function KpiCard({
@@ -251,62 +210,53 @@ export function KpiCard({
   delta?: string
   deltaTone?: 'up' | 'down' | 'neutral'
 }) {
-  const t = kpiTones[tone] ?? kpiTones.slate
+  const accentClass = kpiAccents[tone] ?? kpiAccents.slate
   const deltaCls =
     deltaTone === 'up'
       ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
       : deltaTone === 'down'
         ? 'text-rose-400 bg-rose-500/10 border-rose-500/20'
-        : 'text-slate-400 bg-slate-700/20 border-slate-600/20'
+        : 'text-slate-400 bg-slate-800 border-slate-700'
 
   const trendIcon = deltaTone === 'up' ? '↑' : deltaTone === 'down' ? '↓' : '→'
 
   return (
     <div
-      className={`animate-rise group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-slate-900/60 p-5 shadow-xl shadow-black/30 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-black/50 ${t.border}`}
+      className={`rounded-xl border border-slate-800 bg-[#111622] p-5 shadow-card transition-colors hover:border-slate-750 ${accentClass}`}
     >
-      {/* Background glow gradient */}
-      <div
-        className={`pointer-events-none absolute inset-0 bg-gradient-to-br opacity-80 transition-opacity duration-300 group-hover:opacity-100 ${t.gradient}`}
-      />
-
-      <div className="relative">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-            {label}
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+          {label}
+        </span>
+        {icon && (
+          <span className="flex h-6 w-6 items-center justify-center rounded bg-slate-800 text-xs text-slate-400">
+            {icon}
           </span>
-          {icon && (
-            <span
-              className={`flex h-7 w-7 items-center justify-center rounded-lg border text-xs font-semibold shadow-inner ${t.iconBg}`}
-            >
-              {icon}
-            </span>
-          )}
-        </div>
-
-        <div className="num mt-2 text-2xl font-bold tracking-tight text-white lg:text-3xl">
-          {value}
-        </div>
-
-        {(sub || delta) && (
-          <div className="mt-2.5 flex flex-wrap items-center gap-2">
-            {delta && (
-              <span
-                className={`inline-flex items-center gap-0.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${deltaCls}`}
-              >
-                <span>{trendIcon}</span>
-                {delta}
-              </span>
-            )}
-            {sub && <span className="text-[11px] text-slate-400">{sub}</span>}
-          </div>
         )}
       </div>
+
+      <div className="num mt-2 text-2xl font-bold tracking-tight text-white lg:text-3xl">
+        {value}
+      </div>
+
+      {(sub || delta) && (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          {delta && (
+            <span
+              className={`inline-flex items-center gap-0.5 rounded border px-1.5 py-0.5 text-[11px] font-semibold ${deltaCls}`}
+            >
+              <span>{trendIcon}</span>
+              {delta}
+            </span>
+          )}
+          {sub && <span className="text-xs text-slate-400">{sub}</span>}
+        </div>
+      )}
     </div>
   )
 }
 
-/* ── Buttons ─────────────────────────────────────────────────────── */
+/* ── Clean Buttons ───────────────────────────────────────────────── */
 
 export function PrimaryButton({
   children,
@@ -323,7 +273,7 @@ export function PrimaryButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-blue-900/30 transition-all duration-200 hover:from-blue-500 hover:to-indigo-500 hover:shadow-blue-800/50 hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-blue-500 active:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
     >
       {children}
     </button>
@@ -345,7 +295,7 @@ export function GhostButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700/70 bg-slate-800/40 px-3.5 py-2 text-xs font-medium text-slate-300 backdrop-blur-sm transition-all duration-200 hover:border-slate-600 hover:bg-slate-700/50 hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg border border-slate-750 bg-slate-850 px-3.5 py-2 text-xs font-medium text-slate-200 transition-colors hover:border-slate-700 hover:bg-slate-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
     >
       {children}
     </button>
@@ -360,19 +310,20 @@ export function Badge({
   tone?: 'default' | 'emerald' | 'blue' | 'amber' | 'rose' | 'purple'
 }) {
   const tones = {
-    default: 'bg-slate-800/80 text-slate-300 border-slate-700',
-    emerald: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
-    blue: 'bg-blue-500/10 text-blue-300 border-blue-500/30',
-    amber: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
-    rose: 'bg-rose-500/10 text-rose-300 border-rose-500/30',
-    purple: 'bg-purple-500/10 text-purple-300 border-purple-500/30',
+    default: 'bg-slate-800 text-slate-300 border-slate-700',
+    emerald: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    blue: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    amber: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
+    rose: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+    purple: 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20',
   }
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-medium ${tones[tone]}`}
+      className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium ${tones[tone]}`}
     >
       {children}
     </span>
   )
 }
+
 
