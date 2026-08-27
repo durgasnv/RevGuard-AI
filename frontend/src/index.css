@@ -2,10 +2,146 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-slate-950 text-slate-200 antialiased;
+:root {
+  color-scheme: dark;
+  --bg-primary: #030712;
+  --bg-surface: #0b0f19;
+  --bg-surface-elevated: #111827;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-accent: rgba(59, 130, 246, 0.3);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-slate-950 text-slate-100 antialiased selection:bg-blue-500/30 selection:text-blue-200;
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  background-color: #030712;
+  background-image: 
+    radial-gradient(1200px 700px at 85% -5%, rgba(59, 130, 246, 0.14), transparent 65%),
+    radial-gradient(900px 600px at -10% 30%, rgba(16, 185, 129, 0.09), transparent 60%),
+    radial-gradient(800px 600px at 50% 110%, rgba(139, 92, 246, 0.08), transparent 65%),
+    radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.5), transparent 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* Tabular numbers */
 .num {
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
+
+/* Subtle background grid */
+.bg-grid-subtle {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}
+
+/* Sleek custom scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(51, 65, 85, 0.6) transparent;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.5);
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.8);
+}
+
+/* Glassmorphism surfaces */
+.glass-panel {
+  background: rgba(11, 15, 25, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.glass-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(11, 15, 25, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Modern Gradient Texts */
+.text-gradient {
+  @apply bg-gradient-to-r from-blue-400 via-indigo-300 to-emerald-300 bg-clip-text text-transparent;
+}
+
+.text-gradient-emerald {
+  @apply bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300 bg-clip-text text-transparent;
+}
+
+.text-gradient-amber {
+  @apply bg-gradient-to-r from-amber-400 via-orange-300 to-yellow-200 bg-clip-text text-transparent;
+}
+
+.text-gradient-purple {
+  @apply bg-gradient-to-r from-purple-400 via-violet-300 to-pink-300 bg-clip-text text-transparent;
+}
+
+/* Glowing outline effects */
+.glow-border {
+  position: relative;
+}
+.glow-border::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), transparent 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Shimmer gradient animation */
+.shimmer-effect {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+}
+
+/* Interactive lift helper */
+.hover-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px rgba(59, 130, 246, 0.15);
+}
+
