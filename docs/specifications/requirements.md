@@ -67,6 +67,15 @@ The system shall gracefully handle at least one payment/action failure without c
 ### FR-18: Dashboard
 The system shall provide a merchant-facing dashboard for revenue overview, leakage sources, recovery cases, agent decisions, and audit history.
 
+### FR-19: Multi-Channel Localized Outreach (Hinglish & English)
+The system shall generate simulated 1-click Razorpay payment links and localized customer notification templates (English and Hinglish) for payment link and customer notification recovery actions.
+
+### FR-20: Interactive Bounded Recovery & Stopping Rules Panel
+The system shall provide an interactive policy panel allowing merchants to configure approval thresholds and view active deterministic stopping rules (customer fatigue cap, risk blocks, high-value approval gate, compliance isolation).
+
+### FR-21: Explainable AI Decision Chain
+The system shall provide a step-by-step transparent visual inspection modal tracing raw failure ingestion, statistical clustering, LLM root-cause reasoning, Expected Value mathematical optimization, and policy gate enforcement.
+
 ## 4. AI REQUIREMENTS
 
 - **AI-01:** The AI shall reason over structured transaction and operational context.

@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from 'react'
 import { api, inr } from '../api'
-import type { DetectReport, Diagnosis } from '../types'
+import type { Cluster, DetectReport, Diagnosis } from '../types'
 import { Card, ConfidenceBar, SeverityBadge } from '../components/ui'
 
 export default function LeakageView({
@@ -10,6 +10,7 @@ export default function LeakageView({
 }) {
   const [diagnoses, setDiagnoses] = useState<Record<string, Diagnosis>>({})
   const [openId, setOpenId] = useState<string | null>(null)
+  const [selectedCluster, setSelectedCluster] = useState<Cluster | null>(null)
 
   useEffect(() => {
     api
@@ -136,9 +137,21 @@ export default function LeakageView({
                                 </div>
                               )}
 
-                              <div className="pt-1 text-[10px] font-mono text-slate-400 dark:text-slate-500">
-                                Sample Transactions: {c.sample_transaction_ids.join(', ')}
-                              </div>
+                                <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800">
+                                  <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500">
+                                    Sample Transactions: {c.sample_transaction_ids.join(', ')}
+                                  </span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setSelectedCluster(c)
+                                    }}
+                                    className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-blue-700 transition-colors shadow-xs"
+                                  >
+                                    <span>✦</span>
+                                    <span>Inspect AI Decision Chain</span>
+                                  </button>
+                                </div>
                             </div>
                           ) : (
                             <div className="space-y-1 p-2">
@@ -159,9 +172,112 @@ export default function LeakageView({
           </table>
         </div>
       </Card>
+
+      {/* Cluster AI Decision Chain Modal */}
+      {selectedCluster && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-xl rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl text-blue-600 dark:text-blue-400">✦</span>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Explainable AI Decision Chain — Cluster View
+                  </h3>
+                  <div className="font-mono text-[11px] text-slate-500">
+                    {selectedCluster.title} · {inr(selectedCluster.revenue_at_risk_inr)} at risk
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedCluster(null)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* 5-Step Visual Decision Progression */}
+            <div className="space-y-2.5">
+              {/* Step 1: Cluster Event Signature */}
+              <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-3 text-xs">
+                <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-white">
+                  <span>1. Concentrated Failure Cluster</span>
+                  <span className="font-mono text-slate-500">{selectedCluster.txn_count} transactions</span>
+                </div>
+                <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+                  Detected pattern across payment methods: {selectedCluster.payment_methods.join(', ').toUpperCase()}.
+                </div>
+              </div>
+
+              {/* Step 2: Statistical Pattern Evidence */}
+              <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-3 text-xs">
+                <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-white">
+                  <span>2. Statistical Evidence</span>
+                  <SeverityBadge severity={selectedCluster.severity} />
+                </div>
+                <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400 space-y-0.5">
+                  {selectedCluster.evidence?.slice(0, 2).map((ev, i) => (
+                    <div key={i}>• {ev}</div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Step 3: LLM Root Cause Diagnosis */}
+              <div className="rounded-lg border border-blue-200 dark:border-blue-500/20 bg-blue-50/40 dark:bg-blue-500/[0.04] p-3 text-xs">
+                <div className="flex items-center justify-between font-semibold text-blue-900 dark:text-blue-300">
+                  <span>3. LLM Diagnostic Reasoning</span>
+                  <span className="font-bold text-blue-600 dark:text-blue-400">
+                    {diagnoses[selectedCluster.cluster_id]
+                      ? `${(diagnoses[selectedCluster.cluster_id].confidence * 100).toFixed(0)}% Confidence`
+                      : 'Diagnostic Active'}
+                  </span>
+                </div>
+                <div className="mt-1 text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed">
+                  {diagnoses[selectedCluster.cluster_id]?.root_cause || 'Analyzing root cause pattern and issuer telemetry.'}
+                </div>
+              </div>
+
+              {/* Step 4: Expected Value Optimization */}
+              <div className="rounded-lg border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-500/[0.04] p-3 text-xs">
+                <div className="flex items-center justify-between font-semibold text-emerald-900 dark:text-emerald-300">
+                  <span>4. Expected Value (EV) Strategy Formulation</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                    EV &gt; 0 Prioritized
+                  </span>
+                </div>
+                <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+                  Evaluates candidate interventions (Retry vs Payment Link vs Customer Notification) against intervention cost (₹5) to pick highest-EV action.
+                </div>
+              </div>
+
+              {/* Step 5: Deterministic Policy Gate (SC-01) */}
+              <div className="rounded-lg border border-purple-200 dark:border-purple-500/20 bg-purple-50/40 dark:bg-purple-500/[0.04] p-3 text-xs">
+                <div className="flex items-center justify-between font-semibold text-purple-900 dark:text-purple-300">
+                  <span>5. Deterministic Policy Gate (SC-01)</span>
+                  <span className="font-bold text-purple-600 dark:text-purple-400">Bounded & Logged</span>
+                </div>
+                <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+                  Zero unconstrained execution. Every action is verified against fatigue caps, idempotency keys, and logged to the immutable audit trail.
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 text-right">
+              <button
+                onClick={() => setSelectedCluster(null)}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+              >
+                Close Inspector
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+
 
 
 

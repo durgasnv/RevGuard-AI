@@ -19,7 +19,7 @@ from app.schemas.transactions import (
     Transaction,
 )
 from app.strategy.ev_model import estimate_probability, expected_recovery_value
-from app.strategy.schemas import DecisionOutcome, StrategyDecision, StrategyPlan
+from app.strategy.schemas import DecisionOutcome, RecoveryOutreach, StrategyDecision, StrategyPlan
 
 CANDIDATE_ACTIONS = [
     RecoveryAction.RETRY_PAYMENT,
@@ -107,12 +107,50 @@ def decide(txn: Transaction) -> StrategyDecision:
         + (", burst-adjusted" if burst else "")
     )
 
+    if best_action in (RecoveryAction.SEND_PAYMENT_LINK, RecoveryAction.NOTIFY_CUSTOMER):
+        base.outreach = _generate_outreach(txn, best_action)
+
     # Rule 3 — high-value actions need approval even when automatable.
     if txn.amount_inr >= HIGH_VALUE_THRESHOLD_INR:
         base.outcome = DecisionOutcome.NEEDS_APPROVAL
         base.requires_approval = True
 
     return base
+
+
+def _generate_outreach(txn: Transaction, action: RecoveryAction) -> RecoveryOutreach:
+    import hashlib
+    h = hashlib.md5(txn.transaction_id.encode()).hexdigest()[:8]
+    link = f"https://rzp.io/i/rec_{h}"
+    amt_fmt = f"₹{txn.amount_inr:,.0f}"
+    clean_code = (txn.failure_code or "TEMPORARY_ISSUE").replace("_", " ").title()
+
+    if action == RecoveryAction.SEND_PAYMENT_LINK:
+        msg_en = (
+            f"Hi! Your payment of {amt_fmt} was interrupted ({clean_code}). "
+            f"Complete it in 1-click here: {link} (Valid for 24 hours)."
+        )
+        msg_hi = (
+            f"Namaste ji! Aapka {amt_fmt} ka payment bank issue ({clean_code}) ki wajah se complete nahi ho paya. "
+            f"Is 1-click link se turant payment complete karein: {link} (24 ghante valid)."
+        )
+    else:
+        msg_en = (
+            f"Action Required: Your payment attempt of {amt_fmt} requires attention ({clean_code}). "
+            f"Please update your details or re-authenticate here: {link}"
+        )
+        msg_hi = (
+            f"Zaroori Soochna: Aapke {amt_fmt} ke payment attempt me update ki zaroorat hai ({clean_code}). "
+            f"Kripya is link se verify ya details update karein: {link}"
+        )
+
+    return RecoveryOutreach(
+        payment_link=link,
+        message_en=msg_en,
+        message_hi=msg_hi,
+        channel="whatsapp",
+    )
+
 
 
 def build_plan(

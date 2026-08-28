@@ -264,3 +264,26 @@ The product consists of:
 - Evaluation against a baseline.
 - Razorpay-specific payment signals.
 - A complete audit trail.
+
+## 14. Multi-Channel Customer Outreach (Hinglish & English)
+
+When the AI selects `SEND_PAYMENT_LINK` or `NOTIFY_CUSTOMER`, the system automatically provisions:
+1. **Simulated/Real Razorpay Payment Link**: `https://rzp.io/i/rec_{tx_id_hash}` with a 24-hour expiry window.
+2. **Localized Message Templates**:
+   - **English**: Clear transaction context, error summary, and secure 1-click completion link.
+   - **Hinglish**: Culturally resonant conversational copy designed specifically for Indian retail and UPI checkout drop-off recovery.
+3. **Interactive Outreach Studio**: Mobile WhatsApp preview card allowing finance teams to inspect, copy, and simulate automated customer recovery dispatches.
+
+## 15. Bounded Recovery & Stopping Rules Panel
+
+To satisfy enterprise compliance and prevent unconstrained execution, the Recovery Control Tower enforces 4 deterministic stopping rules:
+- **Rule SC-01 (Risk Guard)**: Hard block on fraud-suspected cards (`FRAUD_SUSPECTED`, `RISK_BLOCKED`).
+- **Customer Fatigue Cap**: Hard stop preventing automated retries when attempt count $\ge 3$.
+- **Human Sign-Off Gate**: Configurable threshold (₹10,000 / ₹25,000 / ₹50,000) requiring finance manager sign-off on high-value transactions.
+- **Compliance Isolation**: Account restrictions (`ACCOUNT_FROZEN`, `KYC_PENDING`) routed directly to legal/compliance queues.
+
+## 16. Explainable AI Decision Chain Progression
+
+Every transaction decision is rendered transparent through an interactive 5-step decision chain:
+$$\text{Raw Failure Event} \xrightarrow{\text{Pattern Detection}} \text{Statistical Cluster} \xrightarrow{\text{LLM Diagnosis}} \text{Expected Value (EV) Math} \xrightarrow{\text{SC-01 Policy Gate}}$$
+

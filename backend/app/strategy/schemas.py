@@ -19,6 +19,13 @@ class DecisionOutcome(str, Enum):
     STOPPED = "stopped"            # no safe/economic action
 
 
+class RecoveryOutreach(BaseModel):
+    payment_link: str | None = None
+    message_en: str | None = None
+    message_hi: str | None = None
+    channel: str = "whatsapp"
+
+
 class StrategyDecision(BaseModel):
     transaction_id: str
     amount_inr: float
@@ -32,6 +39,7 @@ class StrategyDecision(BaseModel):
     requires_approval: bool = False
     outcome: DecisionOutcome = DecisionOutcome.QUEUED
     rank: int | None = None
+    outreach: RecoveryOutreach | None = None
 
 
 class StrategyPlan(BaseModel):
@@ -46,3 +54,4 @@ class StrategyPlan(BaseModel):
     @property
     def total_expected_recovery_inr(self) -> float:
         return round(sum(d.expected_recovery_value_inr for d in self.queue), 2)
+

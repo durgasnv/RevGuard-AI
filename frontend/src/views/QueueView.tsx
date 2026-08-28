@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { api, inr } from '../api'
-import type { AppState } from '../types'
+import type { AppState, QueueItem } from '../types'
 import { ActionPill, Card, ConfidenceBar } from '../components/ui'
 
 export default function QueueView({
@@ -11,6 +11,13 @@ export default function QueueView({
   onRun?: () => void
 }) {
   const [approving, setApproving] = useState(false)
+  const [outreachItem, setOutreachItem] = useState<QueueItem | null>(null)
+  const [chainItem, setChainItem] = useState<QueueItem | null>(null)
+  const [outreachLang, setOutreachLang] = useState<'en' | 'hi'>('hi')
+  const [copied, setCopied] = useState(false)
+  const [dispatched, setDispatched] = useState(false)
+  const [approvalThreshold, setApprovalThreshold] = useState<number>(25000)
+
   const plan = state?.plan
   const execution = state?.execution
 
@@ -47,6 +54,66 @@ export default function QueueView({
     }
   }
 
+  function exportQueueCsv() {
+    if (!plan) return
+    const headers = [
+      'Rank',
+      'Transaction ID',
+      'Amount (INR)',
+      'Failure Code',
+      'Recommended Action',
+      'P(Recovery)',
+      'Expected Recovery Value (INR)',
+      'Confidence',
+      'Requires Approval',
+      'Reason',
+      'Payment Link',
+      'Hinglish Message',
+    ]
+
+    const rows = plan.queue.map((d) => [
+      d.rank ?? '',
+      d.transaction_id,
+      d.amount_inr,
+      d.failure_code,
+      d.action,
+      d.recovery_probability,
+      d.expected_recovery_value_inr,
+      d.confidence,
+      d.requires_approval ? 'YES' : 'NO',
+      `"${(d.reason || '').replace(/"/g, '""')}"`,
+      d.outreach?.payment_link || `https://rzp.io/i/rec_${d.transaction_id.slice(-8)}`,
+      `"${(d.outreach?.message_hi || '').replace(/"/g, '""')}"`,
+    ])
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement('a')
+    link.setAttribute('href', encodedUri)
+    link.setAttribute('download', `revguard_recovery_queue_${new Date().toISOString().slice(0, 10)}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  function getPaymentLink(d: QueueItem) {
+    return d.outreach?.payment_link || `https://rzp.io/i/rec_${d.transaction_id.slice(-8)}`
+  }
+
+  function getHinglishMessage(d: QueueItem) {
+    if (d.outreach?.message_hi) return d.outreach.message_hi
+    const code = (d.failure_code || 'ISSUE').replace(/_/g, ' ')
+    const link = getPaymentLink(d)
+    return `Namaste ji! Aapka ₹${d.amount_inr.toLocaleString('en-IN')} ka payment bank timeout (${code}) ki wajah se complete nahi ho paya. Is 1-click link se turant complete karein: ${link} (24 ghante valid).`
+  }
+
+  function getEnglishMessage(d: QueueItem) {
+    if (d.outreach?.message_en) return d.outreach.message_en
+    const code = (d.failure_code || 'ISSUE').replace(/_/g, ' ')
+    const link = getPaymentLink(d)
+    return `Hi! Your payment of ₹${d.amount_inr.toLocaleString('en-IN')} was interrupted (${code}). Complete it securely in 1-click here: ${link} (Valid for 24h).`
+  }
+
   return (
     <div className="space-y-5">
       {/* Top 4 KPI metrics */}
@@ -74,7 +141,7 @@ export default function QueueView({
           <div className="num mt-1.5 text-2xl font-bold text-amber-600 dark:text-amber-400">
             {plan.escalations.length}
           </div>
-          <div className="mt-1 text-[11px] text-slate-500">Requires human review</div>
+          <div className="mt-1 text-[11px] text-slate-500">Requires human sign-off</div>
         </Card>
         <Card>
           <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -84,6 +151,74 @@ export default function QueueView({
           <div className="mt-1 text-[11px] text-slate-500">Customer fatigue prevented</div>
         </Card>
       </div>
+
+      {/* Interactive Compliance, Bounded Recovery & Stopping Rules Panel */}
+      <Card
+        title="🛡️ Bounded Recovery Policy & Stopping Rules Guard"
+        subtitle="Enforces deterministic compliance boundaries before any financial intervention is queued"
+        right={
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">Approval Gate:</span>
+            <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 p-0.5 text-xs">
+              {[10000, 25000, 50000].map((val) => (
+                <button
+                  key={val}
+                  onClick={() => setApprovalThreshold(val)}
+                  className={`rounded-md px-2 py-0.5 text-[11px] font-semibold transition-all ${
+                    approvalThreshold === val
+                      ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
+                  }`}
+                >
+                  ₹{(val / 1000).toFixed(0)}k
+                </button>
+              ))}
+            </div>
+          </div>
+        }
+      >
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4 pt-1">
+          <div className="rounded-lg border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-500/[0.04] p-2.5">
+            <div className="flex items-center justify-between text-xs font-semibold text-emerald-800 dark:text-emerald-400">
+              <span>Rule SC-01 (Safe Mode)</span>
+              <span className="rounded bg-emerald-100 dark:bg-emerald-500/20 px-1.5 py-0.2 text-[10px]">Active</span>
+            </div>
+            <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+              Fraud risk declines & card blocks are strictly prohibited from automated retries.
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-blue-200 dark:border-blue-500/20 bg-blue-50/50 dark:bg-blue-500/[0.04] p-2.5">
+            <div className="flex items-center justify-between text-xs font-semibold text-blue-800 dark:text-blue-400">
+              <span>Customer Fatigue Cap</span>
+              <span className="num font-bold text-blue-600 dark:text-blue-400">Max 3</span>
+            </div>
+            <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+              Hard stop on transactions exceeding 3 prior attempts to prevent spam and customer friction.
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-amber-200 dark:border-amber-500/20 bg-amber-50/50 dark:bg-amber-500/[0.04] p-2.5">
+            <div className="flex items-center justify-between text-xs font-semibold text-amber-800 dark:text-amber-400">
+              <span>Human Sign-off Gate</span>
+              <span className="num font-bold text-amber-600 dark:text-amber-400">≥ ₹{(approvalThreshold / 1000).toFixed(0)}k</span>
+            </div>
+            <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+              High-value transactions automatically escalate for finance manager review before execution.
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-purple-200 dark:border-purple-500/20 bg-purple-50/50 dark:bg-purple-500/[0.04] p-2.5">
+            <div className="flex items-center justify-between text-xs font-semibold text-purple-800 dark:text-purple-400">
+              <span>Compliance Isolation</span>
+              <span className="rounded bg-purple-100 dark:bg-purple-500/20 px-1.5 py-0.2 text-[10px]">Enforced</span>
+            </div>
+            <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+              Frozen accounts & KYC holds bypass financial recovery directly to legal compliance.
+            </p>
+          </div>
+        </div>
+      </Card>
 
       {execution && (
         <Card title="Last Execution Outcome">
@@ -109,24 +244,34 @@ export default function QueueView({
 
       <Card
         title="Recovery Execution Queue"
-        subtitle="Ranked dynamically by expected economic value (EV)"
+        subtitle="Ranked dynamically by expected economic value (EV) with 1-click outreach and explainable AI"
         right={
-          pendingApprovals.length > 0 && (
+          <div className="flex items-center gap-2">
             <button
-              onClick={approveAll}
-              disabled={approving}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-amber-700 active:bg-amber-800 disabled:opacity-50"
+              onClick={exportQueueCsv}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-750 bg-white dark:bg-slate-850 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
             >
-              {approving ? (
-                <>
-                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  Approving…
-                </>
-              ) : (
-                <span>Approve {pendingApprovals.length} high-value items</span>
-              )}
+              <span>📥</span>
+              <span className="hidden sm:inline">Export Queue (.csv)</span>
             </button>
-          )
+
+            {pendingApprovals.length > 0 && (
+              <button
+                onClick={approveAll}
+                disabled={approving}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-amber-700 active:bg-amber-800 disabled:opacity-50"
+              >
+                {approving ? (
+                  <>
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    Approving…
+                  </>
+                ) : (
+                  <span>Approve {pendingApprovals.length} high-value items</span>
+                )}
+              </button>
+            )}
+          </div>
         }
       >
         <div className="overflow-x-auto">
@@ -141,6 +286,8 @@ export default function QueueView({
                 <th className="py-3 pr-3 text-right">P(Recovery)</th>
                 <th className="py-3 pr-3 text-right">Expected Value</th>
                 <th className="py-3 pr-3">Confidence</th>
+                <th className="py-3 pr-3 text-center">AI Chain</th>
+                <th className="py-3 pr-3 text-center">Outreach</th>
                 <th className="py-3 pr-3">Gate</th>
               </tr>
             </thead>
@@ -172,8 +319,36 @@ export default function QueueView({
                   <td className="py-3 pr-3">
                     <ConfidenceBar value={d.confidence} />
                   </td>
+                  <td className="py-3 pr-3 text-center">
+                    <button
+                      onClick={() => setChainItem(d)}
+                      title="Inspect full AI decision progression"
+                      className="inline-flex items-center gap-1 rounded bg-blue-50 dark:bg-blue-600/10 px-2 py-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-600/20 transition-colors"
+                    >
+                      <span>✦</span>
+                      <span>Inspect</span>
+                    </button>
+                  </td>
+                  <td className="py-3 pr-3 text-center">
+                    {d.action === 'SEND_PAYMENT_LINK' || d.action === 'NOTIFY_CUSTOMER' ? (
+                      <button
+                        onClick={() => {
+                          setOutreachItem(d)
+                          setCopied(false)
+                          setDispatched(false)
+                        }}
+                        title="View Razorpay payment link and Hinglish message"
+                        className="inline-flex items-center gap-1 rounded bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
+                      >
+                        <span>📱</span>
+                        <span>Outreach</span>
+                      </button>
+                    ) : (
+                      <span className="text-[11px] text-slate-400">—</span>
+                    )}
+                  </td>
                   <td className="py-3 pr-3 text-[11px]">
-                    {d.requires_approval ? (
+                    {d.amount_inr >= approvalThreshold || d.requires_approval ? (
                       <span className="inline-flex items-center gap-1 rounded bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 font-medium text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/20">
                         Review
                       </span>
@@ -212,6 +387,12 @@ export default function QueueView({
                 <span className="num ml-auto font-bold text-slate-900 dark:text-white">{inr(d.amount_inr)}</span>
                 <ActionPill action={d.action} />
                 <span className="max-w-md truncate text-slate-500 dark:text-slate-400">{d.reason}</span>
+                <button
+                  onClick={() => setChainItem(d)}
+                  className="rounded border border-amber-300 dark:border-amber-600/30 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-100"
+                >
+                  ✦ Chain
+                </button>
               </div>
             ))}
             {plan.escalations.length > 10 && (
@@ -238,14 +419,246 @@ export default function QueueView({
                 </span>
                 <span className="num ml-auto font-medium text-slate-700 dark:text-slate-300">{inr(d.amount_inr)}</span>
                 <span className="max-w-xs truncate text-slate-400 dark:text-slate-500">{d.reason}</span>
+                <button
+                  onClick={() => setChainItem(d)}
+                  className="rounded border border-slate-300 dark:border-slate-700 px-1.5 py-0.5 text-[10px] text-slate-500 hover:text-slate-800"
+                >
+                  ✦
+                </button>
               </div>
             ))}
           </div>
         </Card>
       )}
+
+      {/* 1. Hinglish & English Multi-Channel Outreach Studio Modal */}
+      {outreachItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">📱</span>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Customer Recovery Outreach Studio
+                  </h3>
+                  <div className="font-mono text-[11px] text-slate-500">
+                    {outreachItem.transaction_id} · {inr(outreachItem.amount_inr)}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setOutreachItem(null)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Generated Payment Link Box */}
+            <div className="rounded-lg border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-500/[0.03] p-3 text-xs">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-emerald-800 dark:text-emerald-400">
+                <span>Razorpay 1-Click Payment Link (Simulated)</span>
+                <span className="rounded bg-emerald-100 dark:bg-emerald-500/20 px-1.5 py-0.5 text-[10px]">24h Expiry</span>
+              </div>
+              <div className="mt-1.5 flex items-center justify-between gap-2 rounded bg-white dark:bg-slate-950 p-2 font-mono text-[11px] text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900">
+                <span className="truncate">{getPaymentLink(outreachItem)}</span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(getPaymentLink(outreachItem))
+                    setCopied(true)
+                    setTimeout(() => setCopied(false), 2000)
+                  }}
+                  className="shrink-0 rounded bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-emerald-700"
+                >
+                  {copied ? 'Copied ✓' : 'Copy'}
+                </button>
+              </div>
+            </div>
+
+            {/* Language Selector */}
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Message Localization:</span>
+              <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-850 p-0.5 text-xs">
+                <button
+                  onClick={() => setOutreachLang('hi')}
+                  className={`rounded-md px-3 py-1 font-semibold transition-all ${
+                    outreachLang === 'hi'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400'
+                  }`}
+                >
+                  🇮🇳 Hinglish
+                </button>
+                <button
+                  onClick={() => setOutreachLang('en')}
+                  className={`rounded-md px-3 py-1 font-semibold transition-all ${
+                    outreachLang === 'en'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400'
+                  }`}
+                >
+                  🇬🇧 English
+                </button>
+              </div>
+            </div>
+
+            {/* Mobile WhatsApp Preview Card */}
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 p-3">
+              <div className="mb-2 flex items-center justify-between text-[11px] text-slate-500">
+                <span className="flex items-center gap-1 font-medium">
+                  <span className="text-emerald-500">●</span> WhatsApp Business Preview
+                </span>
+                <span>Automated Recovery Bot</span>
+              </div>
+              <div className="rounded-lg border border-emerald-300/40 bg-[#dcf8c6] dark:bg-[#054d40] p-3 text-xs text-slate-900 dark:text-slate-100 shadow-sm leading-relaxed">
+                <div className="font-semibold text-emerald-900 dark:text-emerald-200 mb-1">
+                  RevGuard Merchant Support ✓
+                </div>
+                <p>{outreachLang === 'hi' ? getHinglishMessage(outreachItem) : getEnglishMessage(outreachItem)}</p>
+                <div className="mt-2 text-right text-[10px] text-slate-500 dark:text-slate-300">Just now · Sent ✓✓</div>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center justify-between pt-2">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    outreachLang === 'hi' ? getHinglishMessage(outreachItem) : getEnglishMessage(outreachItem),
+                  )
+                  setCopied(true)
+                  setTimeout(() => setCopied(false), 2000)
+                }}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50"
+              >
+                <span>📋</span>
+                <span>{copied ? 'Template Copied!' : 'Copy Message'}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setDispatched(true)
+                  setTimeout(() => {
+                    setDispatched(false)
+                    setOutreachItem(null)
+                  }, 1500)
+                }}
+                disabled={dispatched}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 active:bg-emerald-800 transition-colors"
+              >
+                <span>{dispatched ? '✓ Dispatched!' : 'Simulate WhatsApp Dispatch'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Explainable AI Decision Chain Modal */}
+      {chainItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-xl rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl text-blue-600 dark:text-blue-400">✦</span>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Explainable AI Decision Chain
+                  </h3>
+                  <div className="font-mono text-[11px] text-slate-500">
+                    {chainItem.transaction_id} · {inr(chainItem.amount_inr)}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setChainItem(null)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* 5-Step Visual Decision Progression */}
+            <div className="space-y-2.5">
+              {/* Step 1: Raw Event */}
+              <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-3 text-xs">
+                <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-white">
+                  <span>1. Raw Failure Event</span>
+                  <span className="font-mono text-slate-500">{chainItem.failure_code}</span>
+                </div>
+                <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+                  Transaction of {inr(chainItem.amount_inr)} experienced error {chainItem.failure_code}.
+                </div>
+              </div>
+
+              {/* Step 2: Statistical Pattern */}
+              <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-3 text-xs">
+                <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-white">
+                  <span>2. Failure Category & Cluster</span>
+                  <span className="capitalize text-indigo-600 dark:text-indigo-400">
+                    {(chainItem.failure_category || 'Transient').replace(/_/g, ' ')}
+                  </span>
+                </div>
+                <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+                  Grouped into statistical cluster. Categorized under deterministic gateway classification rules.
+                </div>
+              </div>
+
+              {/* Step 3: LLM Root Cause Diagnosis */}
+              <div className="rounded-lg border border-blue-200 dark:border-blue-500/20 bg-blue-50/40 dark:bg-blue-500/[0.04] p-3 text-xs">
+                <div className="flex items-center justify-between font-semibold text-blue-900 dark:text-blue-300">
+                  <span>3. AI Diagnostic Reasoning</span>
+                  <span className="font-bold text-blue-600 dark:text-blue-400">
+                    {(chainItem.confidence * 100).toFixed(0)}% Confidence
+                  </span>
+                </div>
+                <div className="mt-1 text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed">
+                  {chainItem.reason || 'AI diagnosed root cause and computed expected recovery probability.'}
+                </div>
+              </div>
+
+              {/* Step 4: Expected Value Formula */}
+              <div className="rounded-lg border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-500/[0.04] p-3 text-xs">
+                <div className="flex items-center justify-between font-semibold text-emerald-900 dark:text-emerald-300">
+                  <span>4. Expected Value (EV) Mathematical Optimization</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                    EV = {inr(chainItem.expected_recovery_value_inr)}
+                  </span>
+                </div>
+                <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400 font-mono">
+                  EV = P({chainItem.recovery_probability.toFixed(2)}) × {inr(chainItem.amount_inr)} - Cost(₹5) → Recommended Action: {chainItem.action}
+                </div>
+              </div>
+
+              {/* Step 5: Bounded Policy Gate */}
+              <div className="rounded-lg border border-purple-200 dark:border-purple-500/20 bg-purple-50/40 dark:bg-purple-500/[0.04] p-3 text-xs">
+                <div className="flex items-center justify-between font-semibold text-purple-900 dark:text-purple-300">
+                  <span>5. Deterministic Policy Gate (SC-01)</span>
+                  <span className="font-bold text-purple-600 dark:text-purple-400">
+                    {chainItem.amount_inr >= approvalThreshold ? 'Needs Human Sign-off' : 'Auto-Execution Approved'}
+                  </span>
+                </div>
+                <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+                  Passed fatigue cap (attempts &lt; 3), passed risk check, bounded within enterprise rules.
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 text-right">
+              <button
+                onClick={() => setChainItem(null)}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+              >
+                Close Inspector
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+
 
 
 

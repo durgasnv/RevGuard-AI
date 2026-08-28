@@ -48,17 +48,26 @@ export interface DiagnoseReport {
   diagnoses: Diagnosis[]
 }
 
+export interface OutreachInfo {
+  payment_link?: string
+  message_en?: string
+  message_hi?: string
+  channel?: string
+}
+
 export interface QueueItem {
   transaction_id: string
-  rank: number
+  rank?: number
   amount_inr: number
   failure_code: string
+  failure_category?: string
   action: Action
   recovery_probability: number
   expected_recovery_value_inr: number
   confidence: number
   requires_approval: boolean
   reason: string
+  outreach?: OutreachInfo
 }
 
 export interface Plan {
