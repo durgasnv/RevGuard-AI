@@ -173,3 +173,53 @@ export interface AnalyzeReport {
   diagnoses: AnalyzeDiagnosis[]
   notification_summary: Record<string, unknown>
 }
+
+export type AgingBucket = '1_30_days' | '31_60_days' | '61_90_days' | '90_plus_days'
+export type InvoiceStatus = 'overdue' | 'promised_to_pay' | 'recovered' | 'escalated_legal'
+export type DunningStage = 'gentle_nudge' | 'invoice_link' | 'finance_director' | 'legal_notice'
+
+export interface PTPCommitment {
+  promised_date: string
+  promised_amount_inr: number
+  recorded_at: string
+  notes: string
+}
+
+export interface B2BInvoice {
+  invoice_id: string
+  client_name: string
+  client_contact: string
+  client_email: string
+  amount_inr: number
+  due_date: string
+  overdue_days: number
+  aging_bucket: AgingBucket
+  status: InvoiceStatus
+  dunning_stage: DunningStage
+  ptp?: PTPCommitment
+  payment_link: string
+  timeline: string[]
+}
+
+export interface B2BSummary {
+  total_invoices: number
+  total_overdue_inr: number
+  total_ptp_committed_inr: number
+  total_recovered_inr: number
+  total_high_risk_inr: number
+}
+
+export interface B2BResponse {
+  invoices: B2BInvoice[]
+  summary: B2BSummary
+}
+
+export interface WebhookEvent {
+  event_id: string
+  event: string
+  amount_inr: number
+  payment_method: string
+  error_code: string
+  timestamp: string
+}
+

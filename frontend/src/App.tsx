@@ -6,8 +6,9 @@ import LeakageView from './views/LeakageView'
 import OverviewView from './views/OverviewView'
 import QueueView from './views/QueueView'
 import AnalyzeView from './views/AnalyzeView'
+import B2BView from './views/B2BView'
 
-type TabId = 'overview' | 'leakage' | 'queue' | 'audit' | 'analyze'
+type TabId = 'overview' | 'leakage' | 'queue' | 'b2b' | 'audit' | 'analyze'
 
 interface NavItem {
   id: TabId
@@ -39,9 +40,15 @@ const NAV: NavItem[] = [
     badge: (_r, state) => (state?.plan?.queue.length ? state.plan.queue.length : null),
   },
   {
+    id: 'b2b',
+    label: 'B2B & PTP Tracker',
+    icon: '📋',
+    desc: 'Corporate aging & PTP chaser',
+  },
+  {
     id: 'audit',
     label: 'Audit Trail',
-    icon: '📋',
+    icon: '🛡️',
     desc: 'Consequential decision logs',
     badge: (_r, state) =>
       state?.execution?.audit_trail.length ? state.execution.audit_trail.length : null,
@@ -114,6 +121,7 @@ export default function App() {
   const [detectReport, setDetectReport] = useState<DetectReport | null>(null)
   const [state, setState] = useState<AppState | null>(null)
   const [busy, setBusy] = useState(false)
+  const [showWebhookSim, setShowWebhookSim] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('revguard_theme')
     return saved === 'dark' ? 'dark' : 'light'
@@ -318,6 +326,14 @@ export default function App() {
               <ThemeToggle theme={theme} setTheme={setTheme} />
 
               <button
+                onClick={() => setShowWebhookSim(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 dark:border-purple-500/20 bg-purple-50 dark:bg-purple-950/40 px-3 py-1.5 text-xs font-semibold text-purple-700 dark:text-purple-300 hover:bg-purple-100 transition-colors shadow-xs"
+              >
+                <span>⚡</span>
+                <span>Sim Webhook</span>
+              </button>
+
+              <button
                 onClick={runRecovery}
                 disabled={busy}
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 active:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
@@ -374,9 +390,112 @@ export default function App() {
           )}
           {tab === 'leakage' && <LeakageView detectReport={detectReport} />}
           {tab === 'queue' && <QueueView state={state} onRun={runRecovery} />}
+          {tab === 'b2b' && <B2BView />}
           {tab === 'audit' && <AuditView state={state} />}
           {tab === 'analyze' && <AnalyzeView />}
         </main>
+
+        {/* Live Webhook Simulator Modal */}
+        {showWebhookSim && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+            <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xl space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">⚡</span>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Live Razorpay Webhook Simulator
+                    </h3>
+                    <div className="text-[11px] text-slate-500">
+                      Inject real-time asynchronous payment events
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowWebhookSim(false)}
+                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-2 text-xs">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Select Event Payload to Trigger:
+                </div>
+
+                <button
+                  onClick={async () => {
+                    await api.fireWebhook({
+                      event: 'payment.failed',
+                      amount_inr: 4500,
+                      payment_method: 'upi',
+                      error_code: 'UPI_COLLECT_DECLINED',
+                    })
+                    alert('⚡ Webhook payment.failed (UPI_COLLECT_DECLINED - ₹4,500) received!')
+                    setShowWebhookSim(false)
+                    refresh()
+                  }}
+                  className="w-full text-left rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-3 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <div className="flex items-center justify-between font-bold text-slate-900 dark:text-white">
+                    <span>🔴 payment.failed</span>
+                    <span className="font-mono text-purple-600 dark:text-purple-400">₹4,500</span>
+                  </div>
+                  <div className="mt-1 text-[11px] text-slate-500">
+                    UPI collect request timed out on PhonePe/GPay handle.
+                  </div>
+                </button>
+
+                <button
+                  onClick={async () => {
+                    await api.fireWebhook({
+                      event: 'payment.failed',
+                      amount_inr: 18500,
+                      payment_method: 'card',
+                      error_code: 'GATEWAY_TIMEOUT',
+                    })
+                    alert('⚡ Webhook payment.failed (GATEWAY_TIMEOUT - ₹18,500) received!')
+                    setShowWebhookSim(false)
+                    refresh()
+                  }}
+                  className="w-full text-left rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-3 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <div className="flex items-center justify-between font-bold text-slate-900 dark:text-white">
+                    <span>🟠 payment.failed</span>
+                    <span className="font-mono text-purple-600 dark:text-purple-400">₹18,500</span>
+                  </div>
+                  <div className="mt-1 text-[11px] text-slate-500">
+                    HDFC Acquiring switch latency spike on credit card checkout.
+                  </div>
+                </button>
+
+                <button
+                  onClick={async () => {
+                    await api.fireWebhook({
+                      event: 'payment.captured',
+                      amount_inr: 4500,
+                      payment_method: 'upi',
+                      error_code: 'NONE',
+                    })
+                    alert('⚡ Webhook payment.captured (₹4,500 settled via 1-Click Link) received!')
+                    setShowWebhookSim(false)
+                    refresh()
+                  }}
+                  className="w-full text-left rounded-lg border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-500/[0.04] p-3 hover:bg-emerald-100/60 transition-colors"
+                >
+                  <div className="flex items-center justify-between font-bold text-emerald-900 dark:text-emerald-300">
+                    <span>🟢 payment.captured</span>
+                    <span className="font-mono text-emerald-600 dark:text-emerald-400">₹4,500</span>
+                  </div>
+                  <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+                    Customer completed recovery payment through generated 1-click Razorpay link!
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Global Footer */}
         <footer className="border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#0e121b] px-4 py-3 text-center text-xs text-slate-500 dark:text-slate-500 lg:px-8 transition-colors">

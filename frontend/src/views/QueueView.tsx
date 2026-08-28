@@ -13,6 +13,10 @@ export default function QueueView({
   const [approving, setApproving] = useState(false)
   const [outreachItem, setOutreachItem] = useState<QueueItem | null>(null)
   const [chainItem, setChainItem] = useState<QueueItem | null>(null)
+  const [voiceItem, setVoiceItem] = useState<QueueItem | null>(null)
+  const [voiceStatus, setVoiceStatus] = useState<'connecting' | 'connected' | 'completed'>('connected')
+  const [voiceStep, setVoiceStep] = useState<number>(1)
+  const [isSpeaking, setIsSpeaking] = useState(false)
   const [outreachLang, setOutreachLang] = useState<'en' | 'hi'>('hi')
   const [copied, setCopied] = useState(false)
   const [dispatched, setDispatched] = useState(false)
@@ -20,6 +24,35 @@ export default function QueueView({
 
   const plan = state?.plan
   const execution = state?.execution
+
+  function speakText(text: string) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel()
+      const clean = text.replace(/[*_#₹]/g, '').replace(/https:\/\/\S+/g, 'link')
+      const utterance = new SpeechSynthesisUtterance(clean)
+      utterance.rate = 0.95
+      utterance.pitch = 1.05
+      
+      // Try to pick an Indian English / Hindi voice if available
+      const voices = window.speechSynthesis.getVoices()
+      const indianVoice = voices.find((v) => v.lang.includes('IN') || v.name.includes('India') || v.lang.includes('hi'))
+      if (indianVoice) utterance.voice = indianVoice
+      
+      utterance.onstart = () => setIsSpeaking(true)
+      utterance.onend = () => setIsSpeaking(false)
+      utterance.onerror = () => setIsSpeaking(false)
+      window.speechSynthesis.speak(utterance)
+    }
+  }
+
+  function startVoiceCall(d: QueueItem) {
+    setVoiceItem(d)
+    setVoiceStatus('connected')
+    setVoiceStep(1)
+    const intro = `Namaste ji! Main Merchant Recovery Desk se AI voice assistant bol raha hoon. Aapka ₹${d.amount_inr.toLocaleString('en-IN')} ka payment bank timeout ki wajah se atak gaya tha. Kya main aapke WhatsApp pe 1-click retry link bhej doon?`
+    setTimeout(() => speakText(intro), 400)
+  }
+
 
   const pendingApprovals = useMemo(
     () =>
@@ -288,6 +321,7 @@ export default function QueueView({
                 <th className="py-3 pr-3">Confidence</th>
                 <th className="py-3 pr-3 text-center">AI Chain</th>
                 <th className="py-3 pr-3 text-center">Outreach</th>
+                <th className="py-3 pr-3 text-center">Voice Bot</th>
                 <th className="py-3 pr-3">Gate</th>
               </tr>
             </thead>
@@ -347,6 +381,16 @@ export default function QueueView({
                       <span className="text-[11px] text-slate-400">—</span>
                     )}
                   </td>
+                  <td className="py-3 pr-3 text-center">
+                    <button
+                      onClick={() => startVoiceCall(d)}
+                      title="Launch interactive Hinglish AI voice recovery call"
+                      className="inline-flex items-center gap-1 rounded bg-purple-50 dark:bg-purple-500/10 px-2 py-1 text-[11px] font-semibold text-purple-700 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-500/20 transition-colors"
+                    >
+                      <span>📞</span>
+                      <span>Call Bot</span>
+                    </button>
+                  </td>
                   <td className="py-3 pr-3 text-[11px]">
                     {d.amount_inr >= approvalThreshold || d.requires_approval ? (
                       <span className="inline-flex items-center gap-1 rounded bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 font-medium text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/20">
@@ -369,6 +413,7 @@ export default function QueueView({
           )}
         </div>
       </Card>
+
 
       {plan.escalations.length > 0 && (
         <Card
@@ -655,9 +700,165 @@ export default function QueueView({
           </div>
         </div>
       )}
+
+      {/* 3. Hinglish AI Voice Recovery Call Bot Simulator Modal */}
+      {voiceItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-600 text-lg font-bold text-white shadow-sm">
+                  🎙️
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Hinglish AI Voice Recovery Bot
+                  </h3>
+                  <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                    <span>{voiceItem.transaction_id}</span>
+                    <span>·</span>
+                    <span className="font-bold text-purple-600 dark:text-purple-400">{inr(voiceItem.amount_inr)}</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+                  setVoiceItem(null)
+                }}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Simulated Live Call Banner */}
+            <div className="rounded-xl border border-purple-200 dark:border-purple-500/20 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/40 dark:to-indigo-950/40 p-4 text-center">
+              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 dark:bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                <span>Live Call Connected (00:24)</span>
+              </div>
+
+              {/* Animated Sound Waveform Indicator */}
+              <div className="mt-3 flex items-center justify-center gap-1.5 h-6">
+                {[40, 75, 90, 60, 100, 45, 80, 55, 95, 30].map((h, i) => (
+                  <span
+                    key={i}
+                    style={{ height: isSpeaking ? `${h}%` : '20%' }}
+                    className="w-1.5 rounded-full bg-purple-600 dark:bg-purple-400 transition-all duration-150"
+                  />
+                ))}
+              </div>
+              <div className="mt-1.5 text-[11px] text-purple-700 dark:text-purple-300 font-medium">
+                {isSpeaking ? 'AI Voice Speaking in Hinglish…' : 'Listening for customer response…'}
+              </div>
+            </div>
+
+            {/* Interactive Dialogue Progression */}
+            <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+              {/* Turn 1: AI Intro */}
+              <div className="flex gap-2 text-xs">
+                <span className="shrink-0 font-bold text-purple-600 dark:text-purple-400">AI:</span>
+                <div className="rounded-lg bg-purple-50 dark:bg-purple-950/60 p-2.5 text-slate-800 dark:text-slate-200 border border-purple-100 dark:border-purple-900 leading-relaxed">
+                  "Namaste ji! Main Merchant Recovery Desk se AI voice assistant bol raha hoon. Aapka {inr(voiceItem.amount_inr)} ka payment bank timeout ki wajah se fail ho gaya tha. Kya main aapke WhatsApp pe 1-click retry link bhej doon?"
+                </div>
+              </div>
+
+              {/* Turn 2: Customer Response Options */}
+              {voiceStep === 1 && (
+                <div className="space-y-1.5 pl-6 pt-1">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Select Simulated Customer Reply:
+                  </div>
+                  <button
+                    onClick={() => {
+                      setVoiceStep(2)
+                      const reply = "Dhanyawad! 1-click Razorpay payment link aapke WhatsApp (+91 98765 43210) pe bhej diya gaya hai. 15 minute me payment complete kar sakte hain."
+                      speakText(reply)
+                    }}
+                    className="w-full text-left rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50/60 dark:bg-emerald-950/40 p-2 text-xs font-semibold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 transition-colors"
+                  >
+                    💬 "Haan, mere WhatsApp pe 1-click link send kar do"
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setVoiceStep(3)
+                      const reply = "Theek hai! Naya UPI collect request aapke VPA handle pe raise kar diya gaya hai. Kripya app me approve karein."
+                      speakText(reply)
+                    }}
+                    className="w-full text-left rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50/60 dark:bg-blue-950/40 p-2 text-xs font-semibold text-blue-800 dark:text-blue-300 hover:bg-blue-100 transition-colors"
+                  >
+                    ⚡ "Alternate UPI ID pe collect request raise karo"
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setVoiceStep(4)
+                      const reply = "Bahut achha ji! Maine aapke liye Friday ka Promise-to-Pay reminder set kar diya hai. Tab tak order reserved rahega."
+                      speakText(reply)
+                    }}
+                    className="w-full text-left rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50/60 dark:bg-amber-950/40 p-2 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition-colors"
+                  >
+                    📅 "Main Friday ko pay karunga (Promise to Pay)"
+                  </button>
+                </div>
+              )}
+
+              {/* Turn 3: AI Outcome */}
+              {voiceStep > 1 && (
+                <>
+                  <div className="flex gap-2 text-xs">
+                    <span className="shrink-0 font-bold text-slate-500">Customer:</span>
+                    <div className="rounded-lg bg-slate-100 dark:bg-slate-800 p-2 text-slate-700 dark:text-slate-300 italic">
+                      {voiceStep === 2 && '"Haan, mere WhatsApp pe 1-click link send kar do"'}
+                      {voiceStep === 3 && '"Alternate UPI ID pe collect request raise karo"'}
+                      {voiceStep === 4 && '"Main Friday ko pay karunga (Promise to Pay)"'}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 text-xs">
+                    <span className="shrink-0 font-bold text-purple-600 dark:text-purple-400">AI:</span>
+                    <div className="rounded-lg bg-purple-50 dark:bg-purple-950/60 p-2.5 text-slate-800 dark:text-slate-200 border border-purple-100 dark:border-purple-900 leading-relaxed font-medium">
+                      {voiceStep === 2 && '“Dhanyawad! 1-click Razorpay payment link aapke WhatsApp (+91 98765 43210) pe bhej diya gaya hai. 15 minute me payment complete kar sakte hain.”'}
+                      {voiceStep === 3 && '“Theek hai! Naya UPI collect request aapke VPA handle pe raise kar diya gaya hai. Kripya app me approve karein.”'}
+                      {voiceStep === 4 && '“Bahut achha ji! Maine aapke liye Friday ka Promise-to-Pay reminder set kar diya hai. Tab tak order reserved rahega.”'}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                onClick={() => {
+                  const intro = `Namaste ji! Main Merchant Recovery Desk se AI voice assistant bol raha hoon. Aapka ₹${voiceItem.amount_inr.toLocaleString('en-IN')} ka payment bank timeout ki wajah se atak gaya tha. Kya main aapke WhatsApp pe 1-click retry link bhej doon?`
+                  speakText(intro)
+                }}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50"
+              >
+                <span>🔊</span>
+                <span>Replay AI Voice</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+                  setVoiceItem(null)
+                }}
+                className="rounded-lg bg-rose-600 px-4 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-rose-700 transition-colors"
+              >
+                End Call
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+
 
 
 

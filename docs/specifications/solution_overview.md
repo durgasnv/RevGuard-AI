@@ -287,3 +287,29 @@ To satisfy enterprise compliance and prevent unconstrained execution, the Recove
 Every transaction decision is rendered transparent through an interactive 5-step decision chain:
 $$\text{Raw Failure Event} \xrightarrow{\text{Pattern Detection}} \text{Statistical Cluster} \xrightarrow{\text{LLM Diagnosis}} \text{Expected Value (EV) Math} \xrightarrow{\text{SC-01 Policy Gate}}$$
 
+## 17. Hinglish AI Voice Agent & Call Bot Simulator
+
+For high-ticket transaction failures and abandoned checkouts, RevGuard-AI provides an interactive Hinglish Voice Recovery Bot powered by browser Web Speech synthesis:
+- Automated calling interface with real-time waveform modulation.
+- Dynamic conversational Hinglish dialogue explaining gateway switch latency and offering 1-click WhatsApp payment links.
+- Interactive multi-turn dialogue allowing simulated customer confirmation or Promise-to-Pay registration.
+
+## 18. B2B Receivables & Promise-to-Pay (PTP) Tracker
+
+For corporate and B2B SaaS merchants, the Control Tower provides an aging receivables ledger:
+- **Aging Buckets**: Categorizes overdue receivables into *1–30d*, *31–60d*, *61–90d*, and *90+d (Critical)*.
+- **Promise-to-Pay (PTP) Commitment Tracking**: Records client commitments (date, promised amount, verification notes).
+- **Autonomous Dunning Chaser**: 4-stage escalating dunning workflow (*Gentle Nudge* $\rightarrow$ *1-Click Corporate Link* $\rightarrow$ *CFO Escalation* $\rightarrow$ *Formal Demand Notice*).
+
+## 19. UPI AutoPay & Recurring Mandate Smart Retry Sequencer
+
+Synchronizes recurring mandate retries (e-NACH / UPI AutoPay) with customer salary & liquidity cycles:
+- **Stage 1 (T+2h)**: Transient gateway ping to check acquiring switch health.
+- **Stage 2 (T+24h, 9:00 AM)**: Peak Liquidity Window (Fires post-salary credit window with 78% historical recovery).
+- **Stage 3 (T+72h)**: 1-Click Alternate UPI Link dispatched before subscription cancellation.
+
+## 20. Real-Time Gateway Webhook Simulator
+
+An interactive asynchronous event generator allowing merchants to fire live `payment.failed` and `payment.captured` webhooks into the system and monitor real-time recovery responses.
+
+

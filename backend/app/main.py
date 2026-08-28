@@ -561,6 +561,121 @@ async def analyze_upload(
     }
 
 
+# ── B2B Receivables & Promise-to-Pay (PTP) Endpoints ─────────────────
+
+from app.b2b import tracker as b2b_tracker
+
+@app.get("/b2b/invoices")
+def list_b2b_invoices() -> dict:
+    """List all B2B aging invoices and corporate receivables totals."""
+    invoices = b2b_tracker.get_all_invoices()
+    overdue_sum = sum(inv.amount_inr for inv in invoices if inv.status.value != "recovered")
+    ptp_sum = sum(inv.ptp.promised_amount_inr for inv in invoices if inv.ptp and inv.status.value == "promised_to_pay")
+    recovered_sum = sum(inv.amount_inr for inv in invoices if inv.status.value == "recovered")
+    high_risk_sum = sum(inv.amount_inr for inv in invoices if inv.aging_bucket.value == "90_plus_days" and inv.status.value != "recovered")
+
+    return {
+        "invoices": [inv.model_dump(mode="json") for inv in invoices],
+        "summary": {
+            "total_invoices": len(invoices),
+            "total_overdue_inr": round(overdue_sum, 2),
+            "total_ptp_committed_inr": round(ptp_sum, 2),
+            "total_recovered_inr": round(recovered_sum, 2),
+            "total_high_risk_inr": round(high_risk_sum, 2),
+        }
+    }
+
+
+@app.post("/b2b/invoices/{invoice_id}/ptp")
+def set_b2b_ptp(
+    invoice_id: str,
+    payload: dict,
+) -> dict:
+    """Record a Promise-to-Pay (PTP) commitment on a B2B invoice."""
+    promised_date = payload.get("promised_date", "")
+    promised_amount = float(payload.get("promised_amount_inr", 0))
+    notes = payload.get("notes", "")
+
+    inv = b2b_tracker.record_ptp(invoice_id, promised_date, promised_amount, notes)
+    if not inv:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    AUDIT_LOG.record(
+        actor="b2b_chaser", action="ptp_registered",
+        reason=f"Promise-to-Pay registered for invoice {invoice_id} on {promised_date}",
+        evidence={"invoice_id": invoice_id, "amount_inr": promised_amount, "notes": notes},
+    )
+    return {"status": "ok", "invoice": inv.model_dump(mode="json")}
+
+
+@app.post("/b2b/invoices/{invoice_id}/chase")
+def chase_b2b_invoice(invoice_id: str) -> dict:
+    """Trigger an escalating AI dunning follow-up on an overdue B2B invoice."""
+    result = b2b_tracker.chase_invoice(invoice_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    AUDIT_LOG.record(
+        actor="b2b_dunning_agent", action="chase_dispatched",
+        reason=f"Dunning escalated for invoice {invoice_id}: {result['action_taken']}",
+        evidence={"invoice_id": invoice_id, "stage": result["dunning_stage"]},
+    )
+    return {
+        "status": "ok",
+        "action_taken": result["action_taken"],
+        "invoice": result["invoice"].model_dump(mode="json"),
+    }
+
+
+@app.post("/b2b/invoices/{invoice_id}/recover")
+def mark_b2b_recovered(invoice_id: str) -> dict:
+    """Mark an overdue B2B invoice as settled in full."""
+    inv = b2b_tracker.mark_recovered(invoice_id)
+    if not inv:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    AUDIT_LOG.record(
+        actor="b2b_settlement", action="invoice_recovered",
+        reason=f"Invoice {invoice_id} settled in full (₹{inv.amount_inr:,.0f})",
+        evidence={"invoice_id": invoice_id, "amount_inr": inv.amount_inr},
+    )
+    return {"status": "ok", "invoice": inv.model_dump(mode="json")}
+
+
+# ── Live Webhook Simulator ───────────────────────────────────────────
+
+_WEBHOOK_EVENTS: list[dict] = []
+
+@app.post("/webhooks/razorpay")
+async def razorpay_webhook_receiver(request: Request) -> dict:
+    """Receive or simulate a live Razorpay webhook (e.g. payment.failed, payment.captured)."""
+    body = await request.json()
+    event_type = body.get("event", "payment.failed")
+    payload = body.get("payload", {}).get("payment", {}).get("entity", {})
+    
+    now_str = datetime.now(timezone.utc).isoformat()
+    record = {
+        "event_id": f"evt_{hash(now_str) % 1000000:06d}",
+        "event": event_type,
+        "amount_inr": float(payload.get("amount", 0)) / 100.0 if "amount" in payload else float(body.get("amount_inr", 3500)),
+        "payment_method": payload.get("method", body.get("payment_method", "upi")),
+        "error_code": payload.get("error_code", body.get("error_code", "GATEWAY_TIMEOUT")),
+        "timestamp": now_str,
+    }
+    _WEBHOOK_EVENTS.insert(0, record)
+    if len(_WEBHOOK_EVENTS) > 50:
+        _WEBHOOK_EVENTS.pop()
+    
+    return {"status": "received", "event": record}
+
+
+@app.get("/webhooks/events")
+def list_webhook_events() -> dict:
+    """Return recently received or simulated webhook events."""
+    return {"events": _WEBHOOK_EVENTS}
+
+
+
 if __name__ == "__main__":
     import uvicorn
 

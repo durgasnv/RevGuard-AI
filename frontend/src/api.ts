@@ -36,6 +36,32 @@ export const api = {
       headers: { 'Content-Type': 'application/octet-stream' },
     }).then((r) => j<AnalyzeReport>(r))
   },
+  b2bInvoices: () => get<import('./types').B2BResponse>('/api/b2b/invoices'),
+  b2bSetPtp: (invoiceId: string, promisedDate: string, promisedAmount: number, notes: string) =>
+    fetch(`/api/b2b/invoices/${invoiceId}/ptp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        promised_date: promisedDate,
+        promised_amount_inr: promisedAmount,
+        notes,
+      }),
+    }).then((r) => j<{ status: string; invoice: import('./types').B2BInvoice }>(r)),
+  b2bChase: (invoiceId: string) =>
+    post<{ status: string; action_taken: string; invoice: import('./types').B2BInvoice }>(
+      `/api/b2b/invoices/${invoiceId}/chase`,
+    ),
+  b2bRecover: (invoiceId: string) =>
+    post<{ status: string; invoice: import('./types').B2BInvoice }>(
+      `/api/b2b/invoices/${invoiceId}/recover`,
+    ),
+  fireWebhook: (payload: { event: string; amount_inr: number; payment_method: string; error_code: string }) =>
+    fetch('/api/webhooks/razorpay', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).then((r) => j<{ status: string; event: import('./types').WebhookEvent }>(r)),
+  webhookEvents: () => get<{ events: import('./types').WebhookEvent[] }>('/api/webhooks/events'),
 }
 
 export const inr = (v: number) =>

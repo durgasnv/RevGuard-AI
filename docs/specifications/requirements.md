@@ -76,6 +76,18 @@ The system shall provide an interactive policy panel allowing merchants to confi
 ### FR-21: Explainable AI Decision Chain
 The system shall provide a step-by-step transparent visual inspection modal tracing raw failure ingestion, statistical clustering, LLM root-cause reasoning, Expected Value mathematical optimization, and policy gate enforcement.
 
+### FR-22: Hinglish AI Voice Agent & Call Bot Simulator
+The system shall provide an interactive Hinglish voice recovery call simulator with real-time speech synthesis and multi-turn dialogue trees for high-ticket checkout drop-off recovery.
+
+### FR-23: B2B Receivables & Promise-to-Pay (PTP) Tracker
+The system shall track corporate aging receivables across buckets (1-30d, 31-60d, 61-90d, 90+d), manage client Promise-to-Pay commitments, and orchestrate escalating AI dunning workflows.
+
+### FR-24: UPI AutoPay & Recurring Mandate Smart Retry Sequencer
+The system shall visualize and orchestrate a 3-stage salary-cycle retry ladder for recurring mandates to minimize false subscription cancellations.
+
+### FR-25: Asynchronous Gateway Webhook Simulator
+The system shall support simulating real-time asynchronous Razorpay webhook events (`payment.failed`, `payment.captured`) with real-time state telemetry updates.
+
 ## 4. AI REQUIREMENTS
 
 - **AI-01:** The AI shall reason over structured transaction and operational context.
