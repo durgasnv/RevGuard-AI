@@ -1,76 +1,44 @@
 # RevGuard-AI Documentation Index
 
-Welcome to the technical documentation for **RevGuard-AI**, an autonomous revenue recovery control tower engineered for payment gateway ecosystems (with first-class support for Razorpay payment flows).
+Welcome to the technical documentation for **RevGuard-AI**, an autonomous revenue recovery control tower engineered for payment gateway ecosystems with native support for the Razorpay payment infrastructure.
 
 ---
 
-## 📑 Documentation Structure
+## 🔍 Specifications & Core Architecture
 
-```
-docs/
-├── README.md                          <- Documentation Index (this file)
-├── specifications/                    <- Core architecture & problem definitions
-│   ├── problem_statement.md           <- Payment leakage problem analysis
-│   ├── solution_overview.md           <- High-level solution architecture
-│   ├── requirements.md                <- Functional & non-functional requirements
-│   ├── system_plan.md                 <- Master architecture & engineering plan
-│   ├── design_gaps_and_solutions.md   <- Architectural audit & gap analysis
-│   └── razorpay_problems_and_solutions.md <- Razorpay ecosystem error code mappings
-├── phases/                            <- Implementation specifications by phase
-│   ├── phase0_scope.md                <- Phase 0: Non-negotiable scope & policy definitions
-│   ├── phase1_data_foundation.md      <- Phase 1: Synthetic data generation & baseline metrics
-│   ├── phase2_integration.md          <- Phase 2: Gateway client abstraction & mock adapters
-│   ├── phase3_detection.md            <- Phase 3: Failure pattern clustering & risk calculation
-│   ├── phase4_diagnosis.md            <- Phase 4: AI root cause diagnostics & heuristic fallback
-│   ├── phase5_strategy.md             <- Phase 5: Expected Value (EV) strategy engine
-│   ├── phase6_policy_execution.md     <- Phase 6: Deterministic policy guard & action execution
-│   ├── phase7_evaluation.md           <- Phase 7: Counterfactual uplift evaluation
-│   ├── phase8_ui.md                   <- Phase 8: Merchant control tower UI
-│   ├── phase9_integration.md          <- Phase 9: Unified API server & orchestration
-│   ├── phase10_hardening.md           <- Phase 10: Statistical validation & noise resilience
-│   └── phase11_reliability.md         <- Phase 11: Webhook idempotency & production readiness
-├── design/                            <- UI & UX design prompts and specs
-│   └── ui_mockup_prompt.md            <- Control Tower visual design specifications
-└── reports/                           <- Audit & evaluation reports
-    └── audit_report.md                <- Codebase quality & improvement audit report
-```
+- **[Problem Statement](specifications/problem_statement.md)**: Analysis of silent revenue leakage in digital checkouts, issuer switch latencies, UPI collect drop-offs, and B2B aging receivables.
+- **[Solution Overview](specifications/solution_overview.md)**: End-to-end architecture covering continuous detection, LLM diagnosis, Expected Value ($EV$) optimization, deterministic policy gates (SC-01), bilingual voice recovery, and B2B Promise-to-Pay tracking.
+- **[Requirements Matrix](specifications/requirements.md)**: Comprehensive Functional Requirements (**FR-01 to FR-25**), Safety Guardrails (**SC-01 to SC-07**), and Evaluation Criteria (**ER-01 to ER-08**).
+- **[System Architecture Plan](specifications/system_plan.md)**: Master architectural plan and module interactions across detection, diagnosis, strategy, execution, and audit trail logging.
+- **[Design Gaps & Solutions](specifications/design_gaps_and_solutions.md)**: Architectural safeguards for race conditions, idempotency caching, and customer fatigue caps.
+- **[Razorpay Error Code Mappings](specifications/razorpay_problems_and_solutions.md)**: Categorization of Razorpay error codes (`BAD_REQUEST_ERROR`, `GATEWAY_ERROR`, `SERVER_ERROR`), webhook payloads, and mitigation pathways.
 
 ---
 
-## 🔍 Specifications & Architecture
+## 🚀 Implementation Roadmap (Phases 0 – 11)
 
-- **[Problem Statement](specifications/problem_statement.md)**: Explains the mechanics of silent revenue leakage in payment gateways (transient gateway drops, bank downtime, auth failures, customer friction).
-- **[Solution Overview](specifications/solution_overview.md)**: Architecture overview of RevGuard-AI's continuous detection, diagnosis, policy-guarded recovery, and audit assurance loop.
-- **[Requirements](specifications/requirements.md)**: Detailed Functional (FR-01 to FR-17) and Non-Functional (NFR-01 to NFR-08) requirements.
-- **[System Plan](specifications/system_plan.md)**: End-to-end component breakdown and phase milestones.
-- **[Design Gaps & Solutions](specifications/design_gaps_and_solutions.md)**: Solutions for common edge cases, race conditions, and safety guardrails.
-- **[Razorpay Ecosystem Mappings](specifications/razorpay_problems_and_solutions.md)**: Categorization of Razorpay payment error codes (`BAD_REQUEST_ERROR`, `GATEWAY_ERROR`, `SERVER_ERROR`), webhooks, and mitigation pathways.
-
----
-
-## 🚀 Phase Roadmap & Implementation Guides
-
-1. **[Phase 0: Scope & Policy Gates](phases/phase0_scope.md)** — Boundary definitions, safe simulation mode, deterministic guardrail rules (SC-01).
-2. **[Phase 1: Data Foundation](phases/phase1_data_foundation.md)** — Synthetic transaction generator with realistic payment distributions (cards, UPI, netbanking, wallets) and baseline retry models.
-3. **[Phase 2: Integration Layer](phases/phase2_integration.md)** — Abstract gateway client interfaces and Razorpay test clients.
-4. **[Phase 3: Leakage Detection](phases/phase3_detection.md)** — Statistical clustering engine identifying concentrated payment failure patterns.
+1. **[Phase 0: Scope & Policy Gates](phases/phase0_scope.md)** — Boundary definitions, safe test-mode simulation, and deterministic guardrail rules (SC-01).
+2. **[Phase 1: Data Foundation](phases/phase1_data_foundation.md)** — Synthetic transaction generator with realistic payment method distributions (UPI, Cards, NetBanking, Wallets) and baseline models.
+3. **[Phase 2: Gateway Integration](phases/phase2_integration.md)** — Abstract gateway client interfaces and Razorpay test-mode API clients.
+4. **[Phase 3: Leakage Detection](phases/phase3_detection.md)** — Statistical clustering engine identifying concentrated payment failure patterns and calculating revenue at risk.
 5. **[Phase 4: AI Diagnosis](phases/phase4_diagnosis.md)** — LLM-driven diagnostic agent with context builder, structured schemas, and deterministic heuristic fallback.
-6. **[Phase 5: Strategy Engine](phases/phase5_strategy.md)** — Expected Value optimization formula: $EV = P(\text{recovery}) \times \text{Amount} - \text{Cost}$, priority queue ranking, and action recommendations (`RETRY_PAYMENT`, `SEND_PAYMENT_LINK`, `NOTIFY_CUSTOMER`, `ESCALATE_HUMAN`, `STOP`).
-7. **[Phase 6: Policy Guard & Execution](phases/phase6_policy_execution.md)** — Enforces idempotency, cooldown windows, retry limits, customer fatigue rules, and records immutable audit events.
+6. **[Phase 5: Strategy & EV Optimization](phases/phase5_strategy.md)** — Expected Value formula ($EV = P \times \text{Amount} - \text{Cost}$), priority ranking, and bounded action selection (`RETRY_PAYMENT`, `SEND_PAYMENT_LINK`, `NOTIFY_CUSTOMER`, `ESCALATE_HUMAN`, `STOP`).
+7. **[Phase 6: Policy Guard & Execution](phases/phase6_policy_execution.md)** — Idempotency enforcement, cooldown windows, retry limits, and immutable audit trail logging.
 8. **[Phase 7: Uplift Evaluation](phases/phase7_evaluation.md)** — Counterfactual evaluation comparing RevGuard AI recovery rate and recovered revenue against naive retry baselines.
-9. **[Phase 8: Merchant Control Tower](phases/phase8_ui.md)** — Glassmorphic React dashboard with live telemetry, KPI cards, interactive charts, and approval workflows.
+9. **[Phase 8: Merchant Control Tower](phases/phase8_ui.md)** — React 18 dashboard with glassmorphism, dual theme toggle (Stripe Light / Slate Dark), live charts, and interactive drawers.
 10. **[Phase 9: API Orchestration](phases/phase9_integration.md)** — FastAPI application wiring ingestion, detection, diagnosis, strategy, execution, and evaluation.
 11. **[Phase 10: Statistical Hardening](phases/phase10_hardening.md)** — Noise tolerance, batch volume scaling, and high-load stress validation.
 12. **[Phase 11: Operational Reliability](phases/phase11_reliability.md)** — Webhook signature validation, idempotency caching, structured logging, and safety caps.
 
 ---
 
-## 🎨 Design & Visual Assets
+## 📁 Demo Datasets & Testing Guides
 
-- **[UI Mockup Prompt](design/ui_mockup_prompt.md)**: Specifications for the Dark Theme Control Tower interface, design tokens, and components.
+- **[Demo Datasets Guide](../demo_datasets/GUIDE.md)**: Walkthrough for using the 4 realistic bundled datasets (`razorpay_payments_export_aug2026.csv`, `generic_payment_failures_q3.csv`, `ecommerce_failures_aug2026.xlsx`, `razorpay_high_ticket_b2b_leakage.csv`) and recommended external open payment data sources (Kaggle PaySim, NPCI open statistics, Mockaroo).
+- **[Demo Datasets Overview](../demo_datasets/README.md)**: Dataset file inventory and format documentation.
 
 ---
 
-## 📊 Reports & Quality Audits
+## 📊 Quality Audits & Reports
 
-- **[Audit Report](reports/audit_report.md)**: Detailed bug analysis, architectural improvements, and test coverage metrics.
+- **[Quality Audit Report](reports/audit_report.md)**: Detailed bug analysis, architectural improvements, and test coverage metrics.
