@@ -88,6 +88,12 @@ The system shall visualize and orchestrate a 3-stage salary-cycle retry ladder f
 ### FR-25: Asynchronous Gateway Webhook Simulator
 The system shall support simulating real-time asynchronous Razorpay webhook events (`payment.failed`, `payment.captured`) with real-time state telemetry updates.
 
+### FR-26: Executive CFO Recovery & Assurance Certificate
+The system shall generate a downloadable, printable cryptographic assurance report detailing total volume analyzed, gross revenue won back, net counterfactual uplift over naive baseline, and policy compliance verification.
+
+### FR-27: Hackathon Alignment Matrix Quick Launcher
+The system shall provide an interactive alignment matrix modal with 1-click launch shortcuts into all 7 recovery directions and validation criteria.
+
 ## 4. AI REQUIREMENTS
 
 - **AI-01:** The AI shall reason over structured transaction and operational context.

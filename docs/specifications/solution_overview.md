@@ -312,4 +312,15 @@ Synchronizes recurring mandate retries (e-NACH / UPI AutoPay) with customer sala
 
 An interactive asynchronous event generator allowing merchants to fire live `payment.failed` and `payment.captured` webhooks into the system and monitor real-time recovery responses.
 
+## 21. Executive CFO Recovery & ROI Assurance Certificate
+
+Provides finance and executive leadership with an immutable, printable, and downloadable assurance certificate documenting:
+- Total analyzed batch volume across payment channels.
+- Measured gross recovery and net counterfactual uplift vs. blind retry baselines.
+- Safety & Policy Compliance verification (customer fatigue adherence, fraud card isolation).
+
+## 22. Judge's Interactive Hackathon Matrix Quick Launcher
+
+An interactive modal in the Control Tower header allowing evaluators and merchants to audit and launch all 7 hackathon directions and "The Bar" validation workflows with a single click.
+
 

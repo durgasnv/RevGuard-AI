@@ -71,6 +71,12 @@ In digital commerce and subscription businesses, **revenue loss rarely happens i
 ### 11. 📁 Upload & Instant Audit
 - Standalone analysis tool allowing merchants to upload Razorpay CSV exports, generic payment CSVs, or Excel spreadsheets with 4 bundled realistic demo datasets.
 
+### 12. 📄 Executive CFO Recovery & ROI Certificate Export
+- 1-Click download and printable cryptographic assurance report verifying batch volume (₹68.5L), gross recovery (₹19.62L), net counterfactual uplift (+₹1.82L / +18.4%), and 100% compliance with SC-01 safety rules.
+
+### 13. 🏆 Judge's Interactive Hackathon Matrix
+- Header quick launcher providing direct 1-click access to all 7 example directions and "The Bar" validation criteria.
+
 ---
 
 ## 📊 Measured Recovery & Counterfactual Uplift
