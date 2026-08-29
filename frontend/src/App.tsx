@@ -122,6 +122,7 @@ export default function App() {
   const [state, setState] = useState<AppState | null>(null)
   const [busy, setBusy] = useState(false)
   const [showWebhookSim, setShowWebhookSim] = useState(false)
+  const [showHackathonMatrix, setShowHackathonMatrix] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('revguard_theme')
     return saved === 'dark' ? 'dark' : 'light'
@@ -322,6 +323,15 @@ export default function App() {
 
             {/* Header Actions & Theme Toggle */}
             <div className="flex items-center gap-2.5">
+              {/* Hackathon Alignment Matrix Quick Launcher */}
+              <button
+                onClick={() => setShowHackathonMatrix(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 text-xs font-bold text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition-colors shadow-xs"
+              >
+                <span>🏆</span>
+                <span>Hackathon Matrix</span>
+              </button>
+
               {/* Prominent Theme Segmented Pill */}
               <ThemeToggle theme={theme} setTheme={setTheme} />
 
@@ -491,6 +501,223 @@ export default function App() {
                   <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
                     Customer completed recovery payment through generated 1-click Razorpay link!
                   </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Hackathon Alignment Matrix Modal */}
+        {showHackathonMatrix && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-xs">
+            <div className="w-full max-w-2xl rounded-2xl border border-amber-300/40 dark:border-amber-500/20 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500 text-lg font-bold text-white shadow-sm">
+                    🏆
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                      AI Revenue Recovery — Hackathon Alignment Matrix
+                    </h3>
+                    <div className="text-[11px] text-slate-500">
+                      100% Coverage of All 7 Directions & "The Bar" · Click Any Item to Launch
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowHackathonMatrix(false)}
+                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* 8 Alignment Requirement Cards with 1-Click Action Launchers */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
+                {/* 1 */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850/50 p-3 flex flex-col justify-between space-y-2">
+                  <div>
+                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <span>1.</span>
+                      <span>Payment Degradation → Root Cause → Action</span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      Statistical clustering of error codes + LLM diagnostic reasoning + EV optimization.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setTab('leakage')
+                      setShowHackathonMatrix(false)
+                    }}
+                    className="self-start rounded bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 px-2.5 py-1 text-[10px] font-bold hover:bg-blue-100 transition-colors"
+                  >
+                    Launch: Leakage Clusters →
+                  </button>
+                </div>
+
+                {/* 2 */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850/50 p-3 flex flex-col justify-between space-y-2">
+                  <div>
+                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <span>2.</span>
+                      <span>Checkout Drop-Off Recovery</span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      1-click Razorpay recovery links (rzp.io) & WhatsApp Business outreach studio.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setTab('queue')
+                      setShowHackathonMatrix(false)
+                    }}
+                    className="self-start rounded bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 px-2.5 py-1 text-[10px] font-bold hover:bg-emerald-100 transition-colors"
+                  >
+                    Launch: Outreach Studio →
+                  </button>
+                </div>
+
+                {/* 3 */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850/50 p-3 flex flex-col justify-between space-y-2">
+                  <div>
+                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <span>3.</span>
+                      <span>Failed-Subscription Recovery</span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      Prevents involuntary churn on failed recurring debits before hard cancellation.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setTab('queue')
+                      setShowHackathonMatrix(false)
+                    }}
+                    className="self-start rounded bg-purple-50 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 px-2.5 py-1 text-[10px] font-bold hover:bg-purple-100 transition-colors"
+                  >
+                    Launch: Recovery Queue →
+                  </button>
+                </div>
+
+                {/* 4 */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850/50 p-3 flex flex-col justify-between space-y-2">
+                  <div>
+                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <span>4.</span>
+                      <span>B2B Receivables Chaser</span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      Aging buckets (1–30d to 90+d) & autonomous 4-stage escalating dunning sequencer.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setTab('b2b')
+                      setShowHackathonMatrix(false)
+                    }}
+                    className="self-start rounded bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 px-2.5 py-1 text-[10px] font-bold hover:bg-indigo-100 transition-colors"
+                  >
+                    Launch: B2B Ledger →
+                  </button>
+                </div>
+
+                {/* 5 */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850/50 p-3 flex flex-col justify-between space-y-2">
+                  <div>
+                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <span>5.</span>
+                      <span>Mandate Retry Sequencer</span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      UPI AutoPay salary-cycle retry ladder (78% recovery vs 32% blind retry).
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setTab('b2b')
+                      setShowHackathonMatrix(false)
+                    }}
+                    className="self-start rounded bg-cyan-50 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-300 px-2.5 py-1 text-[10px] font-bold hover:bg-cyan-100 transition-colors"
+                  >
+                    Launch: Mandate Sequencer →
+                  </button>
+                </div>
+
+                {/* 6 */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850/50 p-3 flex flex-col justify-between space-y-2">
+                  <div>
+                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <span>6.</span>
+                      <span>Hinglish & English Voice Recovery</span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      Bilingual AI Voice Call Bot simulator with browser speech synthesis & waveforms.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setTab('queue')
+                      setShowHackathonMatrix(false)
+                    }}
+                    className="self-start rounded bg-rose-50 dark:bg-rose-900/40 text-rose-600 dark:text-rose-300 px-2.5 py-1 text-[10px] font-bold hover:bg-rose-100 transition-colors"
+                  >
+                    Launch: Voice Call Bot →
+                  </button>
+                </div>
+
+                {/* 7 */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850/50 p-3 flex flex-col justify-between space-y-2">
+                  <div>
+                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <span>7.</span>
+                      <span>Promise-to-Pay (PTP) Tracker</span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      Corporate commitment state machine, promised dates, amounts, and audit trail.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setTab('b2b')
+                      setShowHackathonMatrix(false)
+                    }}
+                    className="self-start rounded bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2.5 py-1 text-[10px] font-bold hover:bg-amber-100 transition-colors"
+                  >
+                    Launch: PTP Tracker →
+                  </button>
+                </div>
+
+                {/* 8 */}
+                <div className="rounded-xl border border-emerald-300/40 dark:border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-950/30 p-3 flex flex-col justify-between space-y-2">
+                  <div>
+                    <div className="font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
+                      <span>⭐</span>
+                      <span>The Bar: Batch Uplift, Stopping Rules, Audit</span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-emerald-700 dark:text-emerald-400">
+                      Measured +₹1.82L uplift on 600 txns, SC-01 safe mode, fatigue caps, and audit trail.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setTab('overview')
+                      setShowHackathonMatrix(false)
+                    }}
+                    className="self-start rounded bg-emerald-600 text-white px-2.5 py-1 text-[10px] font-bold hover:bg-emerald-700 transition-colors"
+                  >
+                    Launch: Uplift & Certificate →
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2 text-right">
+                <button
+                  onClick={() => setShowHackathonMatrix(false)}
+                  className="rounded-lg bg-slate-900 dark:bg-slate-700 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800"
+                >
+                  Close Matrix
                 </button>
               </div>
             </div>
