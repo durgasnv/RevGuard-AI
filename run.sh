@@ -13,9 +13,9 @@ if [ ! -x "$PY" ]; then
   bash backend/setup_env.sh "$VENV"
 fi
 
-if [ ! -d frontend/node_modules ]; then
-  echo "[revguard] installing frontend deps ..."
-  (cd frontend && npm install --no-audit --no-fund)
+if [ ! -d rpaydp/node_modules ]; then
+  echo "[revguard] installing frontend deps in rpaydp ..."
+  (cd rpaydp && npm install --no-audit --no-fund)
 fi
 
 # --- cleanup ---------------------------------------------------------------
