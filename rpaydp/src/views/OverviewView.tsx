@@ -416,67 +416,67 @@ Assurance Status: VERIFIED & AUDITED FOR ENTERPRISE DEPLOYMENT
 
       {/* Executive CFO Recovery & ROI Certificate Modal */}
       {showCert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-2xl rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-2xl rounded-2xl border border-border bg-card text-card-foreground p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-3">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-lg font-bold text-white shadow-sm">
                   📜
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  <h3 className="text-sm font-bold text-foreground">
                     Executive CFO Recovery & ROI Assurance Certificate
                   </h3>
-                  <div className="font-mono text-[11px] text-slate-500">
+                  <div className="font-mono text-[11px] text-muted-foreground">
                     Cryptographically Audited · Enterprise Compliance Ready
                   </div>
                 </div>
               </div>
               <button
                 onClick={() => setShowCert(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
               >
                 ✕
               </button>
             </div>
 
             {/* Certificate Display Paper Card */}
-            <div className="rounded-xl border border-emerald-300/40 dark:border-emerald-500/20 bg-emerald-50/30 dark:bg-emerald-950/20 p-4 font-mono text-xs text-slate-800 dark:text-slate-200 space-y-3 shadow-inner">
-              <div className="flex justify-between border-b border-emerald-200/60 dark:border-emerald-800/60 pb-2 text-[11px]">
-                <span className="font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 font-mono text-xs text-foreground space-y-3 shadow-inner">
+              <div className="flex justify-between border-b border-emerald-500/20 pb-2 text-[11px]">
+                <span className="font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                   REVGUARD-AI CONTROL TOWER
                 </span>
-                <span className="text-slate-500">REF: CERT-REV-{Date.now().toString(36).toUpperCase()}</span>
+                <span className="text-muted-foreground">REF: CERT-REV-{Date.now().toString(36).toUpperCase()}</span>
               </div>
 
               <div className="grid grid-cols-2 gap-3 py-1">
                 <div>
-                  <div className="text-[10px] uppercase text-slate-500">Total Analyzed Volume</div>
-                  <div className="text-sm font-bold text-slate-900 dark:text-white">{inr(6850000)} (600 txns)</div>
+                  <div className="text-[10px] uppercase text-muted-foreground">Total Analyzed Volume</div>
+                  <div className="text-sm font-bold text-foreground">{inr(6850000)} (600 txns)</div>
                 </div>
                 <div>
-                  <div className="text-[10px] uppercase text-slate-500">Gross Recovered Revenue</div>
+                  <div className="text-[10px] uppercase text-muted-foreground">Gross Recovered Revenue</div>
                   <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
                     {evaluation ? inr(evaluation.ai_strategy.recovered_inr) : '₹19,62,000'}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] uppercase text-slate-500">Net Counterfactual Uplift</div>
+                  <div className="text-[10px] uppercase text-muted-foreground">Net Counterfactual Uplift</div>
                   <div className="text-sm font-bold text-blue-600 dark:text-blue-400">
                     {evaluation ? inr(evaluation.uplift.extra_recovered_inr) : '+₹1,82,000'} (+18.4%)
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] uppercase text-slate-500">Economic ROI Multiple</div>
+                  <div className="text-[10px] uppercase text-muted-foreground">Economic ROI Multiple</div>
                   <div className="text-sm font-bold text-purple-600 dark:text-purple-400">14.8x on Interventions</div>
                 </div>
               </div>
 
-              <div className="border-t border-emerald-200/60 dark:border-emerald-800/60 pt-2 space-y-1 text-[11px]">
-                <div className="font-bold text-slate-700 dark:text-slate-300">SC-01 Compliance Verification:</div>
-                <div className="text-emerald-700 dark:text-emerald-400">✓ Customer Fatigue Hard Stop: 0 Customers Spammed (Max 3 attempts)</div>
-                <div className="text-emerald-700 dark:text-emerald-400">✓ Fraud Risk Quarantine: 100% Risk Blocked Cards Isolated</div>
-                <div className="text-emerald-700 dark:text-emerald-400">✓ Audit Assurance: Immutable Append-Only Event Stream</div>
+              <div className="border-t border-emerald-500/20 pt-2 space-y-1 text-[11px]">
+                <div className="font-bold text-foreground">SC-01 Compliance Verification:</div>
+                <div className="text-emerald-600 dark:text-emerald-400">✓ Customer Fatigue Hard Stop: 0 Customers Spammed (Max 3 attempts)</div>
+                <div className="text-emerald-600 dark:text-emerald-400">✓ Fraud Risk Quarantine: 100% Risk Blocked Cards Isolated</div>
+                <div className="text-emerald-600 dark:text-emerald-400">✓ Audit Assurance: Immutable Append-Only Event Stream</div>
               </div>
             </div>
 
@@ -491,7 +491,7 @@ Assurance Status: VERIFIED & AUDITED FOR ENTERPRISE DEPLOYMENT
 
               <button
                 onClick={() => setShowCert(false)}
-                className="rounded-lg border border-slate-300 dark:border-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                className="rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 px-3.5 py-2 text-xs font-semibold transition-colors"
               >
                 Close
               </button>

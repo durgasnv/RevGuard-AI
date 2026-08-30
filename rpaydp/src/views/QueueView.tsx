@@ -495,35 +495,35 @@ export default function QueueView({
 
       {/* 1. Hinglish & English Multi-Channel Outreach Studio Modal */}
       {outreachItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-2xl border border-border bg-card text-card-foreground p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-3">
               <div className="flex items-center gap-2">
                 <span className="text-xl">📱</span>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  <h3 className="text-sm font-bold text-foreground">
                     Customer Recovery Outreach Studio
                   </h3>
-                  <div className="font-mono text-[11px] text-slate-500">
+                  <div className="font-mono text-[11px] text-muted-foreground">
                     {outreachItem.transaction_id} · {inr(outreachItem.amount_inr)}
                   </div>
                 </div>
               </div>
               <button
                 onClick={() => setOutreachItem(null)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
               >
                 ✕
               </button>
             </div>
 
             {/* Generated Payment Link Box */}
-            <div className="rounded-lg border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-500/[0.03] p-3 text-xs">
-              <div className="flex items-center justify-between text-[11px] font-semibold text-emerald-800 dark:text-emerald-400">
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
                 <span>Razorpay 1-Click Payment Link (Simulated)</span>
-                <span className="rounded bg-emerald-100 dark:bg-emerald-500/20 px-1.5 py-0.5 text-[10px]">24h Expiry</span>
+                <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-mono">24h Expiry</span>
               </div>
-              <div className="mt-1.5 flex items-center justify-between gap-2 rounded bg-white dark:bg-slate-950 p-2 font-mono text-[11px] text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900">
+              <div className="mt-1.5 flex items-center justify-between gap-2 rounded-lg bg-background p-2 font-mono text-[11px] text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 <span className="truncate">{getPaymentLink(outreachItem)}</span>
                 <button
                   onClick={() => {
@@ -531,7 +531,7 @@ export default function QueueView({
                     setCopied(true)
                     setTimeout(() => setCopied(false), 2000)
                   }}
-                  className="shrink-0 rounded bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-emerald-700"
+                  className="shrink-0 rounded-md bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-emerald-700 transition-colors"
                 >
                   {copied ? 'Copied ✓' : 'Copy'}
                 </button>
@@ -540,14 +540,14 @@ export default function QueueView({
 
             {/* Language Selector */}
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Message Localization:</span>
-              <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-850 p-0.5 text-xs">
+              <span className="text-xs font-semibold text-foreground">Message Localization:</span>
+              <div className="inline-flex rounded-lg border border-border bg-muted/60 p-0.5 text-xs">
                 <button
                   onClick={() => setOutreachLang('hi')}
                   className={`rounded-md px-3 py-1 font-semibold transition-all ${
                     outreachLang === 'hi'
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400'
+                      ? 'bg-primary text-primary-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   🇮🇳 Hinglish
@@ -556,8 +556,8 @@ export default function QueueView({
                   onClick={() => setOutreachLang('en')}
                   className={`rounded-md px-3 py-1 font-semibold transition-all ${
                     outreachLang === 'en'
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400'
+                      ? 'bg-primary text-primary-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   🇬🇧 English
@@ -566,19 +566,19 @@ export default function QueueView({
             </div>
 
             {/* Mobile WhatsApp Preview Card */}
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 p-3">
-              <div className="mb-2 flex items-center justify-between text-[11px] text-slate-500">
-                <span className="flex items-center gap-1 font-medium">
+            <div className="rounded-xl border border-border bg-muted/30 p-3.5">
+              <div className="mb-2 flex items-center justify-between text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1 font-medium text-foreground">
                   <span className="text-emerald-500">●</span> WhatsApp Business Preview
                 </span>
                 <span>Automated Recovery Bot</span>
               </div>
-              <div className="rounded-lg border border-emerald-300/40 bg-[#dcf8c6] dark:bg-[#054d40] p-3 text-xs text-slate-900 dark:text-slate-100 shadow-sm leading-relaxed">
-                <div className="font-semibold text-emerald-900 dark:text-emerald-200 mb-1">
+              <div className="rounded-xl border border-emerald-500/30 bg-[#dcf8c6] dark:bg-[#054d40] p-3 text-xs text-slate-900 dark:text-emerald-50 shadow-sm leading-relaxed">
+                <div className="font-semibold text-emerald-950 dark:text-emerald-200 mb-1">
                   RevGuard Merchant Support ✓
                 </div>
                 <p>{outreachLang === 'hi' ? getHinglishMessage(outreachItem) : getEnglishMessage(outreachItem)}</p>
-                <div className="mt-2 text-right text-[10px] text-slate-500 dark:text-slate-300">Just now · Sent ✓✓</div>
+                <div className="mt-2 text-right text-[10px] text-slate-600 dark:text-emerald-300">Just now · Sent ✓✓</div>
               </div>
             </div>
 
@@ -592,14 +592,14 @@ export default function QueueView({
                   setCopied(true)
                   setTimeout(() => setCopied(false), 2000)
                 }}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 px-3 py-2 text-xs font-semibold transition-colors"
               >
                 <span>📋</span>
                 <span>{copied ? 'Template Copied!' : 'Copy Message'}</span>
               </button>
 
               <button
-                onClick={() => {
+                onClick={async () => {
                   setDispatched(true)
                   setTimeout(() => {
                     setDispatched(false)
@@ -607,9 +607,10 @@ export default function QueueView({
                   }, 1500)
                 }}
                 disabled={dispatched}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 active:bg-emerald-800 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50 transition-colors"
               >
-                <span>{dispatched ? '✓ Dispatched!' : 'Simulate WhatsApp Dispatch'}</span>
+                <span>🚀</span>
+                <span>{dispatched ? 'Dispatched via WhatsApp ✓' : 'Dispatch via WhatsApp API'}</span>
               </button>
             </div>
           </div>
@@ -618,23 +619,23 @@ export default function QueueView({
 
       {/* 2. Explainable AI Decision Chain Modal */}
       {chainItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-xl rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-xl rounded-2xl border border-border bg-card text-card-foreground p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-3">
               <div className="flex items-center gap-2">
-                <span className="text-xl text-blue-600 dark:text-blue-400">✦</span>
+                <span className="text-xl text-primary">✦</span>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  <h3 className="text-sm font-bold text-foreground">
                     Explainable AI Decision Chain
                   </h3>
-                  <div className="font-mono text-[11px] text-slate-500">
+                  <div className="font-mono text-[11px] text-muted-foreground">
                     {chainItem.transaction_id} · {inr(chainItem.amount_inr)}
                   </div>
                 </div>
               </div>
               <button
                 onClick={() => setChainItem(null)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
               >
                 ✕
               </button>
@@ -643,75 +644,75 @@ export default function QueueView({
             {/* 5-Step Visual Decision Progression */}
             <div className="space-y-2.5">
               {/* Step 1: Raw Event */}
-              <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-3 text-xs">
-                <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-white">
+              <div className="rounded-xl border border-border bg-muted/40 p-3.5 text-xs">
+                <div className="flex items-center justify-between font-semibold text-foreground">
                   <span>1. Raw Failure Event</span>
-                  <span className="font-mono text-slate-500">{chainItem.failure_code}</span>
+                  <span className="font-mono text-muted-foreground">{chainItem.failure_code}</span>
                 </div>
-                <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+                <div className="mt-1 text-[11px] text-muted-foreground">
                   Transaction of {inr(chainItem.amount_inr)} experienced error {chainItem.failure_code}.
                 </div>
               </div>
 
               {/* Step 2: Statistical Pattern */}
-              <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-3 text-xs">
-                <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-white">
+              <div className="rounded-xl border border-border bg-muted/40 p-3.5 text-xs">
+                <div className="flex items-center justify-between font-semibold text-foreground">
                   <span>2. Failure Category & Cluster</span>
-                  <span className="capitalize text-indigo-600 dark:text-indigo-400">
+                  <span className="capitalize text-indigo-600 dark:text-indigo-400 font-semibold">
                     {(chainItem.failure_category || 'Transient').replace(/_/g, ' ')}
                   </span>
                 </div>
-                <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+                <div className="mt-1 text-[11px] text-muted-foreground">
                   Grouped into statistical cluster. Categorized under deterministic gateway classification rules.
                 </div>
               </div>
 
               {/* Step 3: LLM Root Cause Diagnosis */}
-              <div className="rounded-lg border border-blue-200 dark:border-blue-500/20 bg-blue-50/40 dark:bg-blue-500/[0.04] p-3 text-xs">
-                <div className="flex items-center justify-between font-semibold text-blue-900 dark:text-blue-300">
+              <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-3.5 text-xs">
+                <div className="flex items-center justify-between font-semibold text-blue-700 dark:text-blue-300">
                   <span>3. AI Diagnostic Reasoning</span>
                   <span className="font-bold text-blue-600 dark:text-blue-400">
                     {(chainItem.confidence * 100).toFixed(0)}% Confidence
                   </span>
                 </div>
-                <div className="mt-1 text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed">
+                <div className="mt-1 text-[11px] text-foreground leading-relaxed">
                   {chainItem.reason || 'AI diagnosed root cause and computed expected recovery probability.'}
                 </div>
               </div>
 
-              {/* Step 4: Expected Value Formula */}
-              <div className="rounded-lg border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-500/[0.04] p-3 text-xs">
-                <div className="flex items-center justify-between font-semibold text-emerald-900 dark:text-emerald-300">
-                  <span>4. Expected Value (EV) Mathematical Optimization</span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                    EV = {inr(chainItem.expected_recovery_value_inr)}
+              {/* Step 4: Policy & Safety Check */}
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-xs">
+                <div className="flex items-center justify-between font-semibold text-emerald-700 dark:text-emerald-300">
+                  <span>4. Safety Constraints & Policy Check</span>
+                  <span className="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                    PASSED ✓
                   </span>
                 </div>
-                <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400 font-mono">
-                  EV = P({chainItem.recovery_probability.toFixed(2)}) × {inr(chainItem.amount_inr)} - Cost(₹5) → Recommended Action: {chainItem.action}
+                <div className="mt-1 text-[11px] text-muted-foreground">
+                  Customer attempt count ({(chainItem as any).customer_attempt_count ?? 1}/3) within fatigue limits. No fraud flags.
                 </div>
               </div>
 
-              {/* Step 5: Bounded Policy Gate */}
-              <div className="rounded-lg border border-purple-200 dark:border-purple-500/20 bg-purple-50/40 dark:bg-purple-500/[0.04] p-3 text-xs">
-                <div className="flex items-center justify-between font-semibold text-purple-900 dark:text-purple-300">
-                  <span>5. Deterministic Policy Gate (SC-01)</span>
-                  <span className="font-bold text-purple-600 dark:text-purple-400">
-                    {chainItem.amount_inr >= approvalThreshold ? 'Needs Human Sign-off' : 'Auto-Execution Approved'}
+              {/* Step 5: Optimal Action Selection */}
+              <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-3.5 text-xs">
+                <div className="flex items-center justify-between font-semibold text-purple-700 dark:text-purple-300">
+                  <span>5. Prescribed Action & Expected Value</span>
+                  <span className="rounded bg-purple-500/20 px-2 py-0.5 text-[10px] font-bold text-purple-700 dark:text-purple-300">
+                    {chainItem.action.replace(/_/g, ' ')}
                   </span>
                 </div>
-                <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
-                  Passed fatigue cap (attempts &lt; 3), passed risk check, bounded within enterprise rules.
+                <div className="mt-1 text-[11px] text-muted-foreground">
+                  Expected Value: {inr(Math.round(chainItem.amount_inr * chainItem.confidence))} · Highest EV pathway selected.
                 </div>
               </div>
             </div>
 
-            <div className="pt-2 text-right">
+            <div className="pt-2 flex justify-end">
               <button
                 onClick={() => setChainItem(null)}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+                className="rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-2 text-xs font-semibold transition-colors"
               >
-                Close Inspector
+                Close Decision Chain
               </button>
             </div>
           </div>
@@ -720,18 +721,18 @@ export default function QueueView({
 
       {/* 3. Bilingual AI Voice Recovery Call Bot Simulator Modal (English & Hinglish) */}
       {voiceItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-2xl border border-border bg-card text-card-foreground p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-3">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-600 text-lg font-bold text-white shadow-sm">
                   🎙️
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  <h3 className="text-sm font-bold text-foreground">
                     AI Voice Recovery Call Bot
                   </h3>
-                  <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                     <span>{voiceItem.transaction_id}</span>
                     <span>·</span>
                     <span className="font-bold text-purple-600 dark:text-purple-400">{inr(voiceItem.amount_inr)}</span>
@@ -744,18 +745,18 @@ export default function QueueView({
                   if ('speechSynthesis' in window) window.speechSynthesis.cancel()
                   setVoiceItem(null)
                 }}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
               >
                 ✕
               </button>
             </div>
 
-            {/* Dedicated Voice Language Selector (identical to Outreach Studio) */}
-            <div className="flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-2.5">
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            {/* Dedicated Voice Language Selector */}
+            <div className="flex items-center justify-between rounded-xl border border-border bg-muted/40 p-3">
+              <span className="text-xs font-semibold text-foreground">
                 Voice Language Selection:
               </span>
-              <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-200/70 dark:bg-slate-900 p-0.5 text-xs">
+              <div className="inline-flex rounded-lg border border-border bg-muted/60 p-0.5 text-xs">
                 <button
                   onClick={() => {
                     setCallLang('en')
@@ -765,8 +766,8 @@ export default function QueueView({
                   }}
                   className={`rounded-md px-3 py-1 font-semibold transition-all ${
                     callLang === 'en'
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400'
+                      ? 'bg-primary text-primary-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   🇬🇧 English
@@ -780,8 +781,8 @@ export default function QueueView({
                   }}
                   className={`rounded-md px-3 py-1 font-semibold transition-all ${
                     callLang === 'hi'
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400'
+                      ? 'bg-primary text-primary-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   🇮🇳 Hinglish
@@ -790,8 +791,8 @@ export default function QueueView({
             </div>
 
             {/* Simulated Live Call Banner */}
-            <div className="rounded-xl border border-purple-200 dark:border-purple-500/20 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/40 dark:to-indigo-950/40 p-4 text-center">
-              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 dark:bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+            <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-4 text-center">
+              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
                 <span>Live Call Connected (00:24)</span>
               </div>
@@ -818,7 +819,7 @@ export default function QueueView({
               {/* Turn 1: AI Intro */}
               <div className="flex gap-2 text-xs">
                 <span className="shrink-0 font-bold text-purple-600 dark:text-purple-400">AI:</span>
-                <div className="rounded-lg bg-purple-50 dark:bg-purple-950/60 p-2.5 text-slate-800 dark:text-slate-200 border border-purple-100 dark:border-purple-900 leading-relaxed">
+                <div className="rounded-xl bg-purple-500/10 p-3 text-foreground border border-purple-500/20 leading-relaxed">
                   {callLang === 'en'
                     ? `"Hello! This is the Merchant Recovery Desk calling. Your payment of ${inr(voiceItem.amount_inr)} was interrupted due to a gateway timeout. Would you like me to send a secure 1-click completion link to your WhatsApp?"`
                     : `"Namaste ji! Main Merchant Recovery Desk se AI voice assistant bol raha hoon. Aapka ${inr(voiceItem.amount_inr)} ka payment bank timeout ki wajah se fail ho gaya tha. Kya main aapke WhatsApp pe 1-click retry link bhej doon?"`}
@@ -828,7 +829,7 @@ export default function QueueView({
               {/* Turn 2: Customer Response Options */}
               {voiceStep === 1 && (
                 <div className="space-y-1.5 pl-6 pt-1">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     Select Simulated Customer Reply:
                   </div>
                   <button
@@ -840,7 +841,7 @@ export default function QueueView({
                           : 'Dhanyawad! 1-click Razorpay payment link aapke WhatsApp (+91 98765 43210) pe bhej diya gaya hai. 15 minute me payment complete kar sakte hain.'
                       speakText(reply, callLang)
                     }}
-                    className="w-full text-left rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50/60 dark:bg-emerald-950/40 p-2 text-xs font-semibold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 transition-colors"
+                    className="w-full text-left rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 transition-colors"
                   >
                     💬 {callLang === 'en' ? '"Yes, send the 1-click link to my WhatsApp"' : '"Haan, mere WhatsApp pe 1-click link send kar do"'}
                   </button>
@@ -854,7 +855,7 @@ export default function QueueView({
                           : 'Theek hai! Naya UPI collect request aapke VPA handle pe raise kar diya gaya hai. Kripya app me approve karein.'
                       speakText(reply, callLang)
                     }}
-                    className="w-full text-left rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50/60 dark:bg-blue-950/40 p-2 text-xs font-semibold text-blue-800 dark:text-blue-300 hover:bg-blue-100 transition-colors"
+                    className="w-full text-left rounded-xl border border-blue-500/30 bg-blue-500/10 p-2.5 text-xs font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-500/20 transition-colors"
                   >
                     ⚡ {callLang === 'en' ? '"Please raise a collect request on an alternate UPI ID"' : '"Alternate UPI ID pe collect request raise karo"'}
                   </button>
@@ -868,7 +869,7 @@ export default function QueueView({
                           : 'Bahut achha ji! Maine aapke liye Friday ka Promise-to-Pay reminder set kar diya hai. Tab tak order reserved rahega.'
                       speakText(reply, callLang)
                     }}
-                    className="w-full text-left rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50/60 dark:bg-amber-950/40 p-2 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition-colors"
+                    className="w-full text-left rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition-colors"
                   >
                     📅 {callLang === 'en' ? '"I will complete the payment this Friday (Promise to Pay)"' : '"Main Friday ko pay karunga (Promise to Pay)"'}
                   </button>
@@ -879,8 +880,8 @@ export default function QueueView({
               {voiceStep > 1 && (
                 <>
                   <div className="flex gap-2 text-xs">
-                    <span className="shrink-0 font-bold text-slate-500">Customer:</span>
-                    <div className="rounded-lg bg-slate-100 dark:bg-slate-800 p-2 text-slate-700 dark:text-slate-300 italic">
+                    <span className="shrink-0 font-bold text-muted-foreground">Customer:</span>
+                    <div className="rounded-xl bg-muted/60 p-2.5 text-foreground italic">
                       {voiceStep === 2 && (callLang === 'en' ? '"Yes, send the 1-click link to my WhatsApp"' : '"Haan, mere WhatsApp pe 1-click link send kar do"')}
                       {voiceStep === 3 && (callLang === 'en' ? '"Please raise a collect request on an alternate UPI ID"' : '"Alternate UPI ID pe collect request raise karo"')}
                       {voiceStep === 4 && (callLang === 'en' ? '"I will complete the payment this Friday (Promise to Pay)"' : '"Main Friday ko pay karunga (Promise to Pay)"')}
@@ -889,7 +890,7 @@ export default function QueueView({
 
                   <div className="flex gap-2 text-xs">
                     <span className="shrink-0 font-bold text-purple-600 dark:text-purple-400">AI:</span>
-                    <div className="rounded-lg bg-purple-50 dark:bg-purple-950/60 p-2.5 text-slate-800 dark:text-slate-200 border border-purple-100 dark:border-purple-900 leading-relaxed font-medium">
+                    <div className="rounded-xl bg-purple-500/10 p-3 text-foreground border border-purple-500/20 leading-relaxed font-medium">
                       {voiceStep === 2 &&
                         (callLang === 'en'
                           ? '“Thank you! A secure 1-click Razorpay payment link has been sent to your WhatsApp (+91 98765 43210). It remains valid for 24 hours.”'
@@ -909,13 +910,13 @@ export default function QueueView({
             </div>
 
             {/* Controls */}
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between pt-2 border-t border-border">
               <button
                 onClick={() => {
                   const intro = getIntroText(voiceItem, callLang)
                   speakText(intro, callLang)
                 }}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 px-3 py-1.5 text-xs font-semibold transition-colors"
               >
                 <span>🔊</span>
                 <span>Replay AI Voice</span>

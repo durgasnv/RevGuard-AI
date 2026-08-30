@@ -155,7 +155,7 @@ export function Card({
 }) {
   return (
     <section
-      className={`rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-colors hover:border-slate-300 dark:border-slate-800 dark:bg-[#111622] dark:hover:border-slate-750 ${
+      className={`rounded-xl border border-border bg-card text-card-foreground p-5 shadow-xs transition-colors hover:border-border/80 ${
         className ?? ''
       }`}
     >
@@ -163,18 +163,18 @@ export function Card({
         <header className="mb-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             {icon && (
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-100 text-xs font-semibold text-slate-700 dark:border-slate-750 dark:bg-slate-850 dark:text-slate-300">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted/60 text-xs font-semibold text-foreground">
                 {icon}
               </span>
             )}
             <div>
               {title && (
-                <h3 className="text-sm font-semibold tracking-tight text-slate-900 dark:text-white">
+                <h3 className="text-sm font-semibold tracking-tight text-foreground">
                   {title}
                 </h3>
               )}
               {subtitle && (
-                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
               )}
             </div>
           </div>
@@ -191,10 +191,10 @@ export function Card({
 const kpiAccents = {
   red: 'border-t-2 border-t-rose-500',
   green: 'border-t-2 border-t-emerald-500',
-  blue: 'border-t-2 border-t-blue-500',
+  blue: 'border-t-2 border-t-primary',
   amber: 'border-t-2 border-t-amber-500',
   purple: 'border-t-2 border-t-indigo-500',
-  slate: 'border-t-2 border-t-slate-400 dark:border-t-slate-600',
+  slate: 'border-t-2 border-t-muted-foreground/40',
 }
 
 export function KpiCard({
@@ -217,29 +217,29 @@ export function KpiCard({
   const accentClass = kpiAccents[tone] ?? kpiAccents.slate
   const deltaCls =
     deltaTone === 'up'
-      ? 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/20'
+      ? 'text-emerald-600 bg-emerald-500/10 border-emerald-500/20'
       : deltaTone === 'down'
-        ? 'text-rose-700 bg-rose-50 border-rose-200 dark:text-rose-400 dark:bg-rose-500/10 dark:border-rose-500/20'
-        : 'text-slate-600 bg-slate-100 border-slate-200 dark:text-slate-400 dark:bg-slate-800 dark:border-slate-700'
+        ? 'text-rose-600 bg-rose-500/10 border-rose-500/20'
+        : 'text-muted-foreground bg-muted border-border'
 
   const trendIcon = deltaTone === 'up' ? '↑' : deltaTone === 'down' ? '↓' : '→'
 
   return (
     <div
-      className={`rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-colors hover:border-slate-300 dark:border-slate-800 dark:bg-[#111622] dark:hover:border-slate-750 ${accentClass}`}
+      className={`rounded-xl border border-border bg-card text-card-foreground p-5 shadow-xs transition-colors hover:border-border/80 ${accentClass}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           {label}
         </span>
         {icon && (
-          <span className="flex h-6 w-6 items-center justify-center rounded bg-slate-100 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+          <span className="flex h-6 w-6 items-center justify-center rounded bg-muted text-xs text-muted-foreground">
             {icon}
           </span>
         )}
       </div>
 
-      <div className="num mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white lg:text-3xl">
+      <div className="num mt-2 text-2xl font-bold tracking-tight text-foreground lg:text-3xl">
         {value}
       </div>
 
@@ -253,7 +253,7 @@ export function KpiCard({
               {delta}
             </span>
           )}
-          {sub && <span className="text-xs text-slate-500 dark:text-slate-400">{sub}</span>}
+          {sub && <span className="text-xs text-muted-foreground">{sub}</span>}
         </div>
       )}
     </div>
@@ -277,7 +277,7 @@ export function PrimaryButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 active:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-xs transition-all hover:bg-primary/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
     >
       {children}
     </button>
@@ -299,7 +299,7 @@ export function GhostButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:border-slate-750 dark:bg-slate-850 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-800 dark:hover:text-white disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-3.5 py-2 text-xs font-medium text-foreground transition-all hover:bg-muted active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
     >
       {children}
     </button>
@@ -314,12 +314,12 @@ export function Badge({
   tone?: 'default' | 'emerald' | 'blue' | 'amber' | 'rose' | 'purple'
 }) {
   const tones = {
-    default: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
-    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20',
-    blue: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20',
-    amber: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20',
-    rose: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20',
-    purple: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300 dark:border-indigo-500/20',
+    default: 'bg-muted text-muted-foreground border-border',
+    emerald: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+    blue: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+    amber: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20',
+    rose: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+    purple: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
   }
   return (
     <span
