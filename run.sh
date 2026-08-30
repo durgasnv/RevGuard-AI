@@ -41,8 +41,8 @@ for i in $(seq 1 30); do
 done
 
 # --- frontend --------------------------------------------------------------
-echo "[revguard] starting frontend on :5173 ..."
-(cd frontend && npm run dev) &
+echo "[revguard] starting shadcn frontend (rpaydp) on :5173 ..."
+(cd rpaydp && npm run dev -- --host 0.0.0.0 --port 5173) &
 FRONTEND_PID=$!
 
 echo ""
