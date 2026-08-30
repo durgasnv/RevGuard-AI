@@ -223,8 +223,8 @@ export default function B2BView() {
                 onClick={() => setSelectedBucket(b.id)}
                 className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
                   selectedBucket === b.id
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    ? 'bg-primary text-primary-foreground shadow-xs'
+                    : 'border border-border text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
                 {b.label}
@@ -236,7 +236,7 @@ export default function B2BView() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <tr className="border-b border-border text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 <th className="py-3 pr-3">Invoice ID</th>
                 <th className="py-3 pr-3">Client Name</th>
                 <th className="py-3 pr-3 text-right">Amount</th>
@@ -247,7 +247,7 @@ export default function B2BView() {
                 <th className="py-3 pr-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+            <tbody className="divide-y divide-border">
               {filteredInvoices.map((inv) => {
                 const open = openId === inv.invoice_id
                 return (
@@ -255,31 +255,31 @@ export default function B2BView() {
                     <tr
                       onClick={() => setOpenId(open ? null : inv.invoice_id)}
                       className={`cursor-pointer transition-colors ${
-                        open ? 'bg-blue-50/50 dark:bg-blue-600/10' : 'hover:bg-slate-50 dark:hover:bg-slate-850/60'
+                        open ? 'bg-primary/10' : 'hover:bg-muted/50'
                       }`}
                     >
-                      <td className="py-3 pr-3 font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
+                      <td className="py-3 pr-3 font-mono text-xs font-semibold text-foreground">
                         {inv.invoice_id}
                       </td>
                       <td className="py-3 pr-3">
-                        <div className="font-semibold text-slate-900 dark:text-white">{inv.client_name}</div>
-                        <div className="text-[11px] text-slate-500">{inv.client_contact} · {inv.client_email}</div>
+                        <div className="font-semibold text-foreground">{inv.client_name}</div>
+                        <div className="text-[11px] text-muted-foreground">{inv.client_contact} · {inv.client_email}</div>
                       </td>
-                      <td className="num py-3 pr-3 text-right font-bold text-slate-900 dark:text-white">
+                      <td className="num py-3 pr-3 text-right font-bold text-foreground">
                         {inr(inv.amount_inr)}
                       </td>
                       <td className="py-3 pr-3">{getBucketBadge(inv.aging_bucket)}</td>
                       <td className="py-3 pr-3">
                         {inv.status === 'recovered' ? (
-                          <span className="rounded bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                          <span className="rounded bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                             ✓ Settled
                           </span>
                         ) : inv.status === 'promised_to_pay' ? (
-                          <span className="rounded bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20">
+                          <span className="rounded bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 border border-blue-500/20">
                             📅 PTP Committed
                           </span>
                         ) : (
-                          <span className="rounded bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/20">
+                          <span className="rounded bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300 border border-amber-500/20">
                             {inv.overdue_days}d Overdue
                           </span>
                         )}
@@ -299,7 +299,7 @@ export default function B2BView() {
                               setPtpAmount(inv.amount_inr)
                               setPtpNotes('')
                             }}
-                            className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 shadow-xs"
+                            className="rounded border border-border bg-card px-2 py-1 text-[11px] font-semibold text-foreground hover:bg-muted shadow-xs transition-colors"
                           >
                             + Record PTP
                           </button>
@@ -312,7 +312,7 @@ export default function B2BView() {
                               <button
                                 onClick={() => handleChase(inv.invoice_id)}
                                 disabled={chasingId === inv.invoice_id}
-                                className="rounded bg-blue-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                                className="rounded bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
                               >
                                 {chasingId === inv.invoice_id ? 'Chasing…' : '⚡ AI Chase'}
                               </button>
@@ -320,7 +320,7 @@ export default function B2BView() {
                               <button
                                 onClick={() => handleRecover(inv.invoice_id)}
                                 disabled={recoveredId === inv.invoice_id}
-                                className="rounded bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                                className="rounded bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
                               >
                                 {recoveredId === inv.invoice_id ? 'Settling…' : '✓ Settle'}
                               </button>
@@ -331,14 +331,14 @@ export default function B2BView() {
                     </tr>
 
                     {open && (
-                      <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900">
+                      <tr className="border-b border-border bg-muted/20">
                         <td colSpan={8} className="p-4">
-                          <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm space-y-3 text-xs">
-                            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-                              <span className="font-bold text-slate-900 dark:text-white">
+                          <div className="rounded-xl border border-border bg-card text-card-foreground p-4 shadow-xs space-y-3 text-xs">
+                            <div className="flex items-center justify-between border-b border-border pb-2">
+                              <span className="font-bold text-foreground">
                                 Timeline & Dunning Audit Trail — {inv.invoice_id}
                               </span>
-                              <span className="font-mono text-slate-500">Corporate Link: {inv.payment_link}</span>
+                              <span className="font-mono text-muted-foreground">Corporate Link: {inv.payment_link}</span>
                             </div>
 
                             {inv.ptp && (

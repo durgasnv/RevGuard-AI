@@ -368,7 +368,7 @@ Assurance Status: VERIFIED & AUDITED FOR ENTERPRISE DEPLOYMENT
           right={
             <button
               onClick={goLeakage}
-              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline transition-colors"
+              className="text-xs font-semibold text-primary hover:underline transition-colors"
             >
               View all clusters →
             </button>
@@ -379,19 +379,19 @@ Assurance Status: VERIFIED & AUDITED FOR ENTERPRISE DEPLOYMENT
               <div
                 key={c.cluster_id}
                 onClick={goLeakage}
-                className="group flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850/50 p-2.5 transition-colors hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-850"
+                className="group flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-muted/30 p-2.5 transition-colors hover:bg-muted/70 hover:border-border"
               >
-                <span className="num flex h-7 w-7 shrink-0 items-center justify-center rounded bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">
+                <span className="num flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-bold text-foreground">
                   {i + 1}
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="truncate text-xs font-semibold text-slate-900 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                    <span className="truncate text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
                       {c.title}
                     </span>
                     <SeverityBadge severity={c.severity} />
                   </div>
-                  <div className="mt-0.5 flex items-center gap-2 text-[11px] text-slate-500">
+                  <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
                     <span className="num">{c.txn_count} txns</span>
                     <span>·</span>
                     <span className="uppercase">{c.payment_methods.join(', ')}</span>
@@ -401,12 +401,12 @@ Assurance Status: VERIFIED & AUDITED FOR ENTERPRISE DEPLOYMENT
                   <span className="num block text-xs font-bold text-rose-600 dark:text-rose-400">
                     {inr(c.revenue_at_risk_inr)}
                   </span>
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500">at risk</span>
+                  <span className="text-[10px] text-muted-foreground">at risk</span>
                 </div>
               </div>
             ))}
             {detectReport.clusters.length === 0 && (
-              <div className="py-6 text-center text-xs text-slate-400">
+              <div className="py-6 text-center text-xs text-muted-foreground">
                 No active leakage clusters detected
               </div>
             )}

@@ -51,10 +51,10 @@ export default function AuditView({
               <button
                 key={a}
                 onClick={() => setFilter(a)}
-                className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors ${
                   filter === a
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-850 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800'
+                    ? 'bg-primary text-primary-foreground shadow-xs'
+                    : 'border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
                 {a.replace(/_/g, ' ')}
@@ -71,71 +71,71 @@ export default function AuditView({
             return (
               <div
                 key={e.event_id}
-                className={`rounded-lg border transition-colors ${
+                className={`rounded-xl border transition-colors ${
                   open
-                    ? 'border-blue-300 dark:border-blue-500/40 bg-white dark:bg-slate-900 shadow-sm'
-                    : 'border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-850/60'
+                    ? 'border-primary/40 bg-card shadow-xs'
+                    : 'border-border bg-card/60 hover:bg-muted/50'
                 }`}
               >
                 <button
                   className="flex w-full items-center gap-3 px-3.5 py-2.5 text-left text-xs"
                   onClick={() => setExpanded(open ? null : e.event_id)}
                 >
-                  <span className="num shrink-0 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                  <span className="num shrink-0 font-mono text-[11px] text-muted-foreground">
                     {e.timestamp.slice(11, 19)}
                   </span>
-                  <span className="shrink-0 rounded border border-slate-200 dark:border-slate-750 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  <span className="shrink-0 rounded-md border border-border bg-muted/60 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-foreground">
                     {e.actor.replace(/_/g, ' ')}
                   </span>
-                  <span className="shrink-0 font-semibold capitalize text-slate-900 dark:text-white">
+                  <span className="shrink-0 font-semibold capitalize text-foreground">
                     {e.action.replace(/_/g, ' ').toLowerCase()}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-slate-500 dark:text-slate-400">{e.reason}</span>
+                  <span className="min-w-0 flex-1 truncate text-muted-foreground">{e.reason}</span>
                   {outcomeStr && <AuditOutcomeTag outcome={outcomeStr} />}
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500">{open ? '▲' : '▼'}</span>
+                  <span className="text-[10px] text-muted-foreground">{open ? '▲' : '▼'}</span>
                 </button>
 
                 {open && (
-                  <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 px-4 py-3">
+                  <div className="border-t border-border bg-muted/20 px-4 py-3">
                     <div className="mb-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-                      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-xs">
-                        <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      <div className="rounded-lg border border-border bg-card p-2 shadow-xs">
+                        <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                           Policy Result
                         </span>
                         <span className="mt-0.5 font-medium text-emerald-600 dark:text-emerald-400">
                           {e.policy_result}
                         </span>
                       </div>
-                      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-xs">
-                        <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      <div className="rounded-lg border border-border bg-card p-2 shadow-xs">
+                        <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                           Transaction ID
                         </span>
-                        <span className="mt-0.5 block truncate font-mono text-slate-700 dark:text-slate-300">
+                        <span className="mt-0.5 block truncate font-mono text-foreground">
                           {e.evidence.transaction_id as string}
                         </span>
                       </div>
-                      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-xs">
-                        <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      <div className="rounded-lg border border-border bg-card p-2 shadow-xs">
+                        <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                           Amount
                         </span>
-                        <span className="num mt-0.5 font-bold text-slate-900 dark:text-white">
+                        <span className="num mt-0.5 font-bold text-foreground">
                           ₹{Number(e.evidence.amount_inr).toLocaleString('en-IN')}
                         </span>
                       </div>
-                      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-xs">
-                        <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      <div className="rounded-lg border border-border bg-card p-2 shadow-xs">
+                        <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                           Failure Code
                         </span>
-                        <span className="mt-0.5 font-mono text-slate-700 dark:text-slate-300">
+                        <span className="mt-0.5 font-mono text-foreground">
                           {(e.evidence.failure_code as string) || 'N/A'}
                         </span>
                       </div>
                     </div>
 
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                       Raw Evidence Payload
                     </div>
-                    <pre className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-900 text-slate-200 dark:bg-slate-950 dark:text-slate-300 p-3 font-mono text-[11px] leading-relaxed">
+                    <pre className="overflow-x-auto rounded-lg border border-border bg-muted/80 text-foreground p-3 font-mono text-[11px] leading-relaxed">
                       {JSON.stringify(e.evidence, null, 2)}
                     </pre>
                   </div>

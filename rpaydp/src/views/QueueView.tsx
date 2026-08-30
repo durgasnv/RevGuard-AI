@@ -202,22 +202,22 @@ export default function QueueView({
         </Card>
       </div>
 
-      {/* Interactive Compliance, Bounded Recovery & Stopping Rules Panel */}
+            {/* Interactive Compliance, Bounded Recovery & Stopping Rules Panel */}
       <Card
         title="🛡️ Bounded Recovery Policy & Stopping Rules Guard"
         subtitle="Enforces deterministic compliance boundaries before any financial intervention is queued"
         right={
           <div className="flex items-center gap-2">
-            <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">Approval Gate:</span>
-            <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 p-0.5 text-xs">
+            <span className="text-[11px] text-muted-foreground font-medium hidden sm:inline">Approval Gate:</span>
+            <div className="inline-flex rounded-lg border border-border bg-muted/60 p-0.5 text-xs">
               {[10000, 25000, 50000].map((val) => (
                 <button
                   key={val}
                   onClick={() => setApprovalThreshold(val)}
                   className={`rounded-md px-2 py-0.5 text-[11px] font-semibold transition-all ${
                     approvalThreshold === val
-                      ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
+                      ? 'bg-primary text-primary-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   ₹{(val / 1000).toFixed(0)}k
@@ -228,42 +228,42 @@ export default function QueueView({
         }
       >
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4 pt-1">
-          <div className="rounded-lg border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-500/[0.04] p-2.5">
-            <div className="flex items-center justify-between text-xs font-semibold text-emerald-800 dark:text-emerald-400">
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
+            <div className="flex items-center justify-between text-xs font-semibold text-emerald-700 dark:text-emerald-300">
               <span>Rule SC-01 (Safe Mode)</span>
-              <span className="rounded bg-emerald-100 dark:bg-emerald-500/20 px-1.5 py-0.2 text-[10px]">Active</span>
+              <span className="rounded bg-emerald-500/20 px-1.5 py-0.2 text-[10px] font-mono">Active</span>
             </div>
-            <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+            <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">
               Fraud risk declines & card blocks are strictly prohibited from automated retries.
             </p>
           </div>
 
-          <div className="rounded-lg border border-blue-200 dark:border-blue-500/20 bg-blue-50/50 dark:bg-blue-500/[0.04] p-2.5">
-            <div className="flex items-center justify-between text-xs font-semibold text-blue-800 dark:text-blue-400">
+          <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-3">
+            <div className="flex items-center justify-between text-xs font-semibold text-blue-700 dark:text-blue-300">
               <span>Customer Fatigue Cap</span>
               <span className="num font-bold text-blue-600 dark:text-blue-400">Max 3</span>
             </div>
-            <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+            <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">
               Hard stop on transactions exceeding 3 prior attempts to prevent spam and customer friction.
             </p>
           </div>
 
-          <div className="rounded-lg border border-amber-200 dark:border-amber-500/20 bg-amber-50/50 dark:bg-amber-500/[0.04] p-2.5">
-            <div className="flex items-center justify-between text-xs font-semibold text-amber-800 dark:text-amber-400">
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+            <div className="flex items-center justify-between text-xs font-semibold text-amber-700 dark:text-amber-300">
               <span>Human Sign-off Gate</span>
               <span className="num font-bold text-amber-600 dark:text-amber-400">≥ ₹{(approvalThreshold / 1000).toFixed(0)}k</span>
             </div>
-            <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+            <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">
               High-value transactions automatically escalate for finance manager review before execution.
             </p>
           </div>
 
-          <div className="rounded-lg border border-purple-200 dark:border-purple-500/20 bg-purple-50/50 dark:bg-purple-500/[0.04] p-2.5">
-            <div className="flex items-center justify-between text-xs font-semibold text-purple-800 dark:text-purple-400">
+          <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-3">
+            <div className="flex items-center justify-between text-xs font-semibold text-purple-700 dark:text-purple-300">
               <span>Compliance Isolation</span>
-              <span className="rounded bg-purple-100 dark:bg-purple-500/20 px-1.5 py-0.2 text-[10px]">Enforced</span>
+              <span className="rounded bg-purple-500/20 px-1.5 py-0.2 text-[10px] font-mono">Enforced</span>
             </div>
-            <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+            <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">
               Frozen accounts & KYC holds bypass financial recovery directly to legal compliance.
             </p>
           </div>
@@ -273,20 +273,20 @@ export default function QueueView({
       {execution && (
         <Card title="Last Execution Outcome">
           <div className="flex flex-wrap items-center gap-3 text-xs">
-            <span className="flex items-center gap-1.5 rounded-lg border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 font-semibold text-emerald-700 dark:text-emerald-300">
+            <span className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 font-semibold text-emerald-700 dark:text-emerald-300">
               <span>Recovered Revenue:</span>
-              <b className="num font-bold text-emerald-800 dark:text-emerald-400">{inr(execution.recovered_inr ?? 0)}</b>
+              <b className="num font-bold text-emerald-600 dark:text-emerald-400">{inr(execution.recovered_inr ?? 0)}</b>
             </span>
             {Object.entries(execution.outcome_counts ?? {}).map(([k, v]) => (
               <span
                 key={k}
-                className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 px-3 py-1.5 text-slate-700 dark:text-slate-300 capitalize font-medium"
+                className="rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-foreground capitalize font-medium"
               >
-                {k.replace(/_/g, ' ')}: <b className="num text-slate-900 dark:text-white font-semibold">{v}</b>
+                {k.replace(/_/g, ' ')}: <b className="num text-foreground font-semibold">{v}</b>
               </span>
             ))}
-            <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">
-              Audit Events Generated: <b className="num text-slate-900 dark:text-white">{execution.audit_trail.length}</b>
+            <span className="ml-auto text-xs text-muted-foreground">
+              Audit Events Generated: <b className="num text-foreground">{execution.audit_trail.length}</b>
             </span>
           </div>
         </Card>
@@ -299,7 +299,7 @@ export default function QueueView({
           <div className="flex items-center gap-2">
             <button
               onClick={exportQueueCsv}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-750 bg-white dark:bg-slate-850 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
             >
               <span>📥</span>
               <span className="hidden sm:inline">Export Queue (.csv)</span>
@@ -327,7 +327,7 @@ export default function QueueView({
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <tr className="border-b border-border text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 <th className="py-3 pr-3">#</th>
                 <th className="py-3 pr-3">Transaction ID</th>
                 <th className="py-3 pr-3 text-right">Amount</th>
@@ -342,17 +342,17 @@ export default function QueueView({
                 <th className="py-3 pr-3">Gate</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+            <tbody className="divide-y divide-border">
               {plan.queue.slice(0, 25).map((d) => (
                 <tr
                   key={d.transaction_id}
-                  className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-850/60"
+                  className="transition-colors hover:bg-muted/50"
                 >
-                  <td className="num py-3 pr-3 text-xs font-bold text-slate-400 dark:text-slate-500">{d.rank}</td>
-                  <td className="py-3 pr-3 font-mono text-xs text-slate-600 dark:text-slate-300">
+                  <td className="num py-3 pr-3 text-xs font-bold text-muted-foreground">{d.rank}</td>
+                  <td className="py-3 pr-3 font-mono text-xs text-foreground">
                     {d.transaction_id.slice(0, 14)}…
                   </td>
-                  <td className="num py-3 pr-3 text-right font-semibold text-slate-900 dark:text-white">
+                  <td className="num py-3 pr-3 text-right font-semibold text-foreground">
                     {inr(d.amount_inr)}
                   </td>
                   <td className="py-3 pr-3 font-mono text-[11px] text-slate-500 dark:text-slate-400">

@@ -231,7 +231,7 @@ export default function App() {
   const currentNav = NAV.find((n) => n.id === tab)
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-[#0b0e14] text-slate-900 dark:text-slate-200 transition-colors">
+    <div className="flex min-h-screen bg-background text-foreground transition-colors">
       {/* Enterprise Navy Sidebar */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-800 bg-[#0f172a] p-4 text-slate-300 lg:flex">
         <Logo />
@@ -297,7 +297,7 @@ export default function App() {
       {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Sticky Header Bar */}
-        <header className="sticky top-0 z-20 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#0e121b]/95 backdrop-blur transition-colors">
+        <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur transition-colors">
           <div className="flex items-center justify-between gap-3 px-4 py-3 lg:px-8">
             <div className="lg:hidden">
               <Logo />
@@ -305,16 +305,16 @@ export default function App() {
 
             {/* Breadcrumb / Title */}
             <div className="hidden items-center gap-2 text-xs lg:flex">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">RevGuard</span>
-              <span className="text-slate-400 dark:text-slate-600">/</span>
-              <span className="font-semibold text-slate-900 dark:text-white">{currentNav?.label}</span>
+              <span className="text-muted-foreground font-medium">RevGuard</span>
+              <span className="text-muted-foreground/60">/</span>
+              <span className="font-semibold text-foreground">{currentNav?.label}</span>
             </div>
 
             {/* Telemetry pill */}
-            <div className="hidden items-center gap-2 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 text-xs lg:flex">
+            <div className="hidden items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs lg:flex">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span className="text-slate-500 dark:text-slate-400">Store:</span>
-              <span className="font-medium text-slate-700 dark:text-slate-200">
+              <span className="text-muted-foreground">Store:</span>
+              <span className="font-medium text-foreground">
                 {detectReport
                   ? `${detectReport.failed_count} failed · ${inrShort(detectReport.revenue_at_risk_inr)} at risk`
                   : 'Ready'}
@@ -326,7 +326,7 @@ export default function App() {
               {/* Hackathon Alignment Matrix Quick Launcher */}
               <button
                 onClick={() => setShowHackathonMatrix(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 text-xs font-bold text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition-colors shadow-xs"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition-colors shadow-xs"
               >
                 <span>🏆</span>
                 <span>Hackathon Matrix</span>
@@ -337,7 +337,7 @@ export default function App() {
 
               <button
                 onClick={() => setShowWebhookSim(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 dark:border-purple-500/20 bg-purple-50 dark:bg-purple-950/40 px-3 py-1.5 text-xs font-semibold text-purple-700 dark:text-purple-300 hover:bg-purple-100 transition-colors shadow-xs"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/30 bg-purple-500/10 px-3 py-1.5 text-xs font-semibold text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 transition-colors shadow-xs"
               >
                 <span>⚡</span>
                 <span>Sim Webhook</span>
@@ -346,11 +346,11 @@ export default function App() {
               <button
                 onClick={runRecovery}
                 disabled={busy}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 active:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground shadow-xs transition-all hover:bg-primary/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {busy ? (
                   <>
-                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
                     <span>Running…</span>
                   </>
                 ) : (
@@ -366,7 +366,7 @@ export default function App() {
                   await api.reset()
                   location.reload()
                 }}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-750 bg-white dark:bg-slate-850 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-white"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
               >
                 <span>↺</span>
                 <span>Reset</span>
@@ -727,7 +727,7 @@ export default function App() {
         )}
 
         {/* Global Footer */}
-        <footer className="border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#0e121b] px-4 py-3 text-center text-xs text-slate-500 dark:text-slate-500 lg:px-8 transition-colors">
+        <footer className="border-t border-border bg-card px-4 py-3 text-center text-xs text-muted-foreground lg:px-8 transition-colors">
           <span>RevGuard-AI · Autonomous Revenue Recovery Control Tower</span>
           <span className="mx-2">·</span>
           <span>Razorpay Payments Gateway Ecosystem</span>
