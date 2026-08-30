@@ -32,7 +32,7 @@ trap cleanup EXIT INT TERM
 
 # --- backend ---------------------------------------------------------------
 echo "[revguard] starting backend on :8000 ..."
-(cd backend && PYTHONPATH=. "$PY" -m uvicorn app.main:app --port 8000) &
+(cd backend && PYTHONPATH=. "$PY" -m uvicorn app.main:app --host :: --port 8000) &
 BACKEND_PID=$!
 
 for i in $(seq 1 30); do
@@ -42,7 +42,7 @@ done
 
 # --- frontend --------------------------------------------------------------
 echo "[revguard] starting shadcn frontend (rpaydp) on :5173 ..."
-(cd rpaydp && npm run dev -- --host 0.0.0.0 --port 5173) &
+(cd rpaydp && npm run dev -- --host :: --port 5173) &
 FRONTEND_PID=$!
 
 echo ""
