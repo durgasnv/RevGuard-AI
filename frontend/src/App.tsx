@@ -354,7 +354,9 @@ export default function App() {
       >
         {/* Sidebar Header & Toggle */}
         <div className="flex items-center justify-between">
-          <Logo collapsed={!sidebarOpen} />
+          <div className="text-left">
+            <Logo collapsed={!sidebarOpen} />
+          </div>
           {sidebarOpen && (
             <button
               onClick={(e) => {
@@ -362,30 +364,15 @@ export default function App() {
                 setSidebarOpen(false)
               }}
               title="Collapse Sidebar"
-              className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+              className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
             >
               ⇤
             </button>
           )}
         </div>
 
-        {/* Top Sidebar Action: Landing Page */}
-        <button
-          onClick={() => setViewMode('landing')}
-          className={`mt-4 mb-2 flex w-full items-center justify-between rounded-xl border border-slate-800 bg-gradient-to-r from-blue-900/40 to-indigo-900/30 px-3 py-2 text-xs font-semibold text-blue-200 hover:from-blue-900/60 hover:to-indigo-900/50 transition-all shadow-inner ${
-            !sidebarOpen ? 'justify-center px-2' : ''
-          }`}
-          title="Switch to Landing Page"
-        >
-          <div className="flex items-center gap-2">
-            <span>🌐</span>
-            {sidebarOpen && <span>Landing Page</span>}
-          </div>
-          {sidebarOpen && <span className="text-[10px] text-blue-400 font-mono">Ramp UI →</span>}
-        </button>
-
         {sidebarOpen && (
-          <div className="mt-2 mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+          <div className="mt-4 mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
             Navigation
           </div>
         )}
@@ -437,7 +424,7 @@ export default function App() {
           <div className="mb-3 flex justify-center">
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-lg border border-slate-800 bg-slate-900 text-xs"
+              className="p-2 rounded-lg border border-slate-800 bg-slate-900 text-xs cursor-pointer"
               title="Toggle Theme"
             >
               {theme === 'dark' ? '🌙' : '☀️'}
@@ -501,21 +488,28 @@ export default function App() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="hidden lg:flex items-center justify-center h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shadow-sm"
+                className="hidden lg:flex items-center justify-center h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shadow-sm cursor-pointer"
                 title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
               >
                 <span className="text-sm">☰</span>
               </button>
 
-              <div className="lg:hidden">
-                <Logo />
+              <div className="lg:hidden text-left">
+                <Logo collapsed />
               </div>
 
-              {/* Breadcrumb / Title */}
-              <div className="hidden sm:flex items-center gap-2 text-xs">
-                <span className="text-slate-400 dark:text-slate-500 font-medium">RevGuard</span>
+              {/* Breadcrumb / Title with clickable RevGuard Home Link */}
+              <div className="flex items-center gap-2 text-xs">
+                <button
+                  onClick={() => setViewMode('landing')}
+                  className="hover:text-blue-600 dark:hover:text-blue-400 font-bold text-slate-700 dark:text-slate-200 transition-colors flex items-center gap-1.5 group cursor-pointer"
+                  title="Return to Landing Page"
+                >
+                  <span className="text-sm group-hover:scale-110 transition-transform">🛡️</span>
+                  <span className="group-hover:underline underline-offset-4 font-bold">RevGuard</span>
+                </button>
                 <span className="text-slate-300 dark:text-slate-700">/</span>
-                <span className="font-bold text-slate-900 dark:text-white">{currentNav?.label}</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{currentNav?.label}</span>
               </div>
 
               {/* Live Telemetry Pill */}
@@ -531,15 +525,6 @@ export default function App() {
 
             {/* Right: Clean Grouped Actions & Profile */}
             <div className="flex items-center gap-2">
-              {/* Landing Page Link */}
-              <button
-                onClick={() => setViewMode('landing')}
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
-              >
-                <span>🌐</span>
-                <span>Landing Page</span>
-              </button>
-
               {/* Quick Actions Dropdown (Shadcn Menubar Style) */}
               <div className="relative">
                 <button

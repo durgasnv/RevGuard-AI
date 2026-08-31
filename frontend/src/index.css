@@ -19,13 +19,21 @@ body {
   letter-spacing: -0.012em;
 }
 
-/* Luxury card surfaces with enhanced depth and subtle shadows */
-.obsidian-card {
-  @apply rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#0d111a]/95 backdrop-blur-xl shadow-md shadow-slate-200/60 dark:shadow-2xl dark:shadow-black/50 transition-all duration-200;
-}
+@layer components {
+  /* Luxury card surfaces with enhanced depth and subtle shadows */
+  .obsidian-card {
+    @apply rounded-2xl border border-slate-200 bg-white backdrop-blur-xl shadow-sm transition-all duration-200;
+  }
+  .dark .obsidian-card {
+    @apply border-slate-800 bg-[#0d111a]/95 text-slate-100 shadow-2xl shadow-black/50;
+  }
 
-.obsidian-card-sm {
-  @apply rounded-xl border border-slate-200/70 dark:border-white/[0.06] bg-slate-50/90 dark:bg-[#121824]/90 backdrop-blur-md shadow-sm shadow-slate-200/50 dark:shadow-lg dark:shadow-black/40 transition-all duration-200;
+  .obsidian-card-sm {
+    @apply rounded-xl border border-slate-200/80 bg-slate-50/90 backdrop-blur-md shadow-sm transition-all duration-200;
+  }
+  .dark .obsidian-card-sm {
+    @apply border-slate-800 bg-[#121824]/90 text-slate-100 shadow-md shadow-black/40;
+  }
 }
 
 .card-premium-shadow {
