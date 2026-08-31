@@ -34,6 +34,7 @@ from app.policy.guard import PolicyGuard
 from app.schemas.transactions import Transaction
 from app.strategy.engine import build_plan
 from app.strategy.schemas import StrategyPlan
+from app.auth.router import router as auth_router
 
 logger = logging.getLogger("revguard.api")
 logging.basicConfig(
@@ -46,6 +47,7 @@ _CORS_ORIGINS = os.environ.get(
 ).split(",")
 
 app = FastAPI(title="Revenue Recovery Control Tower", version="0.1.0")
+app.include_router(auth_router)
 
 app.add_middleware(
     CORSMiddleware,

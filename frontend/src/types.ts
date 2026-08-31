@@ -223,3 +223,30 @@ export interface WebhookEvent {
   timestamp: string
 }
 
+export type UserRole = 'cfo' | 'finance_lead' | 'risk_officer' | 'merchant_admin'
+
+export interface User {
+  id: string
+  name: string
+  email: string
+  role: UserRole
+  avatar_url?: string | null
+  company: string
+  permissions: string[]
+}
+
+export interface AuthResponse {
+  token: string
+  token_type: string
+  user: User
+}
+
+export interface DemoPersona {
+  key: string
+  name: string
+  role: string
+  email: string
+  company: string
+  avatar_url?: string
+}
+

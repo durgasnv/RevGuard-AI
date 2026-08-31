@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from './api'
-import type { DetectReport, AppState } from './types'
+import type { DetectReport, AppState, User, DemoPersona } from './types'
 import AuditView from './views/AuditView'
 import LeakageView from './views/LeakageView'
 import OverviewView from './views/OverviewView'
 import QueueView from './views/QueueView'
 import AnalyzeView from './views/AnalyzeView'
 import B2BView from './views/B2BView'
+import LoginView from './views/LoginView'
 import BatchSimulatorModal from './components/BatchSimulatorModal'
 
 type TabId = 'overview' | 'leakage' | 'queue' | 'b2b' | 'audit' | 'analyze'
@@ -117,6 +118,19 @@ function ThemeToggle({
 }
 
 export default function App() {
+  const [user, setUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('revguard_user')
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch {
+        return null
+      }
+    }
+    return null
+  })
+  const [personas, setPersonas] = useState<DemoPersona[]>([])
+  const [showUserMenu, setShowUserMenu] = useState(false)
   const [tab, setTab] = useState<TabId>('overview')
   const [boot, setBoot] = useState<'checking' | 'empty' | 'ready'>('checking')
   const [detectReport, setDetectReport] = useState<DetectReport | null>(null)
@@ -138,6 +152,49 @@ export default function App() {
     }
     localStorage.setItem('revguard_theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    api.authPersonas().then((res) => {
+      setPersonas(res.personas)
+    }).catch(() => {})
+
+    const token = localStorage.getItem('revguard_auth_token')
+    if (token) {
+      api.authMe().then((u) => {
+        setUser(u)
+        localStorage.setItem('revguard_user', JSON.stringify(u))
+      }).catch(() => {
+        localStorage.removeItem('revguard_auth_token')
+        localStorage.removeItem('revguard_user')
+        setUser(null)
+      })
+    }
+  }, [])
+
+  const handleLogout = async () => {
+    try {
+      await api.authLogout()
+    } catch {}
+    localStorage.removeItem('revguard_auth_token')
+    localStorage.removeItem('revguard_user')
+    setUser(null)
+    setShowUserMenu(false)
+  }
+
+  const handleSwitchPersona = async (personaKey: string) => {
+    setBusy(true)
+    try {
+      const res = await api.authLogin('', personaKey)
+      localStorage.setItem('revguard_auth_token', res.token)
+      localStorage.setItem('revguard_user', JSON.stringify(res.user))
+      setUser(res.user)
+      setShowUserMenu(false)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setBusy(false)
+    }
+  }
 
   const refresh = useCallback(async () => {
     const [report, st] = await Promise.all([api.detect(), api.state()])
@@ -173,6 +230,17 @@ export default function App() {
       setBusy(false)
     }
   }, [refresh])
+
+  if (!user) {
+    return (
+      <LoginView
+        personas={personas}
+        onLoginSuccess={(loggedUser) => {
+          setUser(loggedUser)
+        }}
+      />
+    )
+  }
 
   if (boot === 'checking') {
     return (
@@ -281,6 +349,30 @@ export default function App() {
           <ThemeToggle theme={theme} setTheme={setTheme} />
         </div>
 
+        {/* Sidebar User Profile Pill */}
+        <div className="mb-3 flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/90 p-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <img
+              src={user.avatar_url || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150'}
+              alt={user.name}
+              className="h-8 w-8 rounded-full object-cover border border-slate-700 shrink-0"
+            />
+            <div className="min-w-0">
+              <div className="text-xs font-semibold text-white truncate">{user.name}</div>
+              <div className="text-[10px] text-blue-400 capitalize font-medium">
+                {user.role.replace('_', ' ')}
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            title="Sign Out"
+            className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-rose-400 transition-colors"
+          >
+            🚪
+          </button>
+        </div>
+
         {/* Sidebar System Telemetry Box */}
         <div className="rounded-lg border border-slate-800 bg-slate-900/90 p-3 text-xs">
           <div className="flex items-center justify-between">
@@ -353,6 +445,76 @@ export default function App() {
                 <span>⚡</span>
                 <span>Sim Webhook</span>
               </button>
+
+              {/* User Avatar Chip & Persona Switcher */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-2 py-1 text-xs hover:bg-slate-100 dark:hover:bg-slate-850 transition-colors"
+                >
+                  <img
+                    src={user.avatar_url || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150'}
+                    alt={user.name}
+                    className="h-6 w-6 rounded-full object-cover border border-slate-300 dark:border-slate-700 shrink-0"
+                  />
+                  <span className="hidden md:inline font-semibold text-slate-800 dark:text-slate-200">
+                    {user.name.split(' ')[0]}
+                  </span>
+                  <span className="text-[9px] uppercase px-1.5 py-0.2 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/20">
+                    {user.role.replace('_', ' ')}
+                  </span>
+                  <span className="text-[10px] text-slate-400">▾</span>
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-2xl z-50 text-xs space-y-2">
+                    <div className="border-b border-slate-100 dark:border-slate-800 pb-2 px-2">
+                      <div className="font-bold text-slate-900 dark:text-white">{user.name}</div>
+                      <div className="text-[11px] text-slate-500 truncate">{user.email}</div>
+                      <div className="text-[10px] text-blue-500 font-medium mt-0.5">{user.company}</div>
+                    </div>
+
+                    <div className="px-2 text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                      Switch Persona
+                    </div>
+                    <div className="space-y-1">
+                      {personas.map((p) => (
+                        <button
+                          key={p.key}
+                          onClick={() => handleSwitchPersona(p.key)}
+                          className={`w-full flex items-center justify-between rounded-lg p-1.5 text-left transition-colors ${
+                            user.email === p.email
+                              ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-semibold'
+                              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <img
+                              src={p.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
+                              alt={p.name}
+                              className="h-5 w-5 rounded-full object-cover"
+                            />
+                            <span>{p.name}</span>
+                          </div>
+                          <span className="text-[9px] uppercase px-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                            {p.role.replace('_', ' ')}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="border-t border-slate-100 dark:border-slate-800 pt-1">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2 rounded-lg p-1.5 text-left text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors font-semibold"
+                      >
+                        <span>🚪</span>
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <button
                 onClick={runRecovery}
