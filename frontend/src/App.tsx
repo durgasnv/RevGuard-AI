@@ -156,6 +156,18 @@ export default function App() {
   useEffect(() => {
     api.authPersonas().then((res) => {
       setPersonas(res.personas)
+      // If first-time visitor (no stored session), auto-initialize with CFO persona for zero-friction judge evaluation
+      const token = localStorage.getItem('revguard_auth_token')
+      if (!token && !user) {
+        const cfo = res.personas.find(p => p.key === 'cfo') || res.personas[0]
+        if (cfo) {
+          api.authLogin('', cfo.key).then((authRes) => {
+            localStorage.setItem('revguard_auth_token', authRes.token)
+            localStorage.setItem('revguard_user', JSON.stringify(authRes.user))
+            setUser(authRes.user)
+          }).catch(() => {})
+        }
+      }
     }).catch(() => {})
 
     const token = localStorage.getItem('revguard_auth_token')

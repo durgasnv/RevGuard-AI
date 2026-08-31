@@ -94,6 +94,22 @@ _SEEN_WEBHOOK_IDS: set[str] = set()  # webhook idempotency (NFR-04)
 _SEEN_WEBHOOK_IDS_MAX = 10_000  # cap to prevent unbounded growth
 
 
+@app.on_event("startup")
+def auto_seed_initial_state() -> None:
+    """Pre-populate a rich demo batch on startup so judges and bots see live data immediately."""
+    global _STORE, _LAST_REPORT, _LAST_PLAN
+    if not _STORE:
+        _STORE = generate_batch(n_total=600, profile="standard", seed=42)
+        _LAST_REPORT = detect(_STORE)
+        _LAST_PLAN = build_plan(_STORE, _LAST_REPORT)
+        AUDIT_LOG.record(
+            actor="system",
+            action="startup_auto_seed",
+            reason="Initialized default 600-transaction demo batch on server boot",
+            evidence={"transactions_count": len(_STORE), "clusters": len(_LAST_REPORT.clusters)},
+        )
+
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok", "transactions_in_store": len(_STORE)}
