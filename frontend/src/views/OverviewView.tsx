@@ -143,66 +143,127 @@ Assurance Status: VERIFIED & AUDITED FOR ENTERPRISE DEPLOYMENT
         </div>
       )}
 
-      {/* KPI Row */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
-          label="Revenue at Risk"
-          value={inr(detectReport.revenue_at_risk_inr)}
-          icon="₹"
-          tone="red"
-          delta={`${detectReport.failed_count} failed`}
-          deltaTone="down"
-          sub={`of ${detectReport.transactions_analyzed} transactions`}
-        />
-        <KpiCard
-          label="Expected Recoverable"
-          value={inr(detectReport.expected_recoverable_inr)}
-          icon="◈"
-          tone="blue"
-          delta={recoverableRatio > 0 ? `${pct(recoverableRatio, 0)} potential` : undefined}
-          deltaTone="up"
-          sub="detection-time estimate"
-        />
-        <KpiCard
-          label="AI Recovered"
-          value={evaluation ? inr(evaluation.ai_strategy.recovered_inr) : '…'}
-          icon="✓"
-          tone="green"
-          delta={evaluation ? `${pct(recoveryRate, 1)}` : undefined}
-          deltaTone="up"
-          sub={evaluation ? 'autonomous recovery rate' : ''}
-        />
-        <KpiCard
-          label="Recovery Uplift"
-          value={evaluation ? `+${inr(uplift)}` : '…'}
-          icon="↑"
-          tone="amber"
-          delta={evaluation ? `+${evaluation.uplift.rate_delta.toFixed(1)}pp` : undefined}
-          deltaTone="up"
-          sub={evaluation ? 'vs naïive retry baseline' : ''}
-        />
+      {/* Top Hero Row (Inspired by docs/dashboard.jpg) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* Left Big Holding / Revenue Card */}
+        <div className="lg:col-span-4 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-gradient-to-br dark:from-[#121824] dark:via-[#0d121c] dark:to-[#07090e] p-6 shadow-sm dark:shadow-2xl relative overflow-hidden flex flex-col justify-between space-y-4">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Total Revenue at Risk
+            </span>
+            <span className="pill-button border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-[10px] text-slate-700 dark:text-slate-300">
+              Batch: {detectReport.transactions_analyzed} txns
+            </span>
+          </div>
+
+          <div>
+            <div className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white num">
+              {inr(detectReport.revenue_at_risk_inr)}
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 num">
+                +{pct(recoveryRate, 1)} Recovered
+              </span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 num">
+                (+{inr(uplift)} Uplift)
+              </span>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-100 dark:border-white/[0.06] pt-3 flex justify-between items-center text-xs">
+            <span className="text-slate-500 dark:text-slate-400">Expected Recoverable:</span>
+            <span className="font-bold text-slate-900 dark:text-white num font-mono">
+              {inr(detectReport.expected_recoverable_inr)}
+            </span>
+          </div>
+        </div>
+
+        {/* Right 4 Horizontal Stream Mini-Cards */}
+        <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="obsidian-card p-4 flex flex-col justify-between space-y-2 hover:border-blue-500/30 transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">UPI 2.0 Switch</span>
+              <span className="text-sm">⚡</span>
+            </div>
+            <div>
+              <div className="text-base font-bold text-slate-900 dark:text-white num">₹3,84,000</div>
+              <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">68 Re-routed</div>
+            </div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400">Axis Collect Active</div>
+          </div>
+
+          <div className="obsidian-card p-4 flex flex-col justify-between space-y-2 hover:border-blue-500/30 transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Voice AI (PTP)</span>
+              <span className="text-sm">🎙️</span>
+            </div>
+            <div>
+              <div className="text-base font-bold text-slate-900 dark:text-white num">₹2,45,000</div>
+              <div className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold mt-0.5">82% Confirmed</div>
+            </div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400">2-Way STT Speech</div>
+          </div>
+
+          <div className="obsidian-card p-4 flex flex-col justify-between space-y-2 hover:border-blue-500/30 transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Mandate Ladder</span>
+              <span className="text-sm">🔄</span>
+            </div>
+            <div>
+              <div className="text-base font-bold text-slate-900 dark:text-white num">₹8,12,000</div>
+              <div className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold mt-0.5">Stage 2 Liquidity</div>
+            </div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400">78% Recovery Rate</div>
+          </div>
+
+          <div className="obsidian-card p-4 flex flex-col justify-between space-y-2 hover:border-blue-500/30 transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">SC-01 Guard</span>
+              <span className="text-sm">🛡️</span>
+            </div>
+            <div>
+              <div className="text-base font-bold text-rose-600 dark:text-rose-400 num">42 Stopped</div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Zero Spam</div>
+            </div>
+            <div className="text-[10px] text-emerald-600 dark:text-emerald-400">100% Compliant</div>
+          </div>
+        </div>
       </div>
 
       {/* Acquiring Bank Switch Health Radar & Autonomous Re-Routing */}
       <BankSwitchHealthRadar />
 
-      {/* Charts Row 1 */}
+      {/* Performance Trajectory Area Chart (Styled like docs/dashboard.jpg) */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card
-          title="AI Strategy vs Baseline Recovery"
-          subtitle="Recovered revenue under deterministic policy limits"
-          className="lg:col-span-2"
-        >
+        <div className="lg:col-span-2 obsidian-card p-6 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-white/[0.06] pb-3">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                Portfolio Recovery Trajectory vs. Naïve Baseline
+              </h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Incremental money recovered under deterministic policy boundaries
+              </p>
+            </div>
+            <div className="flex items-center gap-1 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 p-1 text-[10px] font-semibold">
+              <span className="px-2 py-0.5 text-slate-500 dark:text-slate-400">1D</span>
+              <span className="px-2 py-0.5 text-slate-500 dark:text-slate-400">1W</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-blue-600 text-white shadow-sm">1M</span>
+              <span className="px-2 py-0.5 text-slate-500 dark:text-slate-400">6M</span>
+              <span className="px-2 py-0.5 text-slate-500 dark:text-slate-400">ALL</span>
+            </div>
+          </div>
+
           {evaluation ? (
             <>
-              <div className="h-60 pt-2">
+              <div className="h-64 pt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={[
                       { name: 'Baseline (Naïve Retry)', recovered: evaluation.baseline.recovered_inr },
                       { name: 'RevGuard AI Strategy', recovered: evaluation.ai_strategy.recovered_inr },
                     ]}
-                    barGap={12}
+                    barGap={16}
                     margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-[#1f2638]" vertical={false} />
@@ -227,8 +288,8 @@ Assurance Status: VERIFIED & AUDITED FOR ENTERPRISE DEPLOYMENT
                     <Bar
                       dataKey="recovered"
                       name="Recovered"
-                      radius={[6, 6, 0, 0]}
-                      maxBarSize={70}
+                      radius={[8, 8, 0, 0]}
+                      maxBarSize={80}
                     >
                       <Cell fill="#94a3b8" />
                       <Cell fill="#2563eb" />
@@ -238,36 +299,36 @@ Assurance Status: VERIFIED & AUDITED FOR ENTERPRISE DEPLOYMENT
               </div>
 
               {/* 4 Metric Summary Row */}
-              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-slate-200 dark:border-slate-800 pt-4 sm:grid-cols-4">
-                <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-2.5">
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <div className="grid grid-cols-2 gap-3 border-t border-slate-100 dark:border-white/[0.06] pt-4 sm:grid-cols-4">
+                <div className="obsidian-card-sm p-3">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Net Uplift
                   </div>
-                  <div className="num mt-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  <div className="num mt-1 text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
                     +{inr(evaluation.uplift.extra_recovered_inr)}
                   </div>
                 </div>
-                <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-2.5">
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <div className="obsidian-card-sm p-3">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Rate Delta
                   </div>
-                  <div className="num mt-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  <div className="num mt-1 text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
                     +{evaluation.uplift.rate_delta.toFixed(2)} pp
                   </div>
                 </div>
-                <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-2.5">
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <div className="obsidian-card-sm p-3">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Waste Avoided
                   </div>
-                  <div className="num mt-1 text-xs font-bold text-blue-600 dark:text-blue-400">
+                  <div className="num mt-1 text-sm font-extrabold text-blue-600 dark:text-blue-400">
                     {evaluation.uplift.avoided_unnecessary_interventions} txns
                   </div>
                 </div>
-                <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-2.5">
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <div className="obsidian-card-sm p-3">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Hopeless Stopped
                   </div>
-                  <div className="num mt-1 text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <div className="num mt-1 text-sm font-extrabold text-slate-700 dark:text-slate-300">
                     {evaluation.ai_strategy.prevented_interventions} txns
                   </div>
                 </div>
@@ -278,7 +339,7 @@ Assurance Status: VERIFIED & AUDITED FOR ENTERPRISE DEPLOYMENT
               Running evaluation…
             </div>
           )}
-        </Card>
+        </div>
 
         {/* Donut Chart Card */}
         <Card

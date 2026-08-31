@@ -8,6 +8,7 @@ import QueueView from './views/QueueView'
 import AnalyzeView from './views/AnalyzeView'
 import B2BView from './views/B2BView'
 import LoginView from './views/LoginView'
+import LandingView from './views/LandingView'
 import BatchSimulatorModal from './components/BatchSimulatorModal'
 
 type TabId = 'overview' | 'leakage' | 'queue' | 'b2b' | 'audit' | 'analyze'
@@ -139,6 +140,7 @@ export default function App() {
   const [showWebhookSim, setShowWebhookSim] = useState(false)
   const [showHackathonMatrix, setShowHackathonMatrix] = useState(false)
   const [showBatchSimulator, setShowBatchSimulator] = useState(false)
+  const [viewMode, setViewMode] = useState<'landing' | 'app'>('landing')
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('revguard_theme')
     return saved === 'dark' ? 'dark' : 'light'
@@ -310,15 +312,50 @@ export default function App() {
     )
   }
 
+  if (viewMode === 'landing') {
+    return (
+      <>
+        <LandingView
+          onEnterDashboard={() => setViewMode('app')}
+          onOpenSimulator={() => {
+            setViewMode('app')
+            setShowBatchSimulator(true)
+          }}
+          onOpenHackathonMatrix={() => {
+            setViewMode('app')
+            setShowHackathonMatrix(true)
+          }}
+          theme={theme}
+          setTheme={setTheme}
+        />
+        {showBatchSimulator && (
+          <BatchSimulatorModal onClose={() => setShowBatchSimulator(false)} />
+        )}
+      </>
+    )
+  }
+
   const currentNav = NAV.find((n) => n.id === tab)
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-[#0b0e14] text-slate-900 dark:text-slate-200 transition-colors">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-[#07090e] text-slate-900 dark:text-slate-200 transition-colors">
       {/* Enterprise Navy Sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-800 bg-[#0f172a] p-4 text-slate-300 lg:flex">
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-800 bg-[#0c1017] p-4 text-slate-300 lg:flex">
         <Logo />
 
-        <div className="mt-6 mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+        {/* Top Sidebar Action: Landing Page */}
+        <button
+          onClick={() => setViewMode('landing')}
+          className="mt-4 mb-2 flex w-full items-center justify-between rounded-xl border border-slate-800 bg-gradient-to-r from-blue-900/40 to-indigo-900/30 px-3 py-2 text-xs font-semibold text-blue-200 hover:from-blue-900/60 hover:to-indigo-900/50 transition-all shadow-inner"
+        >
+          <div className="flex items-center gap-2">
+            <span>🌐</span>
+            <span>Landing Page</span>
+          </div>
+          <span className="text-[10px] text-blue-400 font-mono">Ramp UI →</span>
+        </button>
+
+        <div className="mt-2 mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
           Navigation
         </div>
 
@@ -429,6 +466,15 @@ export default function App() {
 
             {/* Header Actions & Theme Toggle */}
             <div className="flex items-center gap-2.5">
+              {/* Return to Landing Page */}
+              <button
+                onClick={() => setViewMode('landing')}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs"
+              >
+                <span>🌐</span>
+                <span>Landing Page</span>
+              </button>
+
               {/* Batch Simulator Live A/B Engine */}
               <button
                 onClick={() => setShowBatchSimulator(true)}
