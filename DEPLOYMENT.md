@@ -4,7 +4,21 @@ RevGuard-AI is engineered with a **unified production architecture**. The FastAP
 
 ---
 
-## 🌟 Option 1: 1-Click Render.com Deployment (Recommended & Free)
+## ⚡ Option 1: 1-Click Vercel Deployment (Zero Cold Starts & Instant Global CDN)
+
+RevGuard-AI includes native **Vercel Full-Stack Serverless** configuration via [`vercel.json`](vercel.json) and [`api/index.py`](api/index.py).
+
+1. Sign in to **[Vercel.com](https://vercel.com)**.
+2. Click **Add New...** $\rightarrow$ **Project** $\rightarrow$ Import your `RevGuard-AI` repository.
+3. Keep the **Root Directory** as `./` (default). Vercel will automatically read `vercel.json`:
+   - Builds the React 18 TypeScript frontend into global Edge CDN.
+   - Deploys the FastAPI backend as Serverless Python functions under `/api/*`.
+4. Click **Deploy**.
+5. Your live app will be active in seconds at: `https://revguard-ai.vercel.app` (with **0ms cold start**).
+
+---
+
+## 🌟 Option 2: 1-Click Render.com Deployment (Docker)
 
 1. Push your repository to GitHub: `https://github.com/durgasnv/RevGuard-AI`
 2. Sign in to [Render.com](https://render.com).
@@ -20,7 +34,7 @@ RevGuard-AI is engineered with a **unified production architecture**. The FastAP
 
 ---
 
-## 🚂 Option 2: 1-Click Railway Deployment
+## 🚂 Option 3: 1-Click Railway Deployment
 
 1. Sign in to [Railway.app](https://railway.app).
 2. Click **New Project** $\rightarrow$ **Deploy from GitHub repo**.
