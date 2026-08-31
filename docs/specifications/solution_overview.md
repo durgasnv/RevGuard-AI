@@ -323,4 +323,48 @@ Provides finance and executive leadership with an immutable, printable, and down
 
 An interactive modal in the Control Tower header allowing evaluators and merchants to audit and launch all 7 hackathon directions and "The Bar" validation workflows with a single click.
 
+## 23. 2-Way Voice AI Dialogue (Speech-to-Text & Speech Synthesis)
+
+RevGuard-AI provides full two-way conversational voice recovery:
+- **Speech Recognition (STT via `webkitSpeechRecognition`)**: Captures real-time customer speech in **English** and **Hinglish**.
+- **Real-Time NLP Intent Classification**:
+  - Voice responses like *"Main kal pay kar dunga"* or *"I will pay tomorrow"* parse date and amount to **automatically register a Promise-to-Pay (PTP)** on the B2B tracker.
+  - Alternate UPI or WhatsApp requests dispatch 1-click Razorpay links.
+  - Refusal/stop requests trigger **Rule SC-01**, halting retries to eliminate spam.
+
+## 24. Live Autonomous Closed-Loop Batch Simulator (A/B Ticker Engine)
+
+An interactive execution theater running high-speed simulations over 600 transactions:
+- Speed controls: **1x, 5x, ⚡ 10x Turbo Speed**.
+- Live ticking KPIs proving "The Bar":
+  - Gross Recovered: **₹19.62 Lakhs**
+  - Gateway Retry Cost Saved: **₹1,510 (-81.6%)**
+  - Customer Fatigue Violations Prevented: **42 (100% compliant)**
+  - Net Counterfactual Uplift: **+₹1.82 Lakhs (+18.4% vs Blind Retry)**
+- Live Deterministic Action Stream showing transactions transitioning from *Ingestion $\rightarrow$ Diagnosis $\rightarrow$ EV Optimization $\rightarrow$ Policy Pass $\rightarrow$ Recovered*.
+
+## 25. Acquiring Switch Health Radar & Autonomous Re-Routing (Rule SC-02)
+
+Real-time telemetry dashboard monitoring acquiring bank switch latency and success rates across HDFC UPI, ICICI Cards, SBI NetBanking, and Axis VPA rails:
+- **Rule SC-02 Automated Failover**: Detects transient bank switch degradation and autonomously re-routes high-intent checkouts to alternate healthy UPI collect rails.
+
+## 26. Enterprise Slack / Teams CFO Escalation Bridge
+
+Interactive Slack notification card in `#finance-revenue-escalations` for high-value transactions (>₹25k) and critical aging B2B invoices:
+- Live interactive action buttons: `[ ✅ Approve 1-Click Recovery Link ]`, `[ 🛑 Block Under SC-01 ]`, and `[ 🎙️ Launch Voice Bot ]`.
+- Executing approval updates the backend, records cryptographic audit logs, and posts real-time confirmation in Slack.
+
+## 27. Dynamic Incentive & Margin-Bounded EV Yield Optimizer
+
+Calculates dynamic conversion incentives (e.g. 5% instant UPI cashback) for checkout drop-offs and subscription churn:
+$$\text{Net EV} = P(\text{recovery} \mid \text{incentive}) \times (\text{Amount} - \text{Incentive}) - \text{Cost}$$
+- Bounded strictly by merchant gross margin constraints to guarantee profitability.
+
+## 28. Unified Production Deployment Architecture
+
+The platform packages a multi-stage Docker build where the FastAPI backend directly serves the pre-compiled React 18 SPA on `$PORT`:
+- **1-Click Render.com Blueprint**: Via `render.yaml` and `Dockerfile`.
+- **1-Click Railway Deployment**: Via `railway.json`.
+- **Universal Container**: Compatible with Fly.io, Google Cloud Run, AWS App Runner, and Docker Compose.
+
 

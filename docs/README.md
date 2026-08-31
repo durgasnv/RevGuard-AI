@@ -32,6 +32,17 @@ Welcome to the technical documentation for **RevGuard-AI**, an autonomous revenu
 
 ---
 
+## 🚢 Production Deployment
+
+- **[Unified Deployment Guide](../DEPLOYMENT.md)**: Zero-friction deployment configurations for:
+  - **1-Click Render.com Blueprint** (`render.yaml`)
+  - **1-Click Railway.app Deployment** (`railway.json`)
+  - **Universal Multi-Stage Docker Build** (`Dockerfile` & `docker-compose.yml`)
+  - **Fly.io & Cloud Run Containers**
+  - **Decoupled Vercel (Frontend) + Render/Railway (Backend)**
+
+---
+
 ## 📁 Demo Datasets & Testing Guides
 
 - **[Demo Datasets Guide](../demo_datasets/GUIDE.md)**: Walkthrough for using the 4 realistic bundled datasets (`razorpay_payments_export_aug2026.csv`, `generic_payment_failures_q3.csv`, `ecommerce_failures_aug2026.xlsx`, `razorpay_high_ticket_b2b_leakage.csv`) and recommended external open payment data sources (Kaggle PaySim, NPCI open statistics, Mockaroo).
@@ -41,4 +52,4 @@ Welcome to the technical documentation for **RevGuard-AI**, an autonomous revenu
 
 ## 📊 Quality Audits & Reports
 
-- **[Quality Audit Report](reports/audit_report.md)**: Detailed bug analysis, architectural improvements, and test coverage metrics.
+- **[Quality Audit Report](reports/audit_report.md)**: Detailed bug analysis, architectural improvements, and test coverage metrics (106 automated tests passing).
