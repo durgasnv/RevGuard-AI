@@ -56,10 +56,14 @@ export default function LandingView({
           {/* Center Links */}
           <nav className="hidden md:flex items-center gap-7 text-xs font-medium text-slate-300">
             <a href="#features" className="hover:text-white transition-colors">Capabilities</a>
-            <a href="#demo-preview" className="hover:text-white transition-colors">Control Tower</a>
             <a href="#calculator" className="hover:text-white transition-colors">ROI Calculator</a>
-            <a href="#architecture" className="hover:text-white transition-colors">Architecture</a>
-            <a href="#security" className="hover:text-white transition-colors">Compliance</a>
+            <button
+              onClick={onEnterDashboard}
+              className="hover:text-white transition-colors flex items-center gap-1.5 font-semibold text-blue-400"
+            >
+              <span>Control Tower</span>
+              <span className="text-[10px] rounded-full bg-blue-500/20 px-2 py-0.5 border border-blue-400/30 text-blue-300 font-mono">LIVE</span>
+            </button>
           </nav>
 
           {/* Right Actions */}
