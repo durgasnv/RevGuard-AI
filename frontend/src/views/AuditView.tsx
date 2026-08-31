@@ -98,7 +98,7 @@ export default function AuditView({
                 {open && (
                   <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 px-4 py-3">
                     <div className="mb-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-                      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-xs">
+                      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-sm">
                         <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                           Policy Result
                         </span>
@@ -106,7 +106,7 @@ export default function AuditView({
                           {e.policy_result}
                         </span>
                       </div>
-                      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-xs">
+                      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-sm">
                         <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                           Transaction ID
                         </span>
@@ -114,7 +114,7 @@ export default function AuditView({
                           {e.evidence.transaction_id as string}
                         </span>
                       </div>
-                      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-xs">
+                      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-sm">
                         <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                           Amount
                         </span>
@@ -122,7 +122,7 @@ export default function AuditView({
                           ₹{Number(e.evidence.amount_inr).toLocaleString('en-IN')}
                         </span>
                       </div>
-                      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-xs">
+                      <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-sm">
                         <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                           Failure Code
                         </span>

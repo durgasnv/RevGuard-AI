@@ -1,7 +1,7 @@
 import { useMemo, useState, useRef } from 'react'
 import { api, inr } from '../api'
 import type { AppState, QueueItem } from '../types'
-import { ActionPill, Card, ConfidenceBar } from '../components/ui'
+import { ActionPill, Card, ConfidenceBar, Pagination, Alert, AlertTitle, AlertDescription } from '../components/ui'
 import SlackEscalationModal from '../components/SlackEscalationModal'
 import DynamicYieldIncentiveModal from '../components/DynamicYieldIncentiveModal'
 
@@ -13,6 +13,7 @@ export default function QueueView({
   onRun?: () => void
 }) {
   const [approving, setApproving] = useState(false)
+  const [queuePage, setQueuePage] = useState(1)
   const [outreachItem, setOutreachItem] = useState<QueueItem | null>(null)
   const [chainItem, setChainItem] = useState<QueueItem | null>(null)
   const [voiceItem, setVoiceItem] = useState<QueueItem | null>(null)
@@ -371,7 +372,7 @@ export default function QueueView({
                   onClick={() => setApprovalThreshold(val)}
                   className={`rounded-md px-2 py-0.5 text-[11px] font-semibold transition-all ${
                     approvalThreshold === val
-                      ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs'
+                      ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm'
                       : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
                   }`}
                 >
@@ -454,7 +455,7 @@ export default function QueueView({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setYieldItem(plan.queue[0] || null)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700/60 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 transition-colors shadow-xs"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700/60 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 transition-colors shadow-sm"
             >
               <span>⚡</span>
               <span className="hidden sm:inline">Dynamic Yield Engine</span>
@@ -511,7 +512,7 @@ export default function QueueView({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-              {plan.queue.slice(0, 25).map((d) => (
+              {plan.queue.slice((queuePage - 1) * 15, queuePage * 15).map((d) => (
                 <tr
                   key={d.transaction_id}
                   className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-850/60"
@@ -596,9 +597,13 @@ export default function QueueView({
               ))}
             </tbody>
           </table>
-          {plan.queue.length > 25 && (
-            <div className="pt-3 text-center text-xs text-slate-400">
-              + {plan.queue.length - 25} more queued actions below the priority threshold
+          {plan.queue.length > 15 && (
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80">
+              <Pagination
+                currentPage={queuePage}
+                totalPages={Math.ceil(plan.queue.length / 15)}
+                onPageChange={setQueuePage}
+              />
             </div>
           )}
         </div>
@@ -719,7 +724,7 @@ export default function QueueView({
                   onClick={() => setOutreachLang('hi')}
                   className={`rounded-md px-3 py-1 font-semibold transition-all ${
                     outreachLang === 'hi'
-                      ? 'bg-blue-600 text-white shadow-xs'
+                      ? 'bg-blue-600 text-white shadow-sm'
                       : 'text-slate-600 hover:text-slate-900 dark:text-slate-400'
                   }`}
                 >
@@ -729,7 +734,7 @@ export default function QueueView({
                   onClick={() => setOutreachLang('en')}
                   className={`rounded-md px-3 py-1 font-semibold transition-all ${
                     outreachLang === 'en'
-                      ? 'bg-blue-600 text-white shadow-xs'
+                      ? 'bg-blue-600 text-white shadow-sm'
                       : 'text-slate-600 hover:text-slate-900 dark:text-slate-400'
                   }`}
                 >
@@ -938,7 +943,7 @@ export default function QueueView({
                   }}
                   className={`rounded-md px-3 py-1 font-semibold transition-all ${
                     callLang === 'en'
-                      ? 'bg-blue-600 text-white shadow-xs'
+                      ? 'bg-blue-600 text-white shadow-sm'
                       : 'text-slate-600 hover:text-slate-900 dark:text-slate-400'
                   }`}
                 >
@@ -953,7 +958,7 @@ export default function QueueView({
                   }}
                   className={`rounded-md px-3 py-1 font-semibold transition-all ${
                     callLang === 'hi'
-                      ? 'bg-blue-600 text-white shadow-xs'
+                      ? 'bg-blue-600 text-white shadow-sm'
                       : 'text-slate-600 hover:text-slate-900 dark:text-slate-400'
                   }`}
                 >

@@ -106,7 +106,7 @@ export default function SlackEscalationModal({
           {replies.map((r, i) => (
             <div key={i} className="flex items-start gap-3 text-xs leading-relaxed">
               <div
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white shadow-xs ${
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white shadow-sm ${
                   r.role === 'APP' ? 'bg-blue-600' : r.role === 'CFO' ? 'bg-emerald-600' : 'bg-purple-600'
                 }`}
               >
@@ -166,7 +166,7 @@ export default function SlackEscalationModal({
                 <button
                   onClick={handleApprove}
                   disabled={approving}
-                  className="rounded-lg bg-emerald-600 px-3.5 py-1.5 font-bold text-white hover:bg-emerald-500 transition-colors shadow-xs flex items-center gap-1.5"
+                  className="rounded-lg bg-emerald-600 px-3.5 py-1.5 font-bold text-white hover:bg-emerald-500 transition-colors shadow-sm flex items-center gap-1.5"
                 >
                   <span>{approving ? 'Approving…' : '✅ Approve Recovery Link'}</span>
                 </button>

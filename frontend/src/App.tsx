@@ -64,21 +64,23 @@ const NAV: NavItem[] = [
   },
 ]
 
-function Logo() {
+function Logo({ collapsed = false }: { collapsed?: boolean }) {
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-base font-black text-white shadow-sm">
-        R
+    <div className="flex items-center gap-2.5 min-w-0">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-base font-black text-white shadow-md shadow-blue-600/30 border border-blue-400/30">
+        🛡️
       </div>
-      <div className="min-w-0 leading-tight">
-        <div className="flex items-center gap-1.5">
-          <span className="text-sm font-bold text-white tracking-tight">RevGuard</span>
-          <span className="rounded bg-blue-500/20 px-1.5 py-0.2 text-[10px] font-semibold text-blue-300 border border-blue-400/30">
-            AI
-          </span>
+      {!collapsed && (
+        <div className="min-w-0 leading-tight">
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-bold text-white tracking-tight">RevGuard</span>
+            <span className="rounded bg-blue-500/20 px-1.5 py-0.2 text-[10px] font-semibold text-blue-300 border border-blue-400/30">
+              AI
+            </span>
+          </div>
+          <div className="text-[11px] text-slate-400 font-mono">Control Tower</div>
         </div>
-        <div className="text-[11px] text-slate-400">Recovery Control Tower</div>
-      </div>
+      )}
     </div>
   )
 }
@@ -91,7 +93,7 @@ function ThemeToggle({
   setTheme: (t: 'light' | 'dark') => void
 }) {
   return (
-    <div className="inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100/90 dark:bg-slate-900 p-0.5 shadow-xs">
+    <div className="inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100/90 dark:bg-slate-900 p-0.5 shadow-sm">
       <button
         onClick={() => setTheme('light')}
         className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
@@ -132,6 +134,8 @@ export default function App() {
   })
   const [personas, setPersonas] = useState<DemoPersona[]>([])
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showActionsMenu, setShowActionsMenu] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const [tab, setTab] = useState<TabId>('overview')
   const [boot, setBoot] = useState<'checking' | 'empty' | 'ready'>('checking')
   const [detectReport, setDetectReport] = useState<DetectReport | null>(null)
@@ -339,46 +343,77 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-[#07090e] text-slate-900 dark:text-slate-200 transition-colors">
-      {/* Enterprise Navy Sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-800 bg-[#0c1017] p-4 text-slate-300 lg:flex">
-        <Logo />
+      {/* Enterprise Navy Collapsible Sidebar with Smooth Transition */}
+      <aside
+        onClick={() => {
+          if (!sidebarOpen) setSidebarOpen(true)
+        }}
+        className={`sticky top-0 hidden h-screen shrink-0 flex-col border-r border-slate-800 bg-[#0c1017] text-slate-300 transition-all duration-300 ease-in-out lg:flex ${
+          sidebarOpen ? 'w-64 p-4' : 'w-20 p-3 cursor-pointer hover:border-slate-700'
+        }`}
+      >
+        {/* Sidebar Header & Toggle */}
+        <div className="flex items-center justify-between">
+          <Logo collapsed={!sidebarOpen} />
+          {sidebarOpen && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setSidebarOpen(false)
+              }}
+              title="Collapse Sidebar"
+              className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+            >
+              ⇤
+            </button>
+          )}
+        </div>
 
         {/* Top Sidebar Action: Landing Page */}
         <button
           onClick={() => setViewMode('landing')}
-          className="mt-4 mb-2 flex w-full items-center justify-between rounded-xl border border-slate-800 bg-gradient-to-r from-blue-900/40 to-indigo-900/30 px-3 py-2 text-xs font-semibold text-blue-200 hover:from-blue-900/60 hover:to-indigo-900/50 transition-all shadow-inner"
+          className={`mt-4 mb-2 flex w-full items-center justify-between rounded-xl border border-slate-800 bg-gradient-to-r from-blue-900/40 to-indigo-900/30 px-3 py-2 text-xs font-semibold text-blue-200 hover:from-blue-900/60 hover:to-indigo-900/50 transition-all shadow-inner ${
+            !sidebarOpen ? 'justify-center px-2' : ''
+          }`}
+          title="Switch to Landing Page"
         >
           <div className="flex items-center gap-2">
             <span>🌐</span>
-            <span>Landing Page</span>
+            {sidebarOpen && <span>Landing Page</span>}
           </div>
-          <span className="text-[10px] text-blue-400 font-mono">Ramp UI →</span>
+          {sidebarOpen && <span className="text-[10px] text-blue-400 font-mono">Ramp UI →</span>}
         </button>
 
-        <div className="mt-2 mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-          Navigation
-        </div>
+        {sidebarOpen && (
+          <div className="mt-2 mb-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+            Navigation
+          </div>
+        )}
 
-        <nav className="flex flex-1 flex-col gap-1">
+        <nav className="flex flex-1 flex-col gap-1 mt-1">
           {NAV.map((item) => {
             const active = tab === item.id
             const badgeValue = item.badge?.(detectReport, state)
             return (
               <button
                 key={item.id}
-                onClick={() => setTab(item.id)}
-                className={`group flex items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs transition-colors ${
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setTab(item.id)
+                }}
+                title={item.label}
+                className={`group flex items-center justify-between rounded-xl px-3 py-2.5 text-left text-xs transition-all ${
                   active
-                    ? 'bg-blue-600/20 text-white font-semibold border-l-2 border-blue-400'
+                    ? 'bg-blue-600/20 text-white font-bold border-l-2 border-blue-400 shadow-sm'
                     : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-200'
-                }`}
+                } ${!sidebarOpen ? 'justify-center px-2' : ''}`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <span className="text-sm opacity-90">{item.icon}</span>
-                  <span className="truncate">{item.label}</span>
+                  {sidebarOpen && <span className="truncate">{item.label}</span>}
                 </div>
 
-                {badgeValue !== null && badgeValue !== undefined && (
+                {sidebarOpen && badgeValue !== null && badgeValue !== undefined && (
                   <span
                     className={`num ml-2 rounded px-1.5 py-0.5 text-[10px] font-semibold ${
                       active ? 'bg-blue-500/30 text-blue-200' : 'bg-slate-800 text-slate-400'
@@ -393,122 +428,216 @@ export default function App() {
         </nav>
 
         {/* Sidebar Theme Switcher */}
-        <div className="mb-3 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-xs">
-          <span className="text-[11px] text-slate-400 font-medium">Appearance</span>
-          <ThemeToggle theme={theme} setTheme={setTheme} />
-        </div>
+        {sidebarOpen ? (
+          <div className="mb-3 flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-xs">
+            <span className="text-[11px] text-slate-400 font-medium">Appearance</span>
+            <ThemeToggle theme={theme} setTheme={setTheme} />
+          </div>
+        ) : (
+          <div className="mb-3 flex justify-center">
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-2 rounded-lg border border-slate-800 bg-slate-900 text-xs"
+              title="Toggle Theme"
+            >
+              {theme === 'dark' ? '🌙' : '☀️'}
+            </button>
+          </div>
+        )}
 
         {/* Sidebar User Profile Pill */}
-        <div className="mb-3 flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/90 p-2.5">
+        <div className={`mb-3 flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/90 ${
+          sidebarOpen ? 'p-2.5' : 'p-2 justify-center'
+        }`}>
           <div className="flex items-center gap-2.5 min-w-0">
             <img
               src={user.avatar_url || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150'}
               alt={user.name}
               className="h-8 w-8 rounded-full object-cover border border-slate-700 shrink-0"
             />
-            <div className="min-w-0">
-              <div className="text-xs font-semibold text-white truncate">{user.name}</div>
-              <div className="text-[10px] text-blue-400 capitalize font-medium">
-                {user.role.replace('_', ' ')}
+            {sidebarOpen && (
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-white truncate">{user.name}</div>
+                <div className="text-[10px] text-blue-400 capitalize font-medium">
+                  {user.role.replace('_', ' ')}
+                </div>
               </div>
-            </div>
+            )}
           </div>
-          <button
-            onClick={handleLogout}
-            title="Sign Out"
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-rose-400 transition-colors"
-          >
-            🚪
-          </button>
+          {sidebarOpen && (
+            <button
+              onClick={handleLogout}
+              title="Sign Out"
+              className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-rose-400 transition-colors"
+            >
+              🚪
+            </button>
+          )}
         </div>
 
         {/* Sidebar System Telemetry Box */}
-        <div className="rounded-lg border border-slate-800 bg-slate-900/90 p-3 text-xs">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 font-semibold text-emerald-400">
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
-              SC-01 Safe Mode
+        {sidebarOpen && (
+          <div className="rounded-lg border border-slate-800 bg-slate-900/90 p-3 text-xs">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 font-semibold text-emerald-400">
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                SC-01 Safe Mode
+              </div>
+              <span className="text-[10px] font-mono text-slate-400">Enforced</span>
             </div>
-            <span className="text-[10px] font-mono text-slate-400">Enforced</span>
+            <p className="mt-1 text-[11px] text-slate-400">
+              Deterministic policy limits & zero fatigue enforcement.
+            </p>
           </div>
-          <p className="mt-1 text-[11px] text-slate-400">
-            Simulated environment with deterministic policy boundaries.
-          </p>
-        </div>
+        )}
       </aside>
 
       {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Sticky Header Bar */}
-        <header className="sticky top-0 z-20 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#0e121b]/95 backdrop-blur transition-colors">
-          <div className="flex items-center justify-between gap-3 px-4 py-3 lg:px-8">
-            <div className="lg:hidden">
-              <Logo />
+        {/* Sticky Header Bar — Clean Shadcn Navigation Layout */}
+        <header className="sticky top-0 z-20 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#0c1017]/95 backdrop-blur-xl transition-colors">
+          <div className="flex items-center justify-between gap-3 px-4 py-2.5 lg:px-6">
+            {/* Left: Sidebar Toggle + Breadcrumb + Status */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="hidden lg:flex items-center justify-center h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shadow-sm"
+                title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+              >
+                <span className="text-sm">☰</span>
+              </button>
+
+              <div className="lg:hidden">
+                <Logo />
+              </div>
+
+              {/* Breadcrumb / Title */}
+              <div className="hidden sm:flex items-center gap-2 text-xs">
+                <span className="text-slate-400 dark:text-slate-500 font-medium">RevGuard</span>
+                <span className="text-slate-300 dark:text-slate-700">/</span>
+                <span className="font-bold text-slate-900 dark:text-white">{currentNav?.label}</span>
+              </div>
+
+              {/* Live Telemetry Pill */}
+              <div className="hidden md:flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>
+                  {detectReport
+                    ? `${detectReport.failed_count} at risk (${inrShort(detectReport.revenue_at_risk_inr)})`
+                    : 'System Ready'}
+                </span>
+              </div>
             </div>
 
-            {/* Breadcrumb / Title */}
-            <div className="hidden items-center gap-2 text-xs lg:flex">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">RevGuard</span>
-              <span className="text-slate-400 dark:text-slate-600">/</span>
-              <span className="font-semibold text-slate-900 dark:text-white">{currentNav?.label}</span>
-            </div>
-
-            {/* Telemetry pill */}
-            <div className="hidden items-center gap-2 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 text-xs lg:flex">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span className="text-slate-500 dark:text-slate-400">Store:</span>
-              <span className="font-medium text-slate-700 dark:text-slate-200">
-                {detectReport
-                  ? `${detectReport.failed_count} failed · ${inrShort(detectReport.revenue_at_risk_inr)} at risk`
-                  : 'Ready'}
-              </span>
-            </div>
-
-            {/* Header Actions & Theme Toggle */}
-            <div className="flex items-center gap-2.5">
-              {/* Return to Landing Page */}
+            {/* Right: Clean Grouped Actions & Profile */}
+            <div className="flex items-center gap-2">
+              {/* Landing Page Link */}
               <button
                 onClick={() => setViewMode('landing')}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs"
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
               >
                 <span>🌐</span>
                 <span>Landing Page</span>
               </button>
 
-              {/* Batch Simulator Live A/B Engine */}
+              {/* Quick Actions Dropdown (Shadcn Menubar Style) */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowActionsMenu(!showActionsMenu)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-sm"
+                >
+                  <span>⚡</span>
+                  <span>Tools</span>
+                  <span className="text-[10px] text-slate-400">▾</span>
+                </button>
+
+                {showActionsMenu && (
+                  <div
+                    onClick={() => setShowActionsMenu(false)}
+                    className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 shadow-2xl z-50 text-xs space-y-1 animate-fade-in"
+                  >
+                    <button
+                      onClick={() => setShowBatchSimulator(true)}
+                      className="w-full flex items-center gap-2.5 rounded-lg p-2 text-left hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-semibold transition-colors"
+                    >
+                      <span>🚀</span>
+                      <div>
+                        <div>Live Batch Simulator</div>
+                        <div className="text-[10px] text-slate-400 font-normal">A/B Engine with 600 Txns</div>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setShowHackathonMatrix(true)}
+                      className="w-full flex items-center gap-2.5 rounded-lg p-2 text-left hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-semibold transition-colors"
+                    >
+                      <span>🏆</span>
+                      <div>
+                        <div>Hackathon Matrix</div>
+                        <div className="text-[10px] text-slate-400 font-normal">Scoring & Alignment Spec</div>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setShowWebhookSim(true)}
+                      className="w-full flex items-center gap-2.5 rounded-lg p-2 text-left hover:bg-purple-50 dark:hover:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-semibold transition-colors"
+                    >
+                      <span>⚡</span>
+                      <div>
+                        <div>Simulate Webhook</div>
+                        <div className="text-[10px] text-slate-400 font-normal">Inject payment.failed event</div>
+                      </div>
+                    </button>
+                    <div className="border-t border-slate-100 dark:border-slate-800 pt-1">
+                      <button
+                        onClick={async () => {
+                          await api.reset()
+                          location.reload()
+                        }}
+                        className="w-full flex items-center gap-2 rounded-lg p-2 text-left text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                      >
+                        <span>↺</span>
+                        <span>Reset Demo State</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Prominent Live Batch Simulator Quick Pill */}
               <button
                 onClick={() => setShowBatchSimulator(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-blue-300 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-950/40 px-3 py-1.5 text-xs font-bold text-blue-800 dark:text-blue-300 hover:bg-blue-100 transition-colors shadow-xs"
+                className="hidden md:inline-flex items-center gap-1.5 rounded-lg border border-blue-400/30 bg-blue-600/15 hover:bg-blue-600/25 px-3 py-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 transition-all shadow-sm"
               >
                 <span>🚀</span>
-                <span>Live Batch Simulator</span>
+                <span>Batch Sim</span>
               </button>
 
-              {/* Hackathon Alignment Matrix Quick Launcher */}
+              {/* Primary Run Action */}
               <button
-                onClick={() => setShowHackathonMatrix(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 text-xs font-bold text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition-colors shadow-xs"
+                onClick={runRecovery}
+                disabled={busy}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 active:bg-blue-700 px-3.5 py-1.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 transition-all disabled:opacity-40"
               >
-                <span>🏆</span>
-                <span>Hackathon Matrix</span>
+                {busy ? (
+                  <>
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    <span>Running…</span>
+                  </>
+                ) : (
+                  <>
+                    <span>▶</span>
+                    <span>Run Cycle</span>
+                  </>
+                )}
               </button>
 
-              {/* Prominent Theme Segmented Pill */}
+              {/* Theme Toggle */}
               <ThemeToggle theme={theme} setTheme={setTheme} />
-
-              <button
-                onClick={() => setShowWebhookSim(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 dark:border-purple-500/20 bg-purple-50 dark:bg-purple-950/40 px-3 py-1.5 text-xs font-semibold text-purple-700 dark:text-purple-300 hover:bg-purple-100 transition-colors shadow-xs"
-              >
-                <span>⚡</span>
-                <span>Sim Webhook</span>
-              </button>
 
               {/* User Avatar Chip & Persona Switcher */}
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-2 py-1 text-xs hover:bg-slate-100 dark:hover:bg-slate-850 transition-colors"
+                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-1 text-xs hover:bg-slate-100 dark:hover:bg-slate-850 transition-colors"
                 >
                   <img
                     src={user.avatar_url || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150'}
@@ -518,14 +647,11 @@ export default function App() {
                   <span className="hidden md:inline font-semibold text-slate-800 dark:text-slate-200">
                     {user.name.split(' ')[0]}
                   </span>
-                  <span className="text-[9px] uppercase px-1.5 py-0.2 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/20">
-                    {user.role.replace('_', ' ')}
-                  </span>
                   <span className="text-[10px] text-slate-400">▾</span>
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-2xl z-50 text-xs space-y-2">
+                  <div className="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-2xl z-50 text-xs space-y-2 animate-fade-in">
                     <div className="border-b border-slate-100 dark:border-slate-800 pb-2 px-2">
                       <div className="font-bold text-slate-900 dark:text-white">{user.name}</div>
                       <div className="text-[11px] text-slate-500 truncate">{user.email}</div>
@@ -573,35 +699,6 @@ export default function App() {
                   </div>
                 )}
               </div>
-
-              <button
-                onClick={runRecovery}
-                disabled={busy}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 active:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {busy ? (
-                  <>
-                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    <span>Running…</span>
-                  </>
-                ) : (
-                  <>
-                    <span>▶</span>
-                    <span>Run recovery cycle</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                onClick={async () => {
-                  await api.reset()
-                  location.reload()
-                }}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-750 bg-white dark:bg-slate-850 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-white"
-              >
-                <span>↺</span>
-                <span>Reset</span>
-              </button>
             </div>
           </div>
 
@@ -613,7 +710,7 @@ export default function App() {
                 onClick={() => setTab(item.id)}
                 className={`whitespace-nowrap rounded px-2.5 py-1 text-xs font-medium transition-colors ${
                   tab === item.id
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-blue-600 text-white font-semibold'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >

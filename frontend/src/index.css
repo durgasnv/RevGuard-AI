@@ -14,28 +14,36 @@ html {
 
 body {
   @apply bg-slate-50 text-slate-900 antialiased selection:bg-blue-500/20 selection:text-blue-900 dark:bg-[#07090e] dark:text-slate-200 dark:selection:bg-blue-600/30 dark:selection:text-blue-100;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Inter", "Segoe UI", Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Plus Jakarta Sans", "Inter", "Segoe UI", Roboto, sans-serif;
   min-height: 100vh;
-  letter-spacing: -0.011em;
+  letter-spacing: -0.012em;
 }
 
-/* Luxury card surfaces inspired by docs/dashboard.jpg and Ramp */
+/* Luxury card surfaces with enhanced depth and subtle shadows */
 .obsidian-card {
-  @apply rounded-2xl border border-slate-200/80 dark:border-white/[0.07] bg-white dark:bg-[#0d111a]/90 backdrop-blur-xl shadow-sm dark:shadow-2xl transition-all;
+  @apply rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#0d111a]/95 backdrop-blur-xl shadow-md shadow-slate-200/60 dark:shadow-2xl dark:shadow-black/50 transition-all duration-200;
 }
 
 .obsidian-card-sm {
-  @apply rounded-xl border border-slate-200/70 dark:border-white/[0.06] bg-slate-50/80 dark:bg-[#121824]/80 backdrop-blur-md transition-all;
+  @apply rounded-xl border border-slate-200/70 dark:border-white/[0.06] bg-slate-50/90 dark:bg-[#121824]/90 backdrop-blur-md shadow-sm shadow-slate-200/50 dark:shadow-lg dark:shadow-black/40 transition-all duration-200;
+}
+
+.card-premium-shadow {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+}
+
+.dark .card-premium-shadow {
+  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.6), 0 4px 12px -2px rgba(0, 0, 0, 0.4);
 }
 
 /* Mesh glow gradient for hero metrics */
 .mesh-gradient-dark {
-  background: radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.12) 0%, rgba(7, 9, 14, 0.95) 70%),
-              radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.08) 0%, rgba(7, 9, 14, 0.95) 70%);
+  background: radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.15) 0%, rgba(7, 9, 14, 0.95) 70%),
+              radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.10) 0%, rgba(7, 9, 14, 0.95) 70%);
 }
 
 .pill-button {
-  @apply inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all;
+  @apply inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all duration-150;
 }
 
 /* Sharp tabular numbers for metrics and money */

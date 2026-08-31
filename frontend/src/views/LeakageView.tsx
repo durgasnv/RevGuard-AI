@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import { api, inr } from '../api'
 import type { Cluster, DetectReport, Diagnosis } from '../types'
-import { Card, ConfidenceBar, SeverityBadge } from '../components/ui'
+import { Card, ConfidenceBar, SeverityBadge, Alert, AlertTitle, AlertDescription } from '../components/ui'
 
 export default function LeakageView({
   detectReport,
@@ -27,6 +27,13 @@ export default function LeakageView({
 
   return (
     <div className="space-y-4">
+      <Alert variant="info" className="mb-2">
+        <AlertTitle>Deterministic Root Cause Engine Active</AlertTitle>
+        <AlertDescription>
+          {detectReport.clusters.length} distinct leakage clusters detected across bank outages, UPI handles, and card issuer limits. Click any row to expand the deep forensic trace and suggested remediation.
+        </AlertDescription>
+      </Alert>
+
       <Card
         title={`Revenue Leakage Clusters (${detectReport.clusters.length})`}
         subtitle="Ranked by total revenue at risk with AI root-cause diagnostics"
@@ -146,7 +153,7 @@ export default function LeakageView({
                                       e.stopPropagation()
                                       setSelectedCluster(c)
                                     }}
-                                    className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-blue-700 transition-colors shadow-xs"
+                                    className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm"
                                   >
                                     <span>✦</span>
                                     <span>Inspect AI Decision Chain</span>

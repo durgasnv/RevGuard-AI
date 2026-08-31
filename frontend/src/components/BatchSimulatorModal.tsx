@@ -153,19 +153,19 @@ export default function BatchSimulatorModal({
             <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 p-0.5 text-xs">
               <button
                 onClick={() => setSpeed(1)}
-                className={`rounded px-2 py-1 font-semibold ${speed === 1 ? 'bg-white dark:bg-slate-900 shadow-xs' : 'text-slate-500'}`}
+                className={`rounded px-2 py-1 font-semibold ${speed === 1 ? 'bg-white dark:bg-slate-900 shadow-sm' : 'text-slate-500'}`}
               >
                 1x
               </button>
               <button
                 onClick={() => setSpeed(5)}
-                className={`rounded px-2 py-1 font-semibold ${speed === 5 ? 'bg-white dark:bg-slate-900 shadow-xs' : 'text-slate-500'}`}
+                className={`rounded px-2 py-1 font-semibold ${speed === 5 ? 'bg-white dark:bg-slate-900 shadow-sm' : 'text-slate-500'}`}
               >
                 5x
               </button>
               <button
                 onClick={() => setSpeed(10)}
-                className={`rounded px-2 py-1 font-semibold ${speed === 10 ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-500'}`}
+                className={`rounded px-2 py-1 font-semibold ${speed === 10 ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500'}`}
               >
                 ⚡ 10x Turbo
               </button>
@@ -194,7 +194,7 @@ export default function BatchSimulatorModal({
           <div className="h-3 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700">
             <div
               style={{ width: `${progress}%` }}
-              className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 transition-all duration-75 shadow-xs"
+              className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 transition-all duration-75 shadow-sm"
             />
           </div>
 

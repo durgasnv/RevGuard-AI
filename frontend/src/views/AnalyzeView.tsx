@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { api, inr, pct } from '../api'
 import type { AnalyzeReport } from '../types'
-import { Card, ConfidenceBar, SeverityBadge } from '../components/ui'
+import { Card, ConfidenceBar, SeverityBadge, AttachmentCard, Alert, AlertTitle, AlertDescription } from '../components/ui'
 
 type UploadFormat = 'razorpay_csv' | 'generic_csv' | 'excel'
 
@@ -90,50 +90,71 @@ export default function AnalyzeView() {
           ))}
         </div>
 
-        {/* File Input & Action Row */}
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex-1">
-            <input
-              type="file"
-              accept={ACCEPT_MAP[format]}
-              onChange={(e) => {
-                setFile(e.target.files?.[0] ?? null)
-                setError(null)
-              }}
-              className="block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-100 dark:file:bg-slate-800 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-slate-800 dark:file:text-white hover:file:bg-slate-200 dark:hover:file:bg-slate-700 file:cursor-pointer"
-            />
-          </div>
+        {/* File Dropzone & Attachment Card */}
+        <div className="mt-5 space-y-3">
+          {!file ? (
+            <label className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-6 text-center hover:border-blue-500 hover:bg-blue-50/20 dark:hover:border-blue-500/40 transition-all cursor-pointer">
+              <span className="text-3xl mb-2">📁</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                Click to browse or drag & drop payment failure logs
+              </span>
+              <span className="text-[11px] text-slate-400 mt-1">
+                Supports Razorpay CSV, Generic CSV, or Excel (.xlsx) up to 25MB
+              </span>
+              <input
+                type="file"
+                accept={ACCEPT_MAP[format]}
+                onChange={(e) => {
+                  setFile(e.target.files?.[0] ?? null)
+                  setError(null)
+                }}
+                className="hidden"
+              />
+            </label>
+          ) : (
+            <div className="space-y-3">
+              <AttachmentCard
+                file={{
+                  name: file.name,
+                  size: file.size,
+                  type: file.type,
+                  status: report ? 'analyzed' : busy ? 'uploading' : 'ready',
+                }}
+                onRemove={() => {
+                  setFile(null)
+                  setReport(null)
+                }}
+              />
 
-          <button
-            onClick={handleAnalyze}
-            disabled={busy || !file}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 active:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {busy ? (
-              <>
-                <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                Analyzing Dataset…
-              </>
-            ) : (
-              <span>Analyze File</span>
-            )}
-          </button>
+              <div className="flex justify-end">
+                <button
+                  onClick={handleAnalyze}
+                  disabled={busy}
+                  className="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 transition-all disabled:opacity-40"
+                >
+                  {busy ? (
+                    <>
+                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      <span>Analyzing Pattern Recognition…</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>🔍</span>
+                      <span>Run Isolated Leakage Audit</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-
-        {file && (
-          <div className="mt-3 flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            <span>Selected dataset:</span>
-            <span className="font-mono text-slate-900 dark:text-slate-300 font-semibold">{file.name}</span>
-            <span className="text-slate-400 dark:text-slate-500">({(file.size / 1024).toFixed(1)} KB)</span>
-          </div>
-        )}
       </Card>
 
       {error && (
-        <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-700 dark:text-rose-300">
-          {error}
-        </div>
+        <Alert variant="destructive">
+          <AlertTitle>Audit Ingestion Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {report && (
