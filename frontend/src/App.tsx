@@ -7,6 +7,7 @@ import OverviewView from './views/OverviewView'
 import QueueView from './views/QueueView'
 import AnalyzeView from './views/AnalyzeView'
 import B2BView from './views/B2BView'
+import BatchSimulatorModal from './components/BatchSimulatorModal'
 
 type TabId = 'overview' | 'leakage' | 'queue' | 'b2b' | 'audit' | 'analyze'
 
@@ -123,6 +124,7 @@ export default function App() {
   const [busy, setBusy] = useState(false)
   const [showWebhookSim, setShowWebhookSim] = useState(false)
   const [showHackathonMatrix, setShowHackathonMatrix] = useState(false)
+  const [showBatchSimulator, setShowBatchSimulator] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('revguard_theme')
     return saved === 'dark' ? 'dark' : 'light'
@@ -323,6 +325,15 @@ export default function App() {
 
             {/* Header Actions & Theme Toggle */}
             <div className="flex items-center gap-2.5">
+              {/* Batch Simulator Live A/B Engine */}
+              <button
+                onClick={() => setShowBatchSimulator(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-blue-300 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-950/40 px-3 py-1.5 text-xs font-bold text-blue-800 dark:text-blue-300 hover:bg-blue-100 transition-colors shadow-xs"
+              >
+                <span>🚀</span>
+                <span>Live Batch Simulator</span>
+              </button>
+
               {/* Hackathon Alignment Matrix Quick Launcher */}
               <button
                 onClick={() => setShowHackathonMatrix(true)}
@@ -722,6 +733,14 @@ export default function App() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Live Autonomous Batch Recovery Simulator Modal */}
+        {showBatchSimulator && (
+          <BatchSimulatorModal
+            onClose={() => setShowBatchSimulator(false)}
+            onComplete={() => refresh()}
+          />
         )}
 
         {/* Global Footer */}

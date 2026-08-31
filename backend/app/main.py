@@ -16,6 +16,8 @@ import time
 
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.ai.diagnosis_agent import diagnose_report
 from app.ai.llm_client import llm_from_env
@@ -53,6 +55,14 @@ app.add_middleware(
 )
 
 MAX_BATCH_SIZE = 5_000  # ingestion cap: reject oversized batches (NFR-02)
+
+
+@app.middleware("http")
+async def api_prefix_middleware(request: Request, call_next):
+    """Transparently strip /api prefix so /api/detect maps to /detect seamlessly."""
+    if request.scope["path"].startswith("/api/"):
+        request.scope["path"] = request.scope["path"][4:]
+    return await call_next(request)
 
 
 @app.middleware("http")
@@ -675,10 +685,31 @@ def list_webhook_events() -> dict:
     return {"events": _WEBHOOK_EVENTS}
 
 
+# ── Static SPA & Production Deployment Serving ───────────────────────
+_FRONTEND_DIST = os.environ.get(
+    "REVGUARD_FRONTEND_DIST",
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist")),
+)
+
+if os.path.isdir(_FRONTEND_DIST):
+    _assets_dir = os.path.join(_FRONTEND_DIST, "assets")
+    if os.path.isdir(_assets_dir):
+        app.mount("/assets", StaticFiles(directory=_assets_dir), name="spa-assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_spa(full_path: str):
+        # Allow API routes, docs, and schema to fall through
+        if full_path.startswith("api/") or full_path in ("docs", "openapi.json", "redoc"):
+            raise HTTPException(status_code=404, detail="Not Found")
+        file_path = os.path.join(_FRONTEND_DIST, full_path)
+        if full_path and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(_FRONTEND_DIST, "index.html"))
+
 
 if __name__ == "__main__":
     import uvicorn
 
-    host = os.environ.get("REVGUARD_HOST", "0.0.0.0")
-    port = int(os.environ.get("REVGUARD_PORT", "8000"))
+    host = os.environ.get("HOST", os.environ.get("REVGUARD_HOST", "0.0.0.0"))
+    port = int(os.environ.get("PORT", os.environ.get("REVGUARD_PORT", "8000")))
     uvicorn.run("app.main:app", host=host, port=port, reload=True)

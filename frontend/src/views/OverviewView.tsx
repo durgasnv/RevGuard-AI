@@ -16,6 +16,7 @@ import {
 import { api, inr, pct } from '../api'
 import type { DetectReport, Evaluation } from '../types'
 import { Card, KpiCard, SeverityBadge } from '../components/ui'
+import BankSwitchHealthRadar from '../components/BankSwitchHealthRadar'
 
 export default function OverviewView({
   detectReport,
@@ -181,6 +182,9 @@ Assurance Status: VERIFIED & AUDITED FOR ENTERPRISE DEPLOYMENT
           sub={evaluation ? 'vs naïive retry baseline' : ''}
         />
       </div>
+
+      {/* Acquiring Bank Switch Health Radar & Autonomous Re-Routing */}
+      <BankSwitchHealthRadar />
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

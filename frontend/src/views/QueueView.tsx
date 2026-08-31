@@ -1,7 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef } from 'react'
 import { api, inr } from '../api'
 import type { AppState, QueueItem } from '../types'
 import { ActionPill, Card, ConfidenceBar } from '../components/ui'
+import SlackEscalationModal from '../components/SlackEscalationModal'
+import DynamicYieldIncentiveModal from '../components/DynamicYieldIncentiveModal'
 
 export default function QueueView({
   state,
@@ -14,14 +16,20 @@ export default function QueueView({
   const [outreachItem, setOutreachItem] = useState<QueueItem | null>(null)
   const [chainItem, setChainItem] = useState<QueueItem | null>(null)
   const [voiceItem, setVoiceItem] = useState<QueueItem | null>(null)
+  const [slackItem, setSlackItem] = useState<QueueItem | null>(null)
+  const [yieldItem, setYieldItem] = useState<QueueItem | null>(null)
   const [voiceStatus, setVoiceStatus] = useState<'connecting' | 'connected' | 'completed'>('connected')
   const [voiceStep, setVoiceStep] = useState<number>(1)
   const [callLang, setCallLang] = useState<'en' | 'hi'>('en')
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const [isListening, setIsListening] = useState(false)
+  const [speechTranscript, setSpeechTranscript] = useState('')
   const [outreachLang, setOutreachLang] = useState<'en' | 'hi'>('hi')
   const [copied, setCopied] = useState(false)
   const [dispatched, setDispatched] = useState(false)
   const [approvalThreshold, setApprovalThreshold] = useState<number>(25000)
+
+  const recognitionRef = useRef<any>(null)
 
   const plan = state?.plan
   const execution = state?.execution
@@ -65,8 +73,155 @@ export default function QueueView({
     setVoiceItem(d)
     setVoiceStatus('connected')
     setVoiceStep(1)
+    setSpeechTranscript('')
+    setIsListening(false)
     const intro = getIntroText(d, initialLang)
     setTimeout(() => speakText(intro, initialLang), 400)
+  }
+
+  function handleCustomerSpeech(text: string) {
+    const lower = text.toLowerCase()
+    setSpeechTranscript(text)
+    setIsListening(false)
+
+    if (
+      lower.includes('kal') ||
+      lower.includes('tomorrow') ||
+      lower.includes('friday') ||
+      lower.includes('somwar') ||
+      lower.includes('monday') ||
+      lower.includes('pay') ||
+      lower.includes('karunga') ||
+      lower.includes('promise') ||
+      lower.includes('later')
+    ) {
+      setVoiceStep(4)
+      const reply =
+        callLang === 'en'
+          ? 'Great! I have recorded your Promise-to-Pay commitment for Friday. Your order reservation is held until then.'
+          : 'Bahut achha ji! Maine aapke liye Friday ka Promise-to-Pay reminder record kar diya hai. Tab tak order reserved rahega.'
+      speakText(reply, callLang)
+      if (voiceItem) {
+        const nextDate = new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 10)
+        api
+          .b2bSetPtp(
+            voiceItem.transaction_id,
+            nextDate,
+            voiceItem.amount_inr,
+            `Voice Bot Promise recorded via AI speech interaction (${callLang.toUpperCase()})`,
+          )
+          .catch(() => {})
+      }
+    } else if (
+      lower.includes('whatsapp') ||
+      lower.includes('link') ||
+      lower.includes('bhej') ||
+      lower.includes('send') ||
+      lower.includes('message') ||
+      lower.includes('sms')
+    ) {
+      setVoiceStep(2)
+      const reply =
+        callLang === 'en'
+          ? 'Thank you! A secure 1-click Razorpay payment link has been sent to your WhatsApp (+91 98765 43210). It remains valid for 24 hours.'
+          : 'Dhanyawad! 1-click Razorpay payment link aapke WhatsApp (+91 98765 43210) pe bhej diya gaya hai. 15 minute me payment complete kar sakte hain.'
+      speakText(reply, callLang)
+    } else if (
+      lower.includes('upi') ||
+      lower.includes('gpay') ||
+      lower.includes('phonepe') ||
+      lower.includes('handle') ||
+      lower.includes('vpa') ||
+      lower.includes('collect') ||
+      lower.includes('dusra')
+    ) {
+      setVoiceStep(3)
+      const reply =
+        callLang === 'en'
+          ? 'Understood! A fresh UPI collect request has been initiated to your handle. Please approve it in your payment app.'
+          : 'Theek hai! Naya UPI collect request aapke VPA handle pe raise kar diya gaya hai. Kripya app me approve karein.'
+      speakText(reply, callLang)
+    } else if (
+      lower.includes('nahi') ||
+      lower.includes('cancel') ||
+      lower.includes('mat') ||
+      lower.includes('stop') ||
+      lower.includes('no') ||
+      lower.includes("don't") ||
+      lower.includes('reject')
+    ) {
+      setVoiceStep(5)
+      const reply =
+        callLang === 'en'
+          ? 'Understood. Stopping all further retries per Rule SC-01 customer fatigue safety policies.'
+          : 'Ji samajh gaya. SC-01 safety rule ke anurodh par humne automated retries band kar di hain.'
+      speakText(reply, callLang)
+    } else {
+      setVoiceStep(2)
+      const reply =
+        callLang === 'en'
+          ? 'Got it! I have dispatched a secure 1-click completion link to your WhatsApp.'
+          : 'Theek hai! Maine aapke WhatsApp pe 1-click payment link bhej diya hai.'
+      speakText(reply, callLang)
+    }
+  }
+
+  function toggleSpeechRecognition() {
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop()
+      }
+      setIsListening(false)
+      return
+    }
+
+    const SpeechRec =
+      (window as unknown as { SpeechRecognition?: any; webkitSpeechRecognition?: any })
+        .SpeechRecognition ||
+      (window as unknown as { SpeechRecognition?: any; webkitSpeechRecognition?: any })
+        .webkitSpeechRecognition
+
+    if (!SpeechRec) {
+      alert(
+        'Speech Recognition is not supported in this browser. Please use Chrome/Edge or click the reply buttons below.',
+      )
+      return
+    }
+
+    try {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+
+      const rec = new SpeechRec()
+      recognitionRef.current = rec
+      rec.continuous = false
+      rec.interimResults = false
+      rec.lang = callLang === 'hi' ? 'hi-IN' : 'en-IN'
+
+      rec.onstart = () => {
+        setIsListening(true)
+        setSpeechTranscript('')
+      }
+
+      rec.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript
+        handleCustomerSpeech(transcript)
+      }
+
+      rec.onerror = (event: any) => {
+        console.warn('Speech recognition event error:', event)
+        setIsListening(false)
+      }
+
+      rec.onend = () => {
+        setIsListening(false)
+      }
+
+      rec.start()
+    } catch (e) {
+      console.error('Failed to start speech recognition:', e)
+      setIsListening(false)
+    }
   }
 
 
@@ -298,6 +453,14 @@ export default function QueueView({
         right={
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setYieldItem(plan.queue[0] || null)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700/60 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 transition-colors shadow-xs"
+            >
+              <span>⚡</span>
+              <span className="hidden sm:inline">Dynamic Yield Engine</span>
+            </button>
+
+            <button
               onClick={exportQueueCsv}
               className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-750 bg-white dark:bg-slate-850 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
             >
@@ -313,11 +476,16 @@ export default function QueueView({
               >
                 {approving ? (
                   <>
-                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    Approving…
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span>Executing…</span>
                   </>
                 ) : (
-                  <span>Approve {pendingApprovals.length} high-value items</span>
+                  <>
+                    <span>Approve Escalations</span>
+                    <span className="rounded bg-amber-700/50 px-1.5 py-0.2 text-[10px]">
+                      {pendingApprovals.length}
+                    </span>
+                  </>
                 )}
               </button>
             )}
@@ -325,21 +493,21 @@ export default function QueueView({
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                <th className="py-3 pr-3">#</th>
-                <th className="py-3 pr-3">Transaction ID</th>
-                <th className="py-3 pr-3 text-right">Amount</th>
-                <th className="py-3 pr-3">Failure Code</th>
-                <th className="py-3 pr-3">Recommended Action</th>
-                <th className="py-3 pr-3 text-right">P(Recovery)</th>
-                <th className="py-3 pr-3 text-right">Expected Value</th>
-                <th className="py-3 pr-3">Confidence</th>
-                <th className="py-3 pr-3 text-center">AI Chain</th>
-                <th className="py-3 pr-3 text-center">Outreach</th>
-                <th className="py-3 pr-3 text-center">Voice Bot</th>
-                <th className="py-3 pr-3">Gate</th>
+              <tr className="border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-400">
+                <th className="py-2.5 pr-3">#</th>
+                <th className="py-2.5 pr-3">Txn ID</th>
+                <th className="py-2.5 pr-3 text-right">Amount</th>
+                <th className="py-2.5 pr-3">Failure Code</th>
+                <th className="py-2.5 pr-3">Action</th>
+                <th className="py-2.5 pr-3 text-right">P(Rec)</th>
+                <th className="py-2.5 pr-3 text-right">EV (₹)</th>
+                <th className="py-2.5 pr-3">Confidence</th>
+                <th className="py-2.5 pr-3 text-center">AI Reason</th>
+                <th className="py-2.5 pr-3 text-center">Outreach</th>
+                <th className="py-2.5 pr-3 text-center">Voice Bot</th>
+                <th className="py-2.5 pr-3">Policy Gate</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -410,9 +578,14 @@ export default function QueueView({
                   </td>
                   <td className="py-3 pr-3 text-[11px]">
                     {d.amount_inr >= approvalThreshold || d.requires_approval ? (
-                      <span className="inline-flex items-center gap-1 rounded bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 font-medium text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/20">
-                        Review
-                      </span>
+                      <button
+                        onClick={() => setSlackItem(d)}
+                        title="Open Enterprise Slack CFO Escalation Bridge"
+                        className="inline-flex items-center gap-1 rounded bg-amber-50 dark:bg-amber-500/10 px-2 py-1 font-semibold text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/20 hover:bg-amber-100 transition-colors shadow-2xs"
+                      >
+                        <span>💬</span>
+                        <span>CFO Review</span>
+                      </button>
                     ) : (
                       <span className="inline-flex items-center gap-1 rounded bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
                         Auto
@@ -825,12 +998,46 @@ export default function QueueView({
                 </div>
               </div>
 
-              {/* Turn 2: Customer Response Options */}
-              {voiceStep === 1 && (
-                <div className="space-y-1.5 pl-6 pt-1">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    Select Simulated Customer Reply:
+              {/* Speech-to-Text Live Transcript */}
+              {speechTranscript && (
+                <div className="rounded-lg bg-blue-50 dark:bg-blue-950/50 p-2 text-xs border border-blue-200 dark:border-blue-800/60">
+                  <div className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>🎙️ Live Recognized Speech:</span>
                   </div>
+                  <div className="mt-0.5 text-slate-800 dark:text-slate-200 italic font-medium">
+                    "{speechTranscript}"
+                  </div>
+                </div>
+              )}
+
+              {/* Turn 2: Customer Response Options & 2-Way Mic */}
+              {voiceStep === 1 && (
+                <div className="space-y-2 pl-2 pt-1">
+                  {/* 2-Way Live Microphone Toggle */}
+                  <div className="rounded-xl border border-purple-300 dark:border-purple-700 bg-purple-50/60 dark:bg-purple-950/40 p-3 text-center space-y-2">
+                    <div className="text-[11px] font-bold text-purple-900 dark:text-purple-300">
+                      🎙️ 2-Way Voice Dialogue (Speak directly into microphone):
+                    </div>
+                    <button
+                      onClick={toggleSpeechRecognition}
+                      className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold shadow-sm transition-all ${
+                        isListening
+                          ? 'bg-rose-600 text-white animate-pulse shadow-rose-500/30'
+                          : 'bg-purple-600 hover:bg-purple-700 text-white shadow-purple-500/30'
+                      }`}
+                    >
+                      <span className="text-base">{isListening ? '⏹️' : '🎙️'}</span>
+                      <span>{isListening ? 'Listening… (Speak now in Hindi/English)' : 'Click to Speak (Mic)'}</span>
+                    </button>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                      Try saying: <em>"Main kal pay kar dunga"</em> or <em>"Send link on WhatsApp"</em>
+                    </div>
+                  </div>
+
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 pt-1">
+                    Or Click Simulated Response:
+                  </div>
+
                   <button
                     onClick={() => {
                       setVoiceStep(2)
@@ -864,13 +1071,38 @@ export default function QueueView({
                       setVoiceStep(4)
                       const reply =
                         callLang === 'en'
-                          ? 'Great! I have recorded your Promise-to-Pay for Friday. Your order reservation is held until then.'
-                          : 'Bahut achha ji! Maine aapke liye Friday ka Promise-to-Pay reminder set kar diya hai. Tab tak order reserved rahega.'
+                          ? 'Great! I have recorded your Promise-to-Pay commitment for Friday. Your order reservation is held until then.'
+                          : 'Bahut achha ji! Maine aapke liye Friday ka Promise-to-Pay reminder record kar diya hai. Tab tak order reserved rahega.'
                       speakText(reply, callLang)
+                      if (voiceItem) {
+                        const nextDate = new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 10)
+                        api
+                          .b2bSetPtp(
+                            voiceItem.transaction_id,
+                            nextDate,
+                            voiceItem.amount_inr,
+                            `Voice Bot Promise recorded via AI speech interaction (${callLang.toUpperCase()})`,
+                          )
+                          .catch(() => {})
+                      }
                     }}
                     className="w-full text-left rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50/60 dark:bg-amber-950/40 p-2 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition-colors"
                   >
                     📅 {callLang === 'en' ? '"I will complete the payment this Friday (Promise to Pay)"' : '"Main Friday ko pay karunga (Promise to Pay)"'}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setVoiceStep(5)
+                      const reply =
+                        callLang === 'en'
+                          ? 'Understood. Stopping all further retries per Rule SC-01 customer fatigue safety policies.'
+                          : 'Ji samajh gaya. SC-01 safety rule ke anurodh par humne automated retries band kar di hain.'
+                      speakText(reply, callLang)
+                    }}
+                    className="w-full text-left rounded-lg border border-rose-300 dark:border-rose-700 bg-rose-50/60 dark:bg-rose-950/40 p-2 text-xs font-semibold text-rose-800 dark:text-rose-300 hover:bg-rose-100 transition-colors"
+                  >
+                    🛑 {callLang === 'en' ? '"No, please cancel and stop retrying"' : '"Nahi, cancel kar do aur retry mat karo"'}
                   </button>
                 </div>
               )}
@@ -884,6 +1116,7 @@ export default function QueueView({
                       {voiceStep === 2 && (callLang === 'en' ? '"Yes, send the 1-click link to my WhatsApp"' : '"Haan, mere WhatsApp pe 1-click link send kar do"')}
                       {voiceStep === 3 && (callLang === 'en' ? '"Please raise a collect request on an alternate UPI ID"' : '"Alternate UPI ID pe collect request raise karo"')}
                       {voiceStep === 4 && (callLang === 'en' ? '"I will complete the payment this Friday (Promise to Pay)"' : '"Main Friday ko pay karunga (Promise to Pay)"')}
+                      {voiceStep === 5 && (callLang === 'en' ? '"No, cancel and stop retrying"' : '"Nahi, cancel kar do"')}
                     </div>
                   </div>
 
@@ -900,8 +1133,12 @@ export default function QueueView({
                           : '“Theek hai! Naya UPI collect request aapke VPA handle pe raise kar diya gaya hai. Kripya app me approve karein.”')}
                       {voiceStep === 4 &&
                         (callLang === 'en'
-                          ? '“Great! I have recorded your Promise-to-Pay for Friday. Your order reservation is held until then.”'
-                          : '“Bahut achha ji! Maine aapke liye Friday ka Promise-to-Pay reminder set kar diya hai. Tab tak order reserved rahega.”')}
+                          ? '“Great! I have recorded your Promise-to-Pay commitment for Friday. Your order reservation is held until then.”'
+                          : '“Bahut achha ji! Maine aapke liye Friday ka Promise-to-Pay reminder record kar diya hai. Tab tak order reserved rahega.”')}
+                      {voiceStep === 5 &&
+                        (callLang === 'en'
+                          ? '“Understood. Stopping all further retries per Rule SC-01 customer fatigue safety policies.”'
+                          : '“Ji samajh gaya. SC-01 safety rule ke anurodh par humne automated retries band kar di hain.”')}
                     </div>
                   </div>
                 </>
@@ -924,6 +1161,8 @@ export default function QueueView({
               <button
                 onClick={() => {
                   if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+                  if (recognitionRef.current) recognitionRef.current.stop()
+                  setIsListening(false)
                   setVoiceItem(null)
                 }}
                 className="rounded-lg bg-rose-600 px-4 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-rose-700 transition-colors"
@@ -933,6 +1172,32 @@ export default function QueueView({
             </div>
           </div>
         </div>
+      )}
+
+      {/* 4. Enterprise Slack CFO Escalation Bridge Modal */}
+      {slackItem && (
+        <SlackEscalationModal
+          transactionId={slackItem.transaction_id}
+          amountInr={slackItem.amount_inr}
+          reason={slackItem.reason}
+          onApprove={async (id) => {
+            await api.run([id])
+            onRun?.()
+          }}
+          onClose={() => setSlackItem(null)}
+          onOpenVoice={() => {
+            setVoiceItem(slackItem)
+            startVoiceCall(slackItem)
+          }}
+        />
+      )}
+
+      {/* 5. Dynamic Incentive & EV Yield Optimizer Modal */}
+      {yieldItem && (
+        <DynamicYieldIncentiveModal
+          initialAmount={yieldItem.amount_inr}
+          onClose={() => setYieldItem(null)}
+        />
       )}
 
     </div>

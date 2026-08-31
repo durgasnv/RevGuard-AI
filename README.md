@@ -32,49 +32,67 @@ In digital commerce and subscription businesses, **revenue loss rarely happens i
   $$\text{EV} = P(\text{recovery}) \times \text{Transaction Amount} - \text{Intervention Cost}$$
 - Ranks every recoverable transaction to prioritize high-value, high-probability recoveries first.
 
-### 4. 🎙️ Bilingual AI Voice Recovery Bot (English & Hinglish)
-- **Real-Time Browser Speech Synthesis**: Simulates an automated calling bot using browser Web Speech APIs (`window.speechSynthesis`) with audio waveform animation.
-- **Dual Language Localization (`[ 🇬🇧 English | 🇮🇳 Hinglish ]`)**:
-  - **🇬🇧 English (Default)**: Crystal-clear, fluent English pronunciation across all operating systems and browsers.
-  - **🇮🇳 Hinglish**: Culturally resonant conversational copy with phonetic dialect smoothing for Indian retail checkouts.
-- **Multi-Turn Interactive Dialogue**: Handles customer confirmations, alternate UPI requests, or Promise-to-Pay registrations.
+### 4. 🎙️ 2-Way Bilingual AI Voice Recovery Bot (Speech-to-Text & Speech Synthesis)
+- **Two-Way Voice Recognition (STT + TTS)**: Integrated microphone listener (`webkitSpeechRecognition`) supporting real-time voice input from the customer in **English** and **Hinglish**.
+- **Real-Time Intent Understanding & Automatic Action**:
+  - Voice commitments like *"Main kal pay kar dunga"* or *"I will pay tomorrow"* automatically extract the date and amount to **record an active Promise-to-Pay (PTP)** on the B2B tracker.
+  - Alternate UPI or WhatsApp requests automatically dispatch 1-click payment links.
+  - Customer decline stops retries immediately under safe mode SC-01.
 
-### 5. 📱 Multi-Channel Outreach Studio (WhatsApp & 1-Click Razorpay Links)
+### 5. 🚀 Live Autonomous Batch Simulator (A/B Ticker Engine)
+- **High-Speed Execution Theater**: Runs an animated end-to-end simulation across 600 transactions with speed controls (1x, 5x, 10x Turbo).
+- **Live Ticking Counters**: Real-time counter of Gross Recovered (₹19.62L), Wasted Fees Avoided (₹1,510 / -81.6%), Fatigue Violations Prevented (42 customers), and Net Counterfactual Uplift (**+₹1.82 Lakhs / +18.4%**).
+- **Live Deterministic Action Stream**: Visual audit event stream showing interventions executing in real-time.
+
+### 6. 🚦 Acquiring Switch Health Radar & Autonomous Traffic Re-Routing
+- Real-time telemetry monitoring latency and success rates across HDFC UPI, ICICI Cards, SBI NetBanking, and Axis VPA rails.
+- **Rule SC-02 Automated Failover**: Detects transient bank switch degradation and autonomously re-routes high-intent checkouts to alternate healthy UPI collect rails.
+
+### 7. 💬 Enterprise Slack / Teams CFO Escalation Bridge
+- Interactive Slack modal card for high-value transactions (>₹25k) and critical aging B2B invoices.
+- Features real-time interactive buttons `[ ✅ Approve 1-Click Recovery ]`, `[ 🛑 Block Under SC-01 ]`, and `[ 🎙️ Launch Voice Bot ]` with instant audit logging.
+
+### 8. ⚡ Dynamic Incentive & Margin-Bounded EV Yield Engine
+- Optimizes recovery probability for hesitant drop-offs and subscription churn:
+  $$\text{Net EV} = P(\text{recovery} \mid \text{incentive}) \times (\text{Amount} - \text{Incentive}) - \text{Cost}$$
+- Calculates dynamic conversion incentives (e.g. 5% instant UPI cashback) while strictly bounded by merchant gross margin constraints.
+
+### 9. 📱 Multi-Channel Outreach Studio (WhatsApp & 1-Click Razorpay Links)
 - Generates simulated/live 1-click Razorpay payment links (`https://rzp.io/i/rec_{id}`) with 24-hour expiry.
 - Renders an interactive WhatsApp Business mobile preview card with localized English and Hinglish copy, 1-click copy to clipboard, and dispatch simulation.
 
-### 6. 📋 B2B Receivables & Promise-to-Pay (PTP) Tracker
+### 10. 📋 B2B Receivables & Promise-to-Pay (PTP) Tracker
 - **Aging Invoices Ledger**: Categorizes corporate receivables across aging buckets (*1–30d*, *31–60d*, *61–90d*, and *90+d Critical*).
 - **Promise-to-Pay (PTP) State Machine**: Records customer commitments (promised date, promised amount, verification notes).
 - **Autonomous Dunning Sequencer**: 4-stage escalating dunning workflow:
   $$\text{1. Gentle Nudge} \longrightarrow \text{2. 1-Click Corporate Link} \longrightarrow \text{3. CFO Escalation} \longrightarrow \text{4. Formal Demand Notice}$$
 
-### 7. 🔄 UPI AutoPay & Mandate Smart Retry Sequencer
+### 11. 🔄 UPI AutoPay & Mandate Smart Retry Sequencer
 - Replaces blind daily retries ($32\%$ success rate) with a **3-Stage Salary-Cycle Retry Ladder**:
   - **Stage 1 (T+2h)**: Transient gateway ping to check acquiring switch health.
   - **Stage 2 (T+24h, 9:00 AM)**: Peak Liquidity Window synchronized with post-salary hours ($78\%$ historical recovery).
   - **Stage 3 (T+72h)**: Fallback 1-Click Alternate UPI Link before hard mandate cancellation.
 
-### 8. 🛡️ Deterministic Policy Guard (SC-01) & Stopping Rules
+### 12. 🛡️ Deterministic Policy Guard (SC-01) & Stopping Rules
 - **Rule SC-01 (Safe Mode)**: Strict block preventing automated retries on fraud-suspected or blocked cards.
 - **Customer Fatigue Cap**: Hard stop on transactions with $\ge 3$ prior attempts to eliminate spam.
 - **Human Approval Gate**: Interactive threshold switcher (**₹10k / ₹25k / ₹50k**) flagging high-value transactions for finance manager sign-off.
 - **Compliance Isolation**: Account holds (`ACCOUNT_FROZEN`, `KYC_PENDING`) route directly to compliance review.
 
-### 9. 🧠 Explainable AI Decision Chain
+### 13. 🧠 Explainable AI Decision Chain
 - 5-step transparent inspection modal tracing every decision:
   $$\text{Raw Failure} \xrightarrow{\text{Pattern Detection}} \text{Statistical Cluster} \xrightarrow{\text{LLM Diagnosis}} \text{EV Math Formula} \xrightarrow{\text{SC-01 Policy Gate}}$$
 
-### 10. ⚡ Live Real-Time Gateway Webhook Simulator
+### 14. ⚡ Live Real-Time Gateway Webhook Simulator
 - Ingests and simulates real-time asynchronous Razorpay webhook payloads (`payment.failed`, `payment.captured`) with live telemetry updates.
 
-### 11. 📁 Upload & Instant Audit
+### 15. 📁 Upload & Instant Audit
 - Standalone analysis tool allowing merchants to upload Razorpay CSV exports, generic payment CSVs, or Excel spreadsheets with 4 bundled realistic demo datasets.
 
-### 12. 📄 Executive CFO Recovery & ROI Certificate Export
+### 16. 📄 Executive CFO Recovery & ROI Certificate Export
 - 1-Click download and printable cryptographic assurance report verifying batch volume (₹68.5L), gross recovery (₹19.62L), net counterfactual uplift (+₹1.82L / +18.4%), and 100% compliance with SC-01 safety rules.
 
-### 13. 🏆 Judge's Interactive Hackathon Matrix
+### 17. 🏆 Judge's Interactive Hackathon Matrix
 - Header quick launcher providing direct 1-click access to all 7 example directions and "The Bar" validation criteria.
 
 ---
