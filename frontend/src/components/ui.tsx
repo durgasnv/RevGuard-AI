@@ -155,7 +155,7 @@ export function Card({
 }) {
   return (
     <section
-      className={`rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-colors hover:border-slate-300 dark:border-slate-800 dark:bg-[#111622] dark:hover:border-slate-750 ${
+      className={`rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-colors hover:border-slate-300 dark:border-slate-800 dark:bg-[#0E1116] dark:hover:border-slate-750 ${
         className ?? ''
       }`}
     >
@@ -226,7 +226,7 @@ export function KpiCard({
 
   return (
     <div
-      className={`rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-colors hover:border-slate-300 dark:border-slate-800 dark:bg-[#111622] dark:hover:border-slate-750 ${accentClass}`}
+      className={`rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-colors hover:border-slate-300 dark:border-slate-800 dark:bg-[#0E1116] dark:hover:border-slate-750 ${accentClass}`}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">

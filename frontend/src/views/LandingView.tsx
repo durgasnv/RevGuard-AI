@@ -63,14 +63,14 @@ export default function LandingView({
   const annualUplift = counterfactualUplift * 12
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#07090e] dark:text-slate-100 font-sans selection:bg-blue-600 selection:text-white overflow-x-hidden transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#08090C] dark:text-slate-100 font-sans selection:bg-blue-600 selection:text-white overflow-x-hidden transition-colors duration-200">
       {/* Dynamic Background Glows */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] bg-gradient-to-b from-blue-600/15 via-indigo-600/5 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] bg-gradient-to-b from-blue-600/10 via-indigo-600/5 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
       <div className="fixed top-[600px] right-10 w-[500px] h-[400px] bg-emerald-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
       <div className="fixed bottom-10 left-10 w-[600px] h-[500px] bg-purple-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
-      {/* ── 1. Top Navbar (Ramp Style) ─────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-slate-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-[#07090e]/80 backdrop-blur-xl transition-colors">
+      {/* ── 1. Top Navbar ─────────────────────────────── */}
+      <header className="sticky top-0 z-50 border-b border-slate-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-[#08090C]/80 backdrop-blur-xl transition-colors">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           {/* Logo */}
           <div className="flex items-center gap-3">
@@ -182,9 +182,9 @@ export default function LandingView({
 
       {/* ── 3. Interactive Hero Dashboard Showcase (docs/dashboard.jpg style) ── */}
       <section id="demo-preview" className="px-4 sm:px-6 py-8 max-w-6xl mx-auto">
-        <div className="relative rounded-3xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#0c1017]/95 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl space-y-6">
+        <div className="relative rounded-3xl border border-slate-200/80 dark:border-[#1C202B] bg-white dark:bg-[#0E1116]/95 p-4 sm:p-6 shadow-2xl backdrop-blur-2xl space-y-6">
           {/* Mockup Topbar */}
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 dark:border-white/[0.06] pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 dark:border-[#1C202B] pb-4">
             <div className="flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-sm font-black text-white shadow-sm">
                 R
@@ -193,7 +193,7 @@ export default function LandingView({
             </div>
 
             {/* Fake Search Pill */}
-            <div className="hidden md:flex items-center gap-2 rounded-full border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-1.5 text-xs text-slate-500 dark:text-slate-400 w-72">
+            <div className="hidden md:flex items-center gap-2 rounded-full border border-slate-200 dark:border-[#242937] bg-slate-50 dark:bg-[#14171F] px-4 py-1.5 text-xs text-slate-500 dark:text-slate-400 w-72">
               <span>🔍</span>
               <span>Ask RevGuard AI diagnostics…</span>
             </div>
@@ -204,7 +204,7 @@ export default function LandingView({
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Live Ingestion Active
               </div>
-              <div className="flex items-center gap-2 rounded-full border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-2.5 py-1 text-xs text-slate-700 dark:text-slate-300">
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 dark:border-[#242937] bg-slate-50 dark:bg-[#14171F] px-2.5 py-1 text-xs text-slate-700 dark:text-slate-300">
                 <img
                   src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150"
                   alt="CFO"
@@ -218,12 +218,12 @@ export default function LandingView({
           {/* Hero Metrics Row (Inspired by docs/dashboard.jpg) */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Left Big Holding Card */}
-            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-gradient-to-br dark:from-[#121824] dark:via-[#0d121c] dark:to-[#07090e] p-6 space-y-3 relative overflow-hidden shadow-sm">
+            <div className="rounded-2xl border border-slate-200 dark:border-[#1C202B] bg-slate-50 dark:bg-[#14171F] p-6 space-y-3 relative overflow-hidden shadow-sm">
               <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
                 <span className="font-semibold uppercase tracking-wider text-[11px]">
                   Total Revenue Recovered
                 </span>
-                <span className="pill-button bg-slate-200/80 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[10px]">
+                <span className="pill-button bg-slate-200/80 dark:bg-[#1C202B] border border-slate-300 dark:border-[#252A38] text-slate-700 dark:text-slate-300 text-[10px]">
                   Batch 600 txns
                 </span>
               </div>
@@ -240,22 +240,22 @@ export default function LandingView({
 
             {/* Right Mini Stream Cards */}
             <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-850/90 p-3.5 space-y-1.5 shadow-sm dark:shadow-md backdrop-blur-md">
+              <div className="rounded-xl border border-slate-200 dark:border-[#1C202B] bg-slate-50/90 dark:bg-[#14171F] p-3.5 space-y-1.5 shadow-sm dark:shadow-md backdrop-blur-md">
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">UPI 2.0 Failover</div>
                 <div className="text-sm font-bold text-slate-900 dark:text-white">₹3,84,000</div>
                 <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">68 re-routed</div>
               </div>
-              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-850/90 p-3.5 space-y-1.5 shadow-sm dark:shadow-md backdrop-blur-md">
+              <div className="rounded-xl border border-slate-200 dark:border-[#1C202B] bg-slate-50/90 dark:bg-[#14171F] p-3.5 space-y-1.5 shadow-sm dark:shadow-md backdrop-blur-md">
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">Voice Bot (PTP)</div>
                 <div className="text-sm font-bold text-slate-900 dark:text-white">₹2,45,000</div>
                 <div className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">82% Intent Confirmed</div>
               </div>
-              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-850/90 p-3.5 space-y-1.5 shadow-sm dark:shadow-md backdrop-blur-md">
+              <div className="rounded-xl border border-slate-200 dark:border-[#1C202B] bg-slate-50/90 dark:bg-[#14171F] p-3.5 space-y-1.5 shadow-sm dark:shadow-md backdrop-blur-md">
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">Mandate Ladder</div>
                 <div className="text-sm font-bold text-slate-900 dark:text-white">₹8,12,000</div>
                 <div className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold">Stage 2 Liquidity</div>
               </div>
-              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-850/90 p-3.5 space-y-1.5 shadow-sm dark:shadow-md backdrop-blur-md">
+              <div className="rounded-xl border border-slate-200 dark:border-[#1C202B] bg-slate-50/90 dark:bg-[#14171F] p-3.5 space-y-1.5 shadow-sm dark:shadow-md backdrop-blur-md">
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">SC-01 Blocked</div>
                 <div className="text-sm font-bold text-rose-600 dark:text-rose-400">42 Stopped</div>
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">0 Fatigue Violations</div>
@@ -264,7 +264,7 @@ export default function LandingView({
           </div>
 
           {/* Performance Area Chart Preview */}
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0d121c] p-5 space-y-3 shadow-inner">
+          <div className="rounded-2xl border border-slate-200 dark:border-[#1C202B] bg-slate-50 dark:bg-[#14171F] p-5 space-y-3 shadow-inner">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">Recovery Trajectory vs. Naïve Baseline</h3>
@@ -529,7 +529,7 @@ export default function LandingView({
       </section>
 
       {/* ── 6. Footer CTA ─────────────────────────────────────────── */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1017] py-12 px-6 transition-colors">
+      <footer className="border-t border-slate-200 dark:border-[#1C202B] bg-white dark:bg-[#08090C] py-12 px-6 transition-colors">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
           <div className="space-y-1">
             <div className="flex items-center justify-center sm:justify-start gap-2">

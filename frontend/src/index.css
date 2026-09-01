@@ -13,26 +13,26 @@ html {
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased selection:bg-blue-500/20 selection:text-blue-900 dark:bg-[#07090e] dark:text-slate-200 dark:selection:bg-blue-600/30 dark:selection:text-blue-100;
+  @apply bg-slate-50 text-slate-900 antialiased selection:bg-blue-500/20 selection:text-blue-900 dark:bg-[#08090C] dark:text-slate-200 dark:selection:bg-blue-600/30 dark:selection:text-blue-100;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Plus Jakarta Sans", "Inter", "Segoe UI", Roboto, sans-serif;
   min-height: 100vh;
   letter-spacing: -0.012em;
 }
 
 @layer components {
-  /* Luxury card surfaces with enhanced depth and subtle shadows */
+  /* Luxury card surfaces with enhanced depth and subtle shadows (Black & Grey theme) */
   .obsidian-card {
     @apply rounded-2xl border border-slate-200 bg-white backdrop-blur-xl shadow-sm transition-all duration-200;
   }
   .dark .obsidian-card {
-    @apply border-slate-800 bg-[#0d111a]/95 text-slate-100 shadow-2xl shadow-black/50;
+    @apply border-[#1C202B] bg-[#0E1116]/95 text-slate-100 shadow-2xl shadow-black/80;
   }
 
   .obsidian-card-sm {
     @apply rounded-xl border border-slate-200/80 bg-slate-50/90 backdrop-blur-md shadow-sm transition-all duration-200;
   }
   .dark .obsidian-card-sm {
-    @apply border-slate-800 bg-[#121824]/90 text-slate-100 shadow-md shadow-black/40;
+    @apply border-[#242937] bg-[#14171F]/90 text-slate-100 shadow-md shadow-black/60;
   }
 }
 
@@ -41,13 +41,13 @@ body {
 }
 
 .dark .card-premium-shadow {
-  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.6), 0 4px 12px -2px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.8), 0 4px 12px -2px rgba(0, 0, 0, 0.6);
 }
 
 /* Mesh glow gradient for hero metrics */
 .mesh-gradient-dark {
-  background: radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.15) 0%, rgba(7, 9, 14, 0.95) 70%),
-              radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.10) 0%, rgba(7, 9, 14, 0.95) 70%);
+  background: radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.12) 0%, rgba(8, 9, 12, 0.98) 70%),
+              radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.08) 0%, rgba(8, 9, 12, 0.98) 70%);
 }
 
 .pill-button {
@@ -66,7 +66,7 @@ body {
   scrollbar-color: #cbd5e1 transparent;
 }
 .dark * {
-  scrollbar-color: #1f2638 transparent;
+  scrollbar-color: #252A38 transparent;
 }
 
 *::-webkit-scrollbar {
@@ -81,13 +81,13 @@ body {
   border-radius: 4px;
 }
 .dark *::-webkit-scrollbar-thumb {
-  background: #1f2638;
+  background: #252A38;
 }
 *::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 .dark *::-webkit-scrollbar-thumb:hover {
-  background: #36415d;
+  background: #3A4255;
 }
 
 

@@ -6,27 +6,35 @@ export default {
     extend: {
       colors: {
         obsidian: {
-          950: '#07090e',
-          900: '#0c1017',
-          850: '#111622',
-          800: '#161d2c',
-          750: '#1c2538',
-          700: '#253047',
+          950: '#08090C', // deep obsidian black canvas
+          900: '#0E1116', // sleek dark charcoal card surface
+          850: '#14171F', // elevated secondary container
+          800: '#1C202B', // neutral charcoal border & interactive container
+          750: '#252A38', // elevated pill / hover state
+          700: '#313747', // subtle separators / icons
         },
         slate: {
-          950: '#07090e',
-          900: '#0d111a',
-          850: '#121824',
-          800: '#182030',
-          750: '#222d42',
-          700: '#313f5c',
-          600: '#475a80',
-          500: '#64748b',
-          400: '#94a3b8',
-          300: '#cbd5e1',
-          200: '#e2e8f0',
-          100: '#f1f5f9',
-          50: '#f8fafc',
+          950: '#08090C', // true deep black canvas
+          900: '#0E1116', // sleek dark charcoal card surface
+          850: '#14171F', // secondary elevated container
+          800: '#1C202B', // neutral charcoal borders & pills
+          750: '#252A38', // active/hover elements
+          700: '#313747', // subtle separators
+          600: '#52596C', // secondary muted text
+          500: '#7C8497', // labels & category headers
+          400: '#9EA6B8', // body secondary text
+          300: '#CBD1DF', // body primary text in dark mode
+          200: '#E4E7EE', // light text in dark mode / light borders
+          100: '#F1F3F7',
+          50: '#F8F9FA',
+        },
+        charcoal: {
+          950: '#08090C',
+          900: '#0E1116',
+          850: '#14171F',
+          800: '#1C202B',
+          750: '#252A38',
+          700: '#313747',
         },
         brand: {
           50: '#eff6ff',
