@@ -17,73 +17,140 @@ export default function QueueView({
   const [outreachItem, setOutreachItem] = useState<QueueItem | null>(null)
   const [chainItem, setChainItem] = useState<QueueItem | null>(null)
   const [voiceItem, setVoiceItem] = useState<QueueItem | null>(null)
+  interface DialogueTurn {
+    id: string
+    sender: 'ai' | 'customer'
+    text: string
+    time: string
+    actionTaken?: string
+  }
+
   const [slackItem, setSlackItem] = useState<QueueItem | null>(null)
   const [yieldItem, setYieldItem] = useState<QueueItem | null>(null)
-  const [voiceStatus, setVoiceStatus] = useState<'connecting' | 'connected' | 'completed'>('connected')
-  const [voiceStep, setVoiceStep] = useState<number>(1)
-  const [callLang, setCallLang] = useState<'en' | 'hi'>('en')
+  const [callLang, setCallLang] = useState<'en' | 'hi'>('hi')
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [speechTranscript, setSpeechTranscript] = useState('')
+  const [speechError, setSpeechError] = useState<string | null>(null)
+  const [dialogueTurns, setDialogueTurns] = useState<DialogueTurn[]>([])
+  const [customReply, setCustomReply] = useState('')
   const [outreachLang, setOutreachLang] = useState<'en' | 'hi'>('hi')
   const [copied, setCopied] = useState(false)
   const [dispatched, setDispatched] = useState(false)
   const [approvalThreshold, setApprovalThreshold] = useState<number>(25000)
 
   const recognitionRef = useRef<any>(null)
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const chatBottomRef = useRef<HTMLDivElement | null>(null)
 
   const plan = state?.plan
   const execution = state?.execution
 
   function speakText(text: string, lang: 'en' | 'hi' = callLang) {
-    if ('speechSynthesis' in window) {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+
+    try {
       window.speechSynthesis.cancel()
-      const clean = text.replace(/[*_#₹]/g, '').replace(/https:\/\/\S+/g, 'link')
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume()
+      }
+
+      // Convert currency and symbols to clean readable speech
+      const clean = text
+        .replace(/₹\s*([0-9,]+)/g, (_m, p1) => `${p1.replace(/,/g, '')} rupees`)
+        .replace(/[*_#]/g, '')
+        .replace(/https?:\/\/\S+/g, 'link')
+
       const utterance = new SpeechSynthesisUtterance(clean)
-      utterance.rate = 0.95
-      utterance.pitch = 1.02
-      
+      utteranceRef.current = utterance
+      utterance.rate = 0.98
+      utterance.pitch = 1.0
+
       const voices = window.speechSynthesis.getVoices()
       if (lang === 'hi') {
-        const indianVoice = voices.find(
-          (v) => v.lang.includes('IN') || v.name.includes('India') || v.lang.includes('hi'),
+        const hindiVoice = voices.find(
+          (v) =>
+            v.lang.includes('IN') ||
+            v.name.toLowerCase().includes('india') ||
+            v.lang.toLowerCase().includes('hi') ||
+            v.name.toLowerCase().includes('hindi'),
         )
-        if (indianVoice) utterance.voice = indianVoice
+        if (hindiVoice) utterance.voice = hindiVoice
       } else {
         const englishVoice = voices.find(
-          (v) => (v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Online') || v.lang === 'en-US' || v.lang === 'en-GB' || v.lang === 'en-IN')),
+          (v) =>
+            v.lang.startsWith('en') &&
+            (v.name.includes('Natural') ||
+              v.name.includes('Online') ||
+              v.name.includes('Google') ||
+              v.lang === 'en-IN' ||
+              v.lang === 'en-US' ||
+              v.lang === 'en-GB'),
         )
         if (englishVoice) utterance.voice = englishVoice
       }
-      
+
       utterance.onstart = () => setIsSpeaking(true)
-      utterance.onend = () => setIsSpeaking(false)
-      utterance.onerror = () => setIsSpeaking(false)
-      window.speechSynthesis.speak(utterance)
+      utterance.onend = () => {
+        setIsSpeaking(false)
+        utteranceRef.current = null
+      }
+      utterance.onerror = (e) => {
+        console.warn('SpeechSynthesis error:', e)
+        setIsSpeaking(false)
+        utteranceRef.current = null
+      }
+
+      setTimeout(() => {
+        try {
+          window.speechSynthesis.speak(utterance)
+        } catch {}
+      }, 50)
+    } catch (e) {
+      console.warn('speakText exception:', e)
+      setIsSpeaking(false)
     }
   }
 
   function getIntroText(d: QueueItem, lang: 'en' | 'hi') {
     if (lang === 'en') {
-      return `Hello! This is the Merchant Recovery Desk AI assistant calling. Your checkout payment of ₹${d.amount_inr.toLocaleString('en-IN')} was interrupted due to a gateway timeout. Would you like me to send a secure 1-click completion link to your WhatsApp?`
+      return `Hello! This is the Merchant Recovery Desk calling. Your payment of ₹${d.amount_inr.toLocaleString('en-IN')} was interrupted due to a gateway timeout. Would you like me to send a secure 1-click completion link to your WhatsApp?`
     }
-    return `Namaste ji! Main Merchant Recovery Desk se AI assistant bol raha hoon. Aapka ₹${d.amount_inr.toLocaleString('en-IN')} ka payment bank timeout hone se ruk gaya tha. Kya main aapke WhatsApp par 1-click retry link bhej doon?`
+    return `Namaste ji! Main Merchant Recovery Desk se AI voice assistant bol raha hoon. Aapka ₹${d.amount_inr.toLocaleString('en-IN')} ka payment bank timeout hone se ruk gaya tha. Kya main aapke WhatsApp par 1-click retry link bhej doon?`
   }
 
   function startVoiceCall(d: QueueItem, initialLang: 'en' | 'hi' = callLang) {
     setVoiceItem(d)
-    setVoiceStatus('connected')
-    setVoiceStep(1)
+    setCallLang(initialLang)
     setSpeechTranscript('')
+    setSpeechError(null)
+    setCustomReply('')
     setIsListening(false)
+
     const intro = getIntroText(d, initialLang)
-    setTimeout(() => speakText(intro, initialLang), 400)
+    setDialogueTurns([
+      {
+        id: `turn-0`,
+        sender: 'ai',
+        text: intro,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ])
+
+    setTimeout(() => {
+      speakText(intro, initialLang)
+    }, 300)
   }
 
-  function handleCustomerSpeech(text: string) {
+  function handleCustomerResponse(text: string) {
+    if (!text.trim()) return
     const lower = text.toLowerCase()
     setSpeechTranscript(text)
     setIsListening(false)
+    setSpeechError(null)
+
+    let aiReply = ''
+    let actionTaken = ''
 
     if (
       lower.includes('kal') ||
@@ -93,15 +160,19 @@ export default function QueueView({
       lower.includes('monday') ||
       lower.includes('pay') ||
       lower.includes('karunga') ||
+      lower.includes('kar dunga') ||
       lower.includes('promise') ||
-      lower.includes('later')
+      lower.includes('later') ||
+      lower.includes('hafta') ||
+      lower.includes('next week') ||
+      lower.includes('dunga')
     ) {
-      setVoiceStep(4)
-      const reply =
+      aiReply =
         callLang === 'en'
-          ? 'Great! I have recorded your Promise-to-Pay commitment for Friday. Your order reservation is held until then.'
-          : 'Bahut achha ji! Maine aapke liye Friday ka Promise-to-Pay reminder record kar diya hai. Tab tak order reserved rahega.'
-      speakText(reply, callLang)
+          ? 'Great! I have recorded your Promise-to-Pay commitment for this Friday. Your order reservation has been extended and held safely until then.'
+          : 'Bahut achha ji! Maine aapke liye Friday ka Promise-to-Pay reminder register kar diya hai. Tab tak aapka order reserved rahega.'
+      actionTaken = '📅 Promise-to-Pay (PTP) Registered for Friday'
+
       if (voiceItem) {
         const nextDate = new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 10)
         api
@@ -119,29 +190,34 @@ export default function QueueView({
       lower.includes('bhej') ||
       lower.includes('send') ||
       lower.includes('message') ||
-      lower.includes('sms')
+      lower.includes('sms') ||
+      lower.includes('haan') ||
+      lower.includes('yes') ||
+      lower.includes('sure') ||
+      lower.includes('ok') ||
+      lower.includes('karo')
     ) {
-      setVoiceStep(2)
-      const reply =
+      aiReply =
         callLang === 'en'
-          ? 'Thank you! A secure 1-click Razorpay payment link has been sent to your WhatsApp (+91 98765 43210). It remains valid for 24 hours.'
-          : 'Dhanyawad! 1-click Razorpay payment link aapke WhatsApp (+91 98765 43210) pe bhej diya gaya hai. 15 minute me payment complete kar sakte hain.'
-      speakText(reply, callLang)
+          ? 'Thank you! A secure 1-click Razorpay payment link has been dispatched to your WhatsApp (+91 98765 43210). It remains active for 24 hours.'
+          : 'Dhanyawad! 1-click Razorpay payment link aapke WhatsApp (+91 98765 43210) pe bhej diya gaya hai. Aap aasaani se complete kar sakte hain.'
+      actionTaken = '⚡ 1-Click Razorpay Link Sent on WhatsApp'
     } else if (
       lower.includes('upi') ||
       lower.includes('gpay') ||
       lower.includes('phonepe') ||
+      lower.includes('paytm') ||
       lower.includes('handle') ||
       lower.includes('vpa') ||
       lower.includes('collect') ||
-      lower.includes('dusra')
+      lower.includes('dusra') ||
+      lower.includes('alternate')
     ) {
-      setVoiceStep(3)
-      const reply =
+      aiReply =
         callLang === 'en'
-          ? 'Understood! A fresh UPI collect request has been initiated to your handle. Please approve it in your payment app.'
-          : 'Theek hai! Naya UPI collect request aapke VPA handle pe raise kar diya gaya hai. Kripya app me approve karein.'
-      speakText(reply, callLang)
+          ? 'Understood! A fresh UPI collect request has been triggered to your alternate handle. Please approve the notification in your UPI app.'
+          : 'Theek hai! Naya UPI collect request aapke alternate VPA handle pe raise kar diya gaya hai. Kripya app me approve karein.'
+      actionTaken = '⚡ Alternate UPI Collect Rail Triggered'
     } else if (
       lower.includes('nahi') ||
       lower.includes('cancel') ||
@@ -149,28 +225,54 @@ export default function QueueView({
       lower.includes('stop') ||
       lower.includes('no') ||
       lower.includes("don't") ||
-      lower.includes('reject')
+      lower.includes('reject') ||
+      lower.includes('close') ||
+      lower.includes('band')
     ) {
-      setVoiceStep(5)
-      const reply =
+      aiReply =
         callLang === 'en'
-          ? 'Understood. Stopping all further retries per Rule SC-01 customer fatigue safety policies.'
-          : 'Ji samajh gaya. SC-01 safety rule ke anurodh par humne automated retries band kar di hain.'
-      speakText(reply, callLang)
+          ? 'Understood. Halting all automated recovery outreach for this order under Rule SC-01 Zero-Fatigue safety guidelines.'
+          : 'Ji samajh gaya. SC-01 safety policy ke anusaar humne automated outreach band kar di hai.'
+      actionTaken = '🛑 Rule SC-01 Safety Stop Enforced'
     } else {
-      setVoiceStep(2)
-      const reply =
+      aiReply =
         callLang === 'en'
-          ? 'Got it! I have dispatched a secure 1-click completion link to your WhatsApp.'
-          : 'Theek hai! Maine aapke WhatsApp pe 1-click payment link bhej diya hai.'
-      speakText(reply, callLang)
+          ? `Got it! I have updated our recovery desk and dispatched a secure 1-click checkout link to your registered mobile number for ${inr(voiceItem?.amount_inr || 0)}.`
+          : `Theek hai ji! Maine aapka response record kar liya hai aur ${inr(voiceItem?.amount_inr || 0)} ka 1-click payment link SMS aur WhatsApp pe bhej diya hai.`
+      actionTaken = '📱 1-Click Payment Link Dispatched'
     }
+
+    const customerMsg: DialogueTurn = {
+      id: `turn-${Date.now()}-user`,
+      sender: 'customer',
+      text: text,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    }
+
+    const aiMsg: DialogueTurn = {
+      id: `turn-${Date.now()}-ai`,
+      sender: 'ai',
+      text: aiReply,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      actionTaken: actionTaken,
+    }
+
+    setDialogueTurns((prev) => [...prev, customerMsg, aiMsg])
+    speakText(aiReply, callLang)
+
+    setTimeout(() => {
+      chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, 100)
   }
 
   function toggleSpeechRecognition() {
+    setSpeechError(null)
+
     if (isListening) {
       if (recognitionRef.current) {
-        recognitionRef.current.stop()
+        try {
+          recognitionRef.current.stop()
+        } catch {}
       }
       setIsListening(false)
       return
@@ -183,8 +285,8 @@ export default function QueueView({
         .webkitSpeechRecognition
 
     if (!SpeechRec) {
-      alert(
-        'Speech Recognition is not supported in this browser. Please use Chrome/Edge or click the reply buttons below.',
+      setSpeechError(
+        'Speech Recognition API is not supported in this browser. Please use Chrome/Edge or click/type responses below.',
       )
       return
     }
@@ -196,22 +298,37 @@ export default function QueueView({
       const rec = new SpeechRec()
       recognitionRef.current = rec
       rec.continuous = false
-      rec.interimResults = false
+      rec.interimResults = true
       rec.lang = callLang === 'hi' ? 'hi-IN' : 'en-IN'
 
       rec.onstart = () => {
         setIsListening(true)
         setSpeechTranscript('')
+        setSpeechError(null)
       }
 
       rec.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript
-        handleCustomerSpeech(transcript)
+        let finalTranscript = ''
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          finalTranscript += event.results[i][0].transcript
+        }
+        setSpeechTranscript(finalTranscript)
+
+        if (event.results[0].isFinal) {
+          handleCustomerResponse(finalTranscript)
+        }
       }
 
       rec.onerror = (event: any) => {
-        console.warn('Speech recognition event error:', event)
+        console.warn('Speech recognition error:', event.error)
         setIsListening(false)
+        if (event.error === 'not-allowed') {
+          setSpeechError('Microphone access blocked. Click the preset replies or type below.')
+        } else if (event.error === 'no-speech') {
+          setSpeechError('No speech detected. Click the mic again or use preset replies.')
+        } else {
+          setSpeechError(`Speech recognition note: ${event.error}. You can use preset replies.`)
+        }
       }
 
       rec.onend = () => {
@@ -219,9 +336,10 @@ export default function QueueView({
       }
 
       rec.start()
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to start speech recognition:', e)
       setIsListening(false)
+      setSpeechError('Could not initialize microphone. Use Chrome/Edge or click preset replies.')
     }
   }
 
@@ -898,279 +1016,377 @@ export default function QueueView({
 
       {/* 3. Bilingual AI Voice Recovery Call Bot Simulator Modal (English & Hinglish) */}
       {voiceItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-xl rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-2xl space-y-3.5 max-h-[92vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-600 text-lg font-bold text-white shadow-sm">
                   🎙️
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                    AI Voice Recovery Call Bot
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                      AI Voice Recovery Call Bot
+                    </h3>
+                    <span className="rounded bg-purple-500/15 border border-purple-500/30 px-1.5 py-0.5 text-[9px] font-bold text-purple-700 dark:text-purple-300">
+                      2-WAY DIALOGUE
+                    </span>
+                  </div>
                   <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                    <span>{voiceItem.transaction_id}</span>
+                    <span className="font-mono">{voiceItem.transaction_id}</span>
                     <span>·</span>
                     <span className="font-bold text-purple-600 dark:text-purple-400">{inr(voiceItem.amount_inr)}</span>
+                    <span>·</span>
+                    <span className="text-slate-400">{voiceItem.customer_phone || '+91 98765 43210'}</span>
                   </div>
                 </div>
               </div>
 
               <button
                 onClick={() => {
-                  if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+                  if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel()
+                  if (recognitionRef.current) {
+                    try { recognitionRef.current.stop() } catch {}
+                  }
+                  setIsListening(false)
                   setVoiceItem(null)
                 }}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors"
               >
                 ✕
               </button>
             </div>
 
-            {/* Dedicated Voice Language Selector (identical to Outreach Studio) */}
-            <div className="flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-2.5">
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Voice Language Selection:
+            {/* Language Switcher Bar */}
+            <div className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-2 shrink-0">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <span>🌐</span>
+                <span>Spoken Language:</span>
               </span>
-              <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-200/70 dark:bg-slate-900 p-0.5 text-xs">
-                <button
-                  onClick={() => {
-                    setCallLang('en')
-                    setVoiceStep(1)
-                    const intro = getIntroText(voiceItem, 'en')
-                    speakText(intro, 'en')
-                  }}
-                  className={`rounded-md px-3 py-1 font-semibold transition-all ${
-                    callLang === 'en'
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400'
-                  }`}
-                >
-                  🇬🇧 English
-                </button>
+              <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-200/80 dark:bg-slate-900 p-0.5 text-xs">
                 <button
                   onClick={() => {
                     setCallLang('hi')
-                    setVoiceStep(1)
                     const intro = getIntroText(voiceItem, 'hi')
+                    setDialogueTurns([
+                      {
+                        id: `turn-${Date.now()}`,
+                        sender: 'ai',
+                        text: intro,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                      },
+                    ])
                     speakText(intro, 'hi')
                   }}
-                  className={`rounded-md px-3 py-1 font-semibold transition-all ${
+                  className={`rounded-md px-3 py-1 font-bold transition-all cursor-pointer ${
                     callLang === 'hi'
                       ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400'
+                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
                   }`}
                 >
                   🇮🇳 Hinglish
                 </button>
+                <button
+                  onClick={() => {
+                    setCallLang('en')
+                    const intro = getIntroText(voiceItem, 'en')
+                    setDialogueTurns([
+                      {
+                        id: `turn-${Date.now()}`,
+                        sender: 'ai',
+                        text: intro,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                      },
+                    ])
+                    speakText(intro, 'en')
+                  }}
+                  className={`rounded-md px-3 py-1 font-bold transition-all cursor-pointer ${
+                    callLang === 'en'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
+                  }`}
+                >
+                  🇬🇧 English
+                </button>
               </div>
             </div>
 
-            {/* Simulated Live Call Banner */}
-            <div className="rounded-xl border border-purple-200 dark:border-purple-500/20 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/40 dark:to-indigo-950/40 p-4 text-center">
-              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 dark:bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-                <span>Live Call Connected (00:24)</span>
+            {/* Live Audio Telemetry Waveform */}
+            <div className="rounded-xl border border-purple-200 dark:border-purple-500/20 bg-gradient-to-r from-purple-50/80 via-indigo-50/50 to-blue-50/80 dark:from-purple-950/40 dark:via-indigo-950/30 dark:to-blue-950/40 p-3 text-center shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Call Active (2-Way STT + TTS)</span>
+                </div>
+
+                <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                  {callLang === 'hi' ? 'Bilingual Voice Engine (hi-IN)' : 'English Voice Engine (en-IN)'}
+                </span>
               </div>
 
-              {/* Animated Sound Waveform Indicator */}
-              <div className="mt-3 flex items-center justify-center gap-1.5 h-6">
-                {[40, 75, 90, 60, 100, 45, 80, 55, 95, 30].map((h, i) => (
+              {/* Dynamic Sound Waveform */}
+              <div className="mt-2.5 flex items-center justify-center gap-1 h-6">
+                {[35, 65, 95, 50, 100, 40, 85, 60, 90, 45, 75, 30].map((h, i) => (
                   <span
                     key={i}
-                    style={{ height: isSpeaking ? `${h}%` : '20%' }}
-                    className="w-1.5 rounded-full bg-purple-600 dark:bg-purple-400 transition-all duration-150"
+                    style={{
+                      height: isSpeaking || isListening ? `${h}%` : '20%',
+                      animationDuration: `${0.4 + (i % 4) * 0.15}s`,
+                    }}
+                    className={`w-1 rounded-full transition-all duration-150 ${
+                      isListening
+                        ? 'bg-rose-500 animate-pulse'
+                        : isSpeaking
+                        ? 'bg-purple-600 dark:bg-purple-400'
+                        : 'bg-slate-300 dark:bg-slate-700'
+                    }`}
                   />
                 ))}
               </div>
-              <div className="mt-1.5 text-[11px] text-purple-700 dark:text-purple-300 font-medium">
-                {isSpeaking
+
+              <div className="mt-1 text-[11px] font-medium text-purple-800 dark:text-purple-300">
+                {isListening
+                  ? '🎙️ Listening to your voice… Speak now in Hindi or English'
+                  : isSpeaking
                   ? `AI Voice Speaking in ${callLang === 'en' ? 'English' : 'Hinglish'}…`
-                  : 'Listening for customer response…'}
+                  : 'Call Connected · Speak into mic or choose a response below'}
               </div>
             </div>
 
-            {/* Interactive Dialogue Progression */}
-            <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
-              {/* Turn 1: AI Intro */}
-              <div className="flex gap-2 text-xs">
-                <span className="shrink-0 font-bold text-purple-600 dark:text-purple-400">AI:</span>
-                <div className="rounded-lg bg-purple-50 dark:bg-purple-950/60 p-2.5 text-slate-800 dark:text-slate-200 border border-purple-100 dark:border-purple-900 leading-relaxed">
-                  {callLang === 'en'
-                    ? `"Hello! This is the Merchant Recovery Desk calling. Your payment of ${inr(voiceItem.amount_inr)} was interrupted due to a gateway timeout. Would you like me to send a secure 1-click completion link to your WhatsApp?"`
-                    : `"Namaste ji! Main Merchant Recovery Desk se AI voice assistant bol raha hoon. Aapka ${inr(voiceItem.amount_inr)} ka payment bank timeout ki wajah se fail ho gaya tha. Kya main aapke WhatsApp pe 1-click retry link bhej doon?"`}
+            {/* Error Notification banner if mic permissions blocked */}
+            {speechError && (
+              <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 p-2 text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-1.5">
+                  <span>⚠️</span>
+                  <span>{speechError}</span>
+                </div>
+                <button
+                  onClick={() => setSpeechError(null)}
+                  className="text-amber-600 dark:text-amber-400 font-bold hover:underline"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            {/* Live Recognized Speech Transcript Pill */}
+            {speechTranscript && (
+              <div className="rounded-lg bg-blue-50 dark:bg-blue-950/50 p-2 text-xs border border-blue-200 dark:border-blue-800/60 shrink-0">
+                <div className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-ping" />
+                  <span>Live Recognized Speech:</span>
+                </div>
+                <div className="mt-0.5 text-slate-800 dark:text-slate-200 italic font-medium">
+                  "{speechTranscript}"
                 </div>
               </div>
+            )}
 
-              {/* Speech-to-Text Live Transcript */}
-              {speechTranscript && (
-                <div className="rounded-lg bg-blue-50 dark:bg-blue-950/50 p-2 text-xs border border-blue-200 dark:border-blue-800/60">
-                  <div className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <span>🎙️ Live Recognized Speech:</span>
-                  </div>
-                  <div className="mt-0.5 text-slate-800 dark:text-slate-200 italic font-medium">
-                    "{speechTranscript}"
-                  </div>
+            {/* Multi-Turn Conversation History Stream */}
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1 min-h-[160px] max-h-[260px] border border-slate-100 dark:border-slate-800/80 rounded-xl p-3 bg-slate-50/50 dark:bg-slate-950/40">
+              {dialogueTurns.map((turn) => (
+                <div key={turn.id} className="space-y-1">
+                  {turn.sender === 'ai' ? (
+                    <div className="flex items-start gap-2 text-xs">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-purple-600 text-[10px] font-bold text-white shadow-xs">
+                        AI
+                      </div>
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-purple-700 dark:text-purple-300">RevGuard Voice Bot</span>
+                          <span className="text-[10px] text-slate-400">{turn.time}</span>
+                        </div>
+                        <div className="rounded-2xl rounded-tl-xs bg-purple-50 dark:bg-purple-950/60 p-3 text-slate-800 dark:text-slate-200 border border-purple-200/80 dark:border-purple-800/60 leading-relaxed shadow-xs">
+                          {turn.text}
+                        </div>
+                        {turn.actionTaken && (
+                          <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                            <span>✓</span>
+                            <span>{turn.actionTaken}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-start justify-end gap-2 text-xs">
+                      <div className="min-w-0 flex-1 text-right space-y-1">
+                        <div className="flex items-center justify-end gap-2">
+                          <span className="text-[10px] text-slate-400">{turn.time}</span>
+                          <span className="font-bold text-slate-700 dark:text-slate-300">Customer (You)</span>
+                        </div>
+                        <div className="inline-block text-left rounded-2xl rounded-tr-xs bg-blue-600 p-3 text-white shadow-xs font-medium leading-relaxed">
+                          "{turn.text}"
+                        </div>
+                      </div>
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-[10px] font-bold text-white shadow-xs">
+                        👤
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
+              <div ref={chatBottomRef} />
+            </div>
 
-              {/* Turn 2: Customer Response Options & 2-Way Mic */}
-              {voiceStep === 1 && (
-                <div className="space-y-2 pl-2 pt-1">
-                  {/* 2-Way Live Microphone Toggle */}
-                  <div className="rounded-xl border border-purple-300 dark:border-purple-700 bg-purple-50/60 dark:bg-purple-950/40 p-3 text-center space-y-2">
-                    <div className="text-[11px] font-bold text-purple-900 dark:text-purple-300">
-                      🎙️ 2-Way Voice Dialogue (Speak directly into microphone):
-                    </div>
-                    <button
-                      onClick={toggleSpeechRecognition}
-                      className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold shadow-sm transition-all ${
-                        isListening
-                          ? 'bg-rose-600 text-white animate-pulse shadow-rose-500/30'
-                          : 'bg-purple-600 hover:bg-purple-700 text-white shadow-purple-500/30'
-                      }`}
-                    >
-                      <span className="text-base">{isListening ? '⏹️' : '🎙️'}</span>
-                      <span>{isListening ? 'Listening… (Speak now in Hindi/English)' : 'Click to Speak (Mic)'}</span>
-                    </button>
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                      Try saying: <em>"Main kal pay kar dunga"</em> or <em>"Send link on WhatsApp"</em>
-                    </div>
-                  </div>
+            {/* Customer Interaction & Response Controls */}
+            <div className="space-y-2.5 shrink-0 pt-1">
+              {/* 1. Live Microphone Toggle & Text Input */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleSpeechRecognition}
+                  className={`inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold shadow-md transition-all shrink-0 cursor-pointer ${
+                    isListening
+                      ? 'bg-rose-600 text-white animate-pulse shadow-rose-600/30'
+                      : 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-600/25'
+                  }`}
+                >
+                  <span className="text-base">{isListening ? '⏹️' : '🎙️'}</span>
+                  <span>{isListening ? 'Listening… (Speak)' : 'Speak into Mic'}</span>
+                </button>
 
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 pt-1">
-                    Or Click Simulated Response:
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      setVoiceStep(2)
-                      const reply =
-                        callLang === 'en'
-                          ? 'Thank you! A secure 1-click Razorpay payment link has been sent to your WhatsApp (+91 98765 43210). It remains valid for 24 hours.'
-                          : 'Dhanyawad! 1-click Razorpay payment link aapke WhatsApp (+91 98765 43210) pe bhej diya gaya hai. 15 minute me payment complete kar sakte hain.'
-                      speakText(reply, callLang)
-                    }}
-                    className="w-full text-left rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50/60 dark:bg-emerald-950/40 p-2 text-xs font-semibold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 transition-colors"
-                  >
-                    💬 {callLang === 'en' ? '"Yes, send the 1-click link to my WhatsApp"' : '"Haan, mere WhatsApp pe 1-click link send kar do"'}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setVoiceStep(3)
-                      const reply =
-                        callLang === 'en'
-                          ? 'Understood! A fresh UPI collect request has been initiated to your handle. Please approve it in your payment app.'
-                          : 'Theek hai! Naya UPI collect request aapke VPA handle pe raise kar diya gaya hai. Kripya app me approve karein.'
-                      speakText(reply, callLang)
-                    }}
-                    className="w-full text-left rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50/60 dark:bg-blue-950/40 p-2 text-xs font-semibold text-blue-800 dark:text-blue-300 hover:bg-blue-100 transition-colors"
-                  >
-                    ⚡ {callLang === 'en' ? '"Please raise a collect request on an alternate UPI ID"' : '"Alternate UPI ID pe collect request raise karo"'}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setVoiceStep(4)
-                      const reply =
-                        callLang === 'en'
-                          ? 'Great! I have recorded your Promise-to-Pay commitment for Friday. Your order reservation is held until then.'
-                          : 'Bahut achha ji! Maine aapke liye Friday ka Promise-to-Pay reminder record kar diya hai. Tab tak order reserved rahega.'
-                      speakText(reply, callLang)
-                      if (voiceItem) {
-                        const nextDate = new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 10)
-                        api
-                          .b2bSetPtp(
-                            voiceItem.transaction_id,
-                            nextDate,
-                            voiceItem.amount_inr,
-                            `Voice Bot Promise recorded via AI speech interaction (${callLang.toUpperCase()})`,
-                          )
-                          .catch(() => {})
+                {/* Custom Text input as fallback/testing */}
+                <div className="flex-1 flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    placeholder={
+                      callLang === 'hi'
+                        ? 'Type in Hindi/English (e.g. "Main kal pay karunga")…'
+                        : 'Type customer response (e.g. "I will pay tomorrow")…'
+                    }
+                    value={customReply}
+                    onChange={(e) => setCustomReply(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && customReply.trim()) {
+                        handleCustomerResponse(customReply)
+                        setCustomReply('')
                       }
                     }}
-                    className="w-full text-left rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50/60 dark:bg-amber-950/40 p-2 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition-colors"
+                    className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:border-purple-500"
+                  />
+                  <button
+                    onClick={() => {
+                      if (customReply.trim()) {
+                        handleCustomerResponse(customReply)
+                        setCustomReply('')
+                      }
+                    }}
+                    disabled={!customReply.trim()}
+                    className="rounded-xl bg-slate-900 dark:bg-slate-800 text-white px-3 py-2 text-xs font-bold hover:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-40 transition-colors cursor-pointer"
                   >
-                    📅 {callLang === 'en' ? '"I will complete the payment this Friday (Promise to Pay)"' : '"Main Friday ko pay karunga (Promise to Pay)"'}
+                    Send
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. Quick Preset Responses (English & Hinglish) */}
+              <div className="space-y-1">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                  <span>Quick Responses:</span>
+                  <span className="text-[9px] lowercase font-normal text-slate-400">click to simulate voice reply</span>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    onClick={() =>
+                      handleCustomerResponse(
+                        callLang === 'en'
+                          ? 'Yes, send the 1-click link to my WhatsApp'
+                          : 'Haan, mere WhatsApp pe 1-click link send kar do',
+                      )
+                    }
+                    className="text-left rounded-lg border border-emerald-300 dark:border-emerald-700/60 bg-emerald-50/70 dark:bg-emerald-950/40 p-2 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors truncate cursor-pointer"
+                  >
+                    💬 {callLang === 'en' ? 'Yes, send 1-click link to WhatsApp' : 'Haan, WhatsApp pe link bhej do'}
                   </button>
 
                   <button
-                    onClick={() => {
-                      setVoiceStep(5)
-                      const reply =
+                    onClick={() =>
+                      handleCustomerResponse(
                         callLang === 'en'
-                          ? 'Understood. Stopping all further retries per Rule SC-01 customer fatigue safety policies.'
-                          : 'Ji samajh gaya. SC-01 safety rule ke anurodh par humne automated retries band kar di hain.'
-                      speakText(reply, callLang)
-                    }}
-                    className="w-full text-left rounded-lg border border-rose-300 dark:border-rose-700 bg-rose-50/60 dark:bg-rose-950/40 p-2 text-xs font-semibold text-rose-800 dark:text-rose-300 hover:bg-rose-100 transition-colors"
+                          ? 'Please raise a collect request on an alternate UPI ID'
+                          : 'Alternate UPI ID pe collect request raise karo',
+                      )
+                    }
+                    className="text-left rounded-lg border border-blue-300 dark:border-blue-700/60 bg-blue-50/70 dark:bg-blue-950/40 p-2 text-[11px] font-semibold text-blue-800 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors truncate cursor-pointer"
                   >
-                    🛑 {callLang === 'en' ? '"No, please cancel and stop retrying"' : '"Nahi, cancel kar do aur retry mat karo"'}
+                    ⚡ {callLang === 'en' ? 'Request Alternate UPI Collect' : 'Alternate UPI ID pe request bhejo'}
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      handleCustomerResponse(
+                        callLang === 'en'
+                          ? 'I will complete the payment this Friday (Promise to Pay)'
+                          : 'Main Friday ko pay karunga (Promise to Pay commitment)',
+                      )
+                    }
+                    className="text-left rounded-lg border border-amber-300 dark:border-amber-700/60 bg-amber-50/70 dark:bg-amber-950/40 p-2 text-[11px] font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors truncate cursor-pointer"
+                  >
+                    📅 {callLang === 'en' ? 'I will pay this Friday (PTP)' : 'Main Friday ko pay kar dunga (PTP)'}
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      handleCustomerResponse(
+                        callLang === 'en'
+                          ? 'No, please cancel and stop retrying'
+                          : 'Nahi, cancel kar do aur retry mat karo',
+                      )
+                    }
+                    className="text-left rounded-lg border border-rose-300 dark:border-rose-700/60 bg-rose-50/70 dark:bg-rose-950/40 p-2 text-[11px] font-semibold text-rose-800 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors truncate cursor-pointer"
+                  >
+                    🛑 {callLang === 'en' ? 'Cancel & Stop Retries (SC-01)' : 'Nahi, cancel kar do (Stop)'}
                   </button>
                 </div>
-              )}
-
-              {/* Turn 3: AI Outcome */}
-              {voiceStep > 1 && (
-                <>
-                  <div className="flex gap-2 text-xs">
-                    <span className="shrink-0 font-bold text-slate-500">Customer:</span>
-                    <div className="rounded-lg bg-slate-100 dark:bg-slate-800 p-2 text-slate-700 dark:text-slate-300 italic">
-                      {voiceStep === 2 && (callLang === 'en' ? '"Yes, send the 1-click link to my WhatsApp"' : '"Haan, mere WhatsApp pe 1-click link send kar do"')}
-                      {voiceStep === 3 && (callLang === 'en' ? '"Please raise a collect request on an alternate UPI ID"' : '"Alternate UPI ID pe collect request raise karo"')}
-                      {voiceStep === 4 && (callLang === 'en' ? '"I will complete the payment this Friday (Promise to Pay)"' : '"Main Friday ko pay karunga (Promise to Pay)"')}
-                      {voiceStep === 5 && (callLang === 'en' ? '"No, cancel and stop retrying"' : '"Nahi, cancel kar do"')}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 text-xs">
-                    <span className="shrink-0 font-bold text-purple-600 dark:text-purple-400">AI:</span>
-                    <div className="rounded-lg bg-purple-50 dark:bg-purple-950/60 p-2.5 text-slate-800 dark:text-slate-200 border border-purple-100 dark:border-purple-900 leading-relaxed font-medium">
-                      {voiceStep === 2 &&
-                        (callLang === 'en'
-                          ? '“Thank you! A secure 1-click Razorpay payment link has been sent to your WhatsApp (+91 98765 43210). It remains valid for 24 hours.”'
-                          : '“Dhanyawad! 1-click Razorpay payment link aapke WhatsApp (+91 98765 43210) pe bhej diya gaya hai. 15 minute me payment complete kar sakte hain.”')}
-                      {voiceStep === 3 &&
-                        (callLang === 'en'
-                          ? '“Understood! A fresh UPI collect request has been initiated to your handle. Please approve it in your payment app.”'
-                          : '“Theek hai! Naya UPI collect request aapke VPA handle pe raise kar diya gaya hai. Kripya app me approve karein.”')}
-                      {voiceStep === 4 &&
-                        (callLang === 'en'
-                          ? '“Great! I have recorded your Promise-to-Pay commitment for Friday. Your order reservation is held until then.”'
-                          : '“Bahut achha ji! Maine aapke liye Friday ka Promise-to-Pay reminder record kar diya hai. Tab tak order reserved rahega.”')}
-                      {voiceStep === 5 &&
-                        (callLang === 'en'
-                          ? '“Understood. Stopping all further retries per Rule SC-01 customer fatigue safety policies.”'
-                          : '“Ji samajh gaya. SC-01 safety rule ke anurodh par humne automated retries band kar di hain.”')}
-                    </div>
-                  </div>
-                </>
-              )}
+              </div>
             </div>
 
-            {/* Controls */}
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
-              <button
-                onClick={() => {
-                  const intro = getIntroText(voiceItem, callLang)
-                  speakText(intro, callLang)
-                }}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50"
-              >
-                <span>🔊</span>
-                <span>Replay AI Voice</span>
-              </button>
+            {/* Bottom Actions Footer */}
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 shrink-0">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const lastAiTurn = [...dialogueTurns].reverse().find((t) => t.sender === 'ai')
+                    if (lastAiTurn) {
+                      speakText(lastAiTurn.text, callLang)
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors cursor-pointer"
+                >
+                  <span>🔊</span>
+                  <span>Replay AI Voice</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    const intro = getIntroText(voiceItem, callLang)
+                    setDialogueTurns([
+                      {
+                        id: `turn-${Date.now()}`,
+                        sender: 'ai',
+                        text: intro,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                      },
+                    ])
+                    speakText(intro, callLang)
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors cursor-pointer"
+                >
+                  <span>↺</span>
+                  <span>Restart Call</span>
+                </button>
+              </div>
 
               <button
                 onClick={() => {
-                  if ('speechSynthesis' in window) window.speechSynthesis.cancel()
-                  if (recognitionRef.current) recognitionRef.current.stop()
+                  if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel()
+                  if (recognitionRef.current) {
+                    try { recognitionRef.current.stop() } catch {}
+                  }
                   setIsListening(false)
                   setVoiceItem(null)
                 }}
-                className="rounded-lg bg-rose-600 px-4 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-rose-700 transition-colors"
+                className="rounded-lg bg-rose-600 hover:bg-rose-500 active:bg-rose-700 px-4 py-1.5 text-xs font-bold text-white shadow-sm transition-colors cursor-pointer"
               >
                 End Call
               </button>

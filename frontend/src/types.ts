@@ -67,6 +67,7 @@ export interface QueueItem {
   confidence: number
   requires_approval: boolean
   reason: string
+  customer_phone?: string
   outreach?: OutreachInfo
 }
 
