@@ -13,6 +13,7 @@ import json
 import logging
 import os
 import time
+from datetime import datetime, timezone
 
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -92,6 +93,7 @@ _EXECUTOR = ActionExecutor(provider=PaymentSimulator(seed=42), guard=_GUARD)
 AUDIT_LOG = AuditLog()
 _SEEN_WEBHOOK_IDS: set[str] = set()  # webhook idempotency (NFR-04)
 _SEEN_WEBHOOK_IDS_MAX = 10_000  # cap to prevent unbounded growth
+_WEBHOOK_EVENTS: list[dict] = []
 
 
 @app.on_event("startup")
@@ -429,24 +431,40 @@ async def razorpay_webhook(request: Request,
 
     entity = ((event.get("payload") or {}).get("payment") or {}).get("entity") or {}
     source_txn = (entity.get("notes") or {}).get("source_txn")
+    amount_inr = float(entity.get("amount", 0)) / 100.0 if "amount" in entity else float(event.get("amount_inr", 3500))
+    payment_method = entity.get("method", event.get("payment_method", "upi"))
+    error_code = entity.get("error_code", event.get("error_code", "GATEWAY_TIMEOUT"))
+
+    now_str = datetime.now(timezone.utc).isoformat()
+    record = {
+        "event_id": event_id,
+        "event": event_type,
+        "amount_inr": amount_inr,
+        "payment_method": payment_method,
+        "error_code": error_code,
+        "timestamp": now_str,
+    }
+    _WEBHOOK_EVENTS.insert(0, record)
+    if len(_WEBHOOK_EVENTS) > 50:
+        _WEBHOOK_EVENTS.pop()
 
     if event_type == "payment.captured":
         AUDIT_LOG.record(
             actor="razorpay_webhook", action="provider_outcome",
             reason="payment captured by provider",
             evidence={"event_id": event_id, "source_txn": source_txn,
-                      "amount_inr": entity.get("amount", 0) / 100.0},
+                      "amount_inr": amount_inr},
             outcome="recovered",
         )
-        return {"status": "recorded"}
+        return {"status": "recorded", "event": record}
     if event_type == "payment.failed":
         AUDIT_LOG.record(
             actor="razorpay_webhook", action="provider_outcome",
             reason="payment failed at provider",
-            evidence={"event_id": event_id, "source_txn": source_txn},
+            evidence={"event_id": event_id, "source_txn": source_txn, "amount_inr": amount_inr},
             outcome="failed",
         )
-        return {"status": "recorded"}
+        return {"status": "recorded", "event": record}
 
     AUDIT_LOG.record(
         actor="razorpay_webhook", action="unhandled_event_ignored",
@@ -671,31 +689,6 @@ def mark_b2b_recovered(invoice_id: str) -> dict:
 
 
 # ── Live Webhook Simulator ───────────────────────────────────────────
-
-_WEBHOOK_EVENTS: list[dict] = []
-
-@app.post("/webhooks/razorpay")
-async def razorpay_webhook_receiver(request: Request) -> dict:
-    """Receive or simulate a live Razorpay webhook (e.g. payment.failed, payment.captured)."""
-    body = await request.json()
-    event_type = body.get("event", "payment.failed")
-    payload = body.get("payload", {}).get("payment", {}).get("entity", {})
-    
-    now_str = datetime.now(timezone.utc).isoformat()
-    record = {
-        "event_id": f"evt_{hash(now_str) % 1000000:06d}",
-        "event": event_type,
-        "amount_inr": float(payload.get("amount", 0)) / 100.0 if "amount" in payload else float(body.get("amount_inr", 3500)),
-        "payment_method": payload.get("method", body.get("payment_method", "upi")),
-        "error_code": payload.get("error_code", body.get("error_code", "GATEWAY_TIMEOUT")),
-        "timestamp": now_str,
-    }
-    _WEBHOOK_EVENTS.insert(0, record)
-    if len(_WEBHOOK_EVENTS) > 50:
-        _WEBHOOK_EVENTS.pop()
-    
-    return {"status": "received", "event": record}
-
 
 @app.get("/webhooks/events")
 def list_webhook_events() -> dict:
