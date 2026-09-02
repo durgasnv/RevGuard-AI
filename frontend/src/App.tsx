@@ -10,6 +10,8 @@ import B2BView from './views/B2BView'
 import LoginView from './views/LoginView'
 import LandingView from './views/LandingView'
 import BatchSimulatorModal from './components/BatchSimulatorModal'
+import WebhookInjectorModal from './components/WebhookInjectorModal'
+import MandateLadderModal from './components/MandateLadderModal'
 
 type TabId = 'overview' | 'leakage' | 'queue' | 'b2b' | 'audit' | 'analyze'
 
@@ -144,6 +146,7 @@ export default function App() {
   const [showWebhookSim, setShowWebhookSim] = useState(false)
   const [showHackathonMatrix, setShowHackathonMatrix] = useState(false)
   const [showBatchSimulator, setShowBatchSimulator] = useState(false)
+  const [showMandateLadder, setShowMandateLadder] = useState(false)
   const [viewMode, setViewMode] = useState<'landing' | 'app'>('landing')
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('revguard_theme')
@@ -552,23 +555,33 @@ export default function App() {
                       </div>
                     </button>
                     <button
+                      onClick={() => setShowMandateLadder(true)}
+                      className="w-full flex items-center gap-2.5 rounded-lg p-2 text-left hover:bg-purple-50 dark:hover:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-semibold transition-colors cursor-pointer"
+                    >
+                      <span>🔄</span>
+                      <div>
+                        <div>Mandate Recovery Ladder</div>
+                        <div className="text-[10px] text-slate-400 font-normal">UPI AutoPay 4-Step Sequencer</div>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setShowWebhookSim(true)}
+                      className="w-full flex items-center gap-2.5 rounded-lg p-2 text-left hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-semibold transition-colors cursor-pointer"
+                    >
+                      <span>⚡</span>
+                      <div>
+                        <div>Live Webhook Injector</div>
+                        <div className="text-[10px] text-slate-400 font-normal">Inject events & stream live</div>
+                      </div>
+                    </button>
+                    <button
                       onClick={() => setShowHackathonMatrix(true)}
-                      className="w-full flex items-center gap-2.5 rounded-lg p-2 text-left hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-semibold transition-colors"
+                      className="w-full flex items-center gap-2.5 rounded-lg p-2 text-left hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-semibold transition-colors cursor-pointer"
                     >
                       <span>🏆</span>
                       <div>
                         <div>Hackathon Matrix</div>
                         <div className="text-[10px] text-slate-400 font-normal">Scoring & Alignment Spec</div>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => setShowWebhookSim(true)}
-                      className="w-full flex items-center gap-2.5 rounded-lg p-2 text-left hover:bg-purple-50 dark:hover:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-semibold transition-colors"
-                    >
-                      <span>⚡</span>
-                      <div>
-                        <div>Simulate Webhook</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Inject payment.failed event</div>
                       </div>
                     </button>
                     <div className="border-t border-slate-100 dark:border-slate-800 pt-1">
@@ -718,106 +731,19 @@ export default function App() {
           {tab === 'analyze' && <AnalyzeView />}
         </main>
 
-        {/* Live Webhook Simulator Modal */}
+        {/* Live Webhook Simulator & Event Injector Modal */}
         {showWebhookSim && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">⚡</span>
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                      Live Razorpay Webhook Simulator
-                    </h3>
-                    <div className="text-[11px] text-slate-500">
-                      Inject real-time asynchronous payment events
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowWebhookSim(false)}
-                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
-                >
-                  ✕
-                </button>
-              </div>
+          <WebhookInjectorModal
+            onClose={() => setShowWebhookSim(false)}
+            onEventFired={() => refresh()}
+          />
+        )}
 
-              <div className="space-y-2 text-xs">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Select Event Payload to Trigger:
-                </div>
-
-                <button
-                  onClick={async () => {
-                    await api.fireWebhook({
-                      event: 'payment.failed',
-                      amount_inr: 4500,
-                      payment_method: 'upi',
-                      error_code: 'UPI_COLLECT_DECLINED',
-                    })
-                    alert('⚡ Webhook payment.failed (UPI_COLLECT_DECLINED - ₹4,500) received!')
-                    setShowWebhookSim(false)
-                    refresh()
-                  }}
-                  className="w-full text-left rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-3 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                >
-                  <div className="flex items-center justify-between font-bold text-slate-900 dark:text-white">
-                    <span>🔴 payment.failed</span>
-                    <span className="font-mono text-purple-600 dark:text-purple-400">₹4,500</span>
-                  </div>
-                  <div className="mt-1 text-[11px] text-slate-500">
-                    UPI collect request timed out on PhonePe/GPay handle.
-                  </div>
-                </button>
-
-                <button
-                  onClick={async () => {
-                    await api.fireWebhook({
-                      event: 'payment.failed',
-                      amount_inr: 18500,
-                      payment_method: 'card',
-                      error_code: 'GATEWAY_TIMEOUT',
-                    })
-                    alert('⚡ Webhook payment.failed (GATEWAY_TIMEOUT - ₹18,500) received!')
-                    setShowWebhookSim(false)
-                    refresh()
-                  }}
-                  className="w-full text-left rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-3 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                >
-                  <div className="flex items-center justify-between font-bold text-slate-900 dark:text-white">
-                    <span>🟠 payment.failed</span>
-                    <span className="font-mono text-purple-600 dark:text-purple-400">₹18,500</span>
-                  </div>
-                  <div className="mt-1 text-[11px] text-slate-500">
-                    HDFC Acquiring switch latency spike on credit card checkout.
-                  </div>
-                </button>
-
-                <button
-                  onClick={async () => {
-                    await api.fireWebhook({
-                      event: 'payment.captured',
-                      amount_inr: 4500,
-                      payment_method: 'upi',
-                      error_code: 'NONE',
-                    })
-                    alert('⚡ Webhook payment.captured (₹4,500 settled via 1-Click Link) received!')
-                    setShowWebhookSim(false)
-                    refresh()
-                  }}
-                  className="w-full text-left rounded-lg border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-500/[0.04] p-3 hover:bg-emerald-100/60 transition-colors"
-                >
-                  <div className="flex items-center justify-between font-bold text-emerald-900 dark:text-emerald-300">
-                    <span>🟢 payment.captured</span>
-                    <span className="font-mono text-emerald-600 dark:text-emerald-400">₹4,500</span>
-                  </div>
-                  <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
-                    Customer completed recovery payment through generated 1-click Razorpay link!
-                  </div>
-                </button>
-              </div>
-            </div>
-          </div>
+        {/* UPI AutoPay Mandate Recovery Ladder Sequencer Modal */}
+        {showMandateLadder && (
+          <MandateLadderModal
+            onClose={() => setShowMandateLadder(false)}
+          />
         )}
 
         {/* Hackathon Alignment Matrix Modal */}
