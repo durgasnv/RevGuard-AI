@@ -642,8 +642,15 @@ export default function QueueView({
                   <td className="num py-3 pr-3 text-right font-semibold text-slate-900 dark:text-white">
                     {inr(d.amount_inr)}
                   </td>
-                  <td className="py-3 pr-3 font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                    {d.failure_code}
+                  <td className="py-3 pr-3 text-xs">
+                    <div className="font-mono text-[11px] font-semibold text-slate-800 dark:text-slate-200">
+                      {d.failure_code}
+                    </div>
+                    {d.reason && (
+                      <div className="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1 max-w-[170px]" title={d.reason}>
+                        {d.reason}
+                      </div>
+                    )}
                   </td>
                   <td className="py-3 pr-3">
                     <ActionPill action={d.action} />

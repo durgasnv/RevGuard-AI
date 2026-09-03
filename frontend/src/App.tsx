@@ -12,8 +12,20 @@ import LandingView from './views/LandingView'
 import BatchSimulatorModal from './components/BatchSimulatorModal'
 import WebhookInjectorModal from './components/WebhookInjectorModal'
 import MandateLadderModal from './components/MandateLadderModal'
+import DevelopersView from './views/DevelopersView'
+import SecurityView from './views/SecurityView'
+import ResourcesView from './views/ResourcesView'
 
-type TabId = 'overview' | 'leakage' | 'queue' | 'b2b' | 'audit' | 'analyze'
+type TabId =
+  | 'overview'
+  | 'leakage'
+  | 'queue'
+  | 'b2b'
+  | 'audit'
+  | 'analyze'
+  | 'security'
+  | 'developers'
+  | 'resources'
 
 interface NavItem {
   id: TabId
@@ -51,9 +63,27 @@ const NAV: NavItem[] = [
     desc: 'Corporate aging & PTP chaser',
   },
   {
+    id: 'security',
+    label: 'Security & Safety',
+    icon: '🛡️',
+    desc: 'SC-01 & PCI-DSS compliance',
+  },
+  {
+    id: 'developers',
+    label: 'Developer API',
+    icon: '⚡',
+    desc: 'Webhooks & integration specs',
+  },
+  {
+    id: 'resources',
+    label: 'Policies & Docs',
+    icon: '📚',
+    desc: 'Rule directory & benchmarks',
+  },
+  {
     id: 'audit',
     label: 'Audit Trail',
-    icon: '🛡️',
+    icon: '📑',
     desc: 'Consequential decision logs',
     badge: (_r, state) =>
       state?.execution?.audit_trail.length ? state.execution.audit_trail.length : null,
@@ -727,6 +757,9 @@ export default function App() {
           {tab === 'leakage' && <LeakageView detectReport={detectReport} />}
           {tab === 'queue' && <QueueView state={state} onRun={runRecovery} />}
           {tab === 'b2b' && <B2BView />}
+          {tab === 'security' && <SecurityView />}
+          {tab === 'developers' && <DevelopersView />}
+          {tab === 'resources' && <ResourcesView />}
           {tab === 'audit' && <AuditView state={state} />}
           {tab === 'analyze' && <AnalyzeView />}
         </main>
