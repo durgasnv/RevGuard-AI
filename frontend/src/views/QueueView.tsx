@@ -4,6 +4,7 @@ import type { AppState, QueueItem } from '../types'
 import { ActionPill, Card, ConfidenceBar, Pagination, Alert, AlertTitle, AlertDescription } from '../components/ui'
 import SlackEscalationModal from '../components/SlackEscalationModal'
 import DynamicYieldIncentiveModal from '../components/DynamicYieldIncentiveModal'
+import UpiQrStandee from '../components/UpiQrStandee'
 
 export default function QueueView({
   state,
@@ -958,149 +959,24 @@ export default function QueueView({
                 </div>
               </>
             ) : (
-              /* Dynamic UPI QR & Intent View */
-              <div className="space-y-3.5">
-                <div className="flex flex-col sm:flex-row items-center gap-4 rounded-xl border border-purple-500/20 bg-purple-50/40 dark:bg-purple-950/20 p-4">
-                  {/* Visual NPCI Styled QR Code */}
-                  <div className="relative flex h-36 w-36 shrink-0 items-center justify-center rounded-xl bg-white p-2 shadow-md border border-slate-200">
-                    <svg viewBox="0 0 100 100" className="h-full w-full">
-                      {/* 3 Corner Finder Patterns */}
-                      <rect x="5" y="5" width="26" height="26" fill="#000" rx="3" />
-                      <rect x="9" y="9" width="18" height="18" fill="#fff" rx="1" />
-                      <rect x="13" y="13" width="10" height="10" fill="#000" rx="1" />
-
-                      <rect x="69" y="5" width="26" height="26" fill="#000" rx="3" />
-                      <rect x="73" y="9" width="18" height="18" fill="#fff" rx="1" />
-                      <rect x="77" y="13" width="10" height="10" fill="#000" rx="1" />
-
-                      <rect x="5" y="69" width="26" height="26" fill="#000" rx="3" />
-                      <rect x="9" y="73" width="18" height="18" fill="#fff" rx="1" />
-                      <rect x="13" y="77" width="10" height="10" fill="#000" rx="1" />
-
-                      {/* Random Data Dots Matrix Simulation */}
-                      <rect x="36" y="8" width="5" height="5" fill="#000" />
-                      <rect x="46" y="12" width="5" height="5" fill="#000" />
-                      <rect x="56" y="7" width="5" height="5" fill="#000" />
-                      <rect x="36" y="24" width="5" height="5" fill="#000" />
-                      <rect x="48" y="22" width="5" height="5" fill="#000" />
-                      <rect x="58" y="26" width="5" height="5" fill="#000" />
-
-                      <rect x="8" y="38" width="5" height="5" fill="#000" />
-                      <rect x="20" y="44" width="5" height="5" fill="#000" />
-                      <rect x="12" y="52" width="5" height="5" fill="#000" />
-                      <rect x="24" y="58" width="5" height="5" fill="#000" />
-
-                      <rect x="68" y="38" width="5" height="5" fill="#000" />
-                      <rect x="82" y="46" width="5" height="5" fill="#000" />
-                      <rect x="74" y="54" width="5" height="5" fill="#000" />
-                      <rect x="86" y="60" width="5" height="5" fill="#000" />
-
-                      <rect x="38" y="72" width="5" height="5" fill="#000" />
-                      <rect x="52" y="76" width="5" height="5" fill="#000" />
-                      <rect x="44" y="84" width="5" height="5" fill="#000" />
-                      <rect x="58" y="88" width="5" height="5" fill="#000" />
-                      <rect x="70" y="82" width="5" height="5" fill="#000" />
-                      <rect x="84" y="86" width="5" height="5" fill="#000" />
-
-                      {/* Center UPI Logo Overlay */}
-                      <circle cx="50" cy="50" r="13" fill="#6B21A8" />
-                      <text x="50" y="54" fontSize="7" fontWeight="bold" textAnchor="middle" fill="#fff">UPI</text>
-                    </svg>
-
-                    {upiSettled && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-emerald-600/95 text-white animate-fade-in p-2 text-center">
-                        <span className="text-2xl">✓</span>
-                        <span className="text-[10px] font-bold">SETTLED</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* UPI Details */}
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900 dark:text-white">NPCI Dynamic UPI QR</span>
-                      <span className="rounded bg-purple-500/15 text-purple-600 dark:text-purple-400 font-bold px-1.5 py-0.2 text-[9px]">
-                        0-REDIRECT
-                      </span>
-                    </div>
-                    <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300">
-                      Amount: <b className="text-emerald-600 dark:text-emerald-400">{inr(outreachItem.amount_inr)}</b>
-                    </div>
-                    <div className="font-mono text-[10px] text-slate-500 dark:text-slate-400">
-                      VPA: <b className="text-purple-600 dark:text-purple-400">revguard.recovery@razorpay</b>
-                    </div>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-snug">
-                      Scan with any UPI app to bypass browser session drop-offs and collect request expiration (<code className="font-mono text-rose-500">U69</code>).
-                    </p>
-                  </div>
-                </div>
-
-                {/* 1-Tap UPI Intent Launchers */}
-                <div className="space-y-1.5 text-xs">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    1-Tap Mobile Intent Deep-Links:
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {[
-                      { name: 'Google Pay', icon: '🔵', bg: 'hover:border-blue-500' },
-                      { name: 'PhonePe', icon: '🟣', bg: 'hover:border-purple-500' },
-                      { name: 'Paytm UPI', icon: '🔷', bg: 'hover:border-sky-500' },
-                      { name: 'BHIM UPI', icon: '🟢', bg: 'hover:border-emerald-500' },
-                    ].map((app, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          const upiUrl = `upi://pay?pa=revguard.recovery@razorpay&pn=Merchant+Store&am=${outreachItem.amount_inr}&tr=${outreachItem.transaction_id}&cu=INR`
-                          navigator.clipboard.writeText(upiUrl)
-                          setCopied(true)
-                          setTimeout(() => setCopied(false), 2000)
-                        }}
-                        className={`rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-2 text-center text-xs font-semibold text-slate-700 dark:text-slate-300 ${app.bg} transition-colors cursor-pointer`}
-                      >
-                        <div className="text-sm">{app.icon}</div>
-                        <div className="text-[10px] mt-0.5">{app.name}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Settle Action */}
-                <div className="pt-1 flex items-center justify-between">
-                  <button
-                    onClick={() => {
-                      const upiUrl = `upi://pay?pa=revguard.recovery@razorpay&pn=Merchant+Store&am=${outreachItem.amount_inr}&tr=${outreachItem.transaction_id}&cu=INR`
-                      navigator.clipboard.writeText(upiUrl)
-                      setCopied(true)
-                      setTimeout(() => setCopied(false), 2000)
-                    }}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline cursor-pointer font-medium"
-                  >
-                    {copied ? '✓ UPI URL Copied' : 'Copy UPI Intent URI'}
-                  </button>
-
-                  <button
-                    onClick={async () => {
-                      setUpiSettled(true)
-                      try {
-                        await api.fireWebhook({
-                          event: 'payment.captured',
-                          amount_inr: outreachItem.amount_inr,
-                          payment_method: 'upi',
-                          error_code: 'NONE',
-                        })
-                      } catch {}
-                      setTimeout(() => {
-                        setUpiSettled(false)
-                        setOutreachItem(null)
-                      }, 1600)
-                    }}
-                    disabled={upiSettled}
-                    className="rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white hover:bg-purple-500 shadow-sm transition-colors cursor-pointer"
-                  >
-                    {upiSettled ? '✓ Succeeded & Captured!' : '⚡ Simulate Scan & Settle'}
-                  </button>
-                </div>
-              </div>
+              /* High-Resolution Scannable Dynamic UPI QR & Soundbox Standee */
+              <UpiQrStandee
+                transactionId={outreachItem.transaction_id}
+                amountInr={outreachItem.amount_inr}
+                onSettled={async () => {
+                  try {
+                    await api.fireWebhook({
+                      event: 'payment.captured',
+                      amount_inr: outreachItem.amount_inr,
+                      payment_method: 'upi',
+                      error_code: 'NONE',
+                    })
+                  } catch {}
+                  setTimeout(() => {
+                    setOutreachItem(null)
+                  }, 1200)
+                }}
+              />
             )}
           </div>
         </div>

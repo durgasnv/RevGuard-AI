@@ -2,6 +2,7 @@ import { Fragment, useEffect, useState, useRef } from 'react'
 import { api, inr } from '../api'
 import type { B2BInvoice, B2BSummary } from '../types'
 import { Card } from '../components/ui'
+import UpiQrStandee from '../components/UpiQrStandee'
 
 interface DialogueTurn {
   id: string
@@ -23,6 +24,7 @@ export default function B2BView() {
   const [ptpNotes, setPtpNotes] = useState('')
   const [chasingId, setChasingId] = useState<string | null>(null)
   const [recoveredId, setRecoveredId] = useState<string | null>(null)
+  const [qrInvoice, setQrInvoice] = useState<B2BInvoice | null>(null)
 
   // B2B 2-Way Voice Bot State
   const [voiceInvoice, setVoiceInvoice] = useState<B2BInvoice | null>(null)
@@ -515,6 +517,15 @@ export default function B2BView() {
                           {inv.status !== 'recovered' && (
                             <>
                               <button
+                                onClick={() => setQrInvoice(inv)}
+                                className="rounded-lg border border-purple-500/40 bg-purple-600/10 hover:bg-purple-600/20 px-2 py-1 text-[11px] font-bold text-purple-600 dark:text-purple-300 transition-all shadow-xs flex items-center gap-1 cursor-pointer"
+                                title="Dynamic Scannable UPI QR Standee"
+                              >
+                                <span>⚡</span>
+                                <span>UPI QR</span>
+                              </button>
+
+                              <button
                                 onClick={() => startB2BVoiceCall(inv)}
                                 className="rounded-lg border border-purple-500/40 bg-purple-600/15 hover:bg-purple-600/25 px-2.5 py-1 text-[11px] font-bold text-purple-600 dark:text-purple-300 transition-all shadow-xs flex items-center gap-1 cursor-pointer"
                                 title="Launch Interactive Bilingual Voice Bot"
@@ -906,6 +917,43 @@ export default function B2BView() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* B2B Dynamic UPI QR Standee Modal */}
+      {qrInvoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">⚡</span>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    B2B Dynamic UPI QR Standee
+                  </h3>
+                  <p className="text-[10px] text-slate-500">
+                    Invoice #{qrInvoice.invoice_id} · {qrInvoice.client_name}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setQrInvoice(null)}
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <UpiQrStandee
+              transactionId={qrInvoice.invoice_id}
+              amountInr={qrInvoice.amount_inr}
+              clientName={qrInvoice.client_name}
+              onSettled={() => {
+                handleRecover(qrInvoice.invoice_id)
+                setTimeout(() => setQrInvoice(null), 1200)
+              }}
+            />
           </div>
         </div>
       )}
