@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import RbiIncidentModal from './RbiIncidentModal'
 
 export interface SwitchHealth {
   id: string
@@ -14,6 +15,7 @@ export interface SwitchHealth {
 export default function BankSwitchHealthRadar({ onSimulateReroute }: { onSimulateReroute?: () => void }) {
   const [isDegraded, setIsDegraded] = useState(true)
   const [rerouted] = useState(true)
+  const [showRbiModal, setShowRbiModal] = useState(false)
 
   const switches: SwitchHealth[] = [
     {
@@ -74,11 +76,20 @@ export default function BankSwitchHealthRadar({ onSimulateReroute }: { onSimulat
 
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setShowRbiModal(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300 transition-colors cursor-pointer"
+            title="Generate official 6-Hour RBI Disruption Incident Disclosure (Form INC-01)"
+          >
+            <span>🏛️</span>
+            <span>RBI 6-Hr Incident Form</span>
+          </button>
+
+          <button
             onClick={() => {
               setIsDegraded(!isDegraded)
               onSimulateReroute?.()
             }}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             <span>{isDegraded ? '🔄 Restore HDFC Normal' : '⚡ Simulate HDFC Outage'}</span>
           </button>
@@ -90,11 +101,14 @@ export default function BankSwitchHealthRadar({ onSimulateReroute }: { onSimulat
         <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50/80 dark:bg-amber-950/40 p-3 text-xs text-amber-900 dark:text-amber-200">
           <span className="text-base leading-none">⚠️</span>
           <div className="min-w-0 flex-1">
-            <div className="font-bold flex items-center gap-2">
+            <div className="font-bold flex items-center justify-between gap-2 flex-wrap">
               <span>Rule SC-02 Triggered: HDFC UPI Switch Degradation Detected (4,280ms Latency)</span>
-              <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:text-amber-300 border border-amber-500/30">
-                ACTIVE RE-ROUTE
-              </span>
+              <button
+                onClick={() => setShowRbiModal(true)}
+                className="rounded bg-amber-600 px-2 py-0.5 text-[10px] font-bold text-white hover:bg-amber-700 transition-colors cursor-pointer"
+              >
+                🏛️ Generate RBI INC-01 Filing →
+              </button>
             </div>
             <p className="mt-0.5 text-[11px] leading-relaxed text-amber-800/90 dark:text-amber-300/90">
               RevGuard AI automatically intercepted 68 checkout drop-offs and re-routed to <strong>Axis Dynamic UPI Collect Rail</strong>, protecting <strong>₹3.84 Lakhs</strong> in revenue without customer drop-off.
@@ -167,6 +181,14 @@ export default function BankSwitchHealthRadar({ onSimulateReroute }: { onSimulat
           </div>
         ))}
       </div>
+
+      {showRbiModal && (
+        <RbiIncidentModal
+          onClose={() => setShowRbiModal(false)}
+          latencyMs={isDegraded ? 4280 : 340}
+          errorRate={isDegraded ? 32.4 : 1.2}
+        />
+      )}
     </div>
   )
 }
