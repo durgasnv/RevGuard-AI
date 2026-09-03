@@ -574,6 +574,23 @@ export default function QueueView({
         right={
           <div className="flex items-center gap-2">
             <button
+              onClick={() => {
+                const topItem = plan.queue[0]
+                if (topItem) {
+                  setOutreachItem(topItem)
+                  setOutreachChannel('upi_qr')
+                  setCopied(false)
+                  setDispatched(false)
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-purple-400/40 bg-purple-600/15 hover:bg-purple-600/25 px-2.5 py-1.5 text-xs font-semibold text-purple-700 dark:text-purple-300 transition-all shadow-xs cursor-pointer"
+              title="Open Dynamic UPI QR & Intent Studio"
+            >
+              <span>⚡</span>
+              <span className="hidden sm:inline">Instant UPI QR</span>
+            </button>
+
+            <button
               onClick={() => setYieldItem(plan.queue[0] || null)}
               className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700/60 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 transition-colors shadow-sm"
             >
@@ -677,22 +694,18 @@ export default function QueueView({
                     </button>
                   </td>
                   <td className="py-3 pr-3 text-center">
-                    {d.action === 'SEND_PAYMENT_LINK' || d.action === 'NOTIFY_CUSTOMER' ? (
-                      <button
-                        onClick={() => {
-                          setOutreachItem(d)
-                          setCopied(false)
-                          setDispatched(false)
-                        }}
-                        title="View Razorpay payment link and Hinglish message"
-                        className="inline-flex items-center gap-1 rounded bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
-                      >
-                        <span>📱</span>
-                        <span>Outreach</span>
-                      </button>
-                    ) : (
-                      <span className="text-[11px] text-slate-400">—</span>
-                    )}
+                    <button
+                      onClick={() => {
+                        setOutreachItem(d)
+                        setCopied(false)
+                        setDispatched(false)
+                      }}
+                      title="Open 1-Click Payment Link, WhatsApp, or Dynamic UPI QR"
+                      className="inline-flex items-center gap-1 rounded bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors cursor-pointer"
+                    >
+                      <span>📱</span>
+                      <span>Outreach</span>
+                    </button>
                   </td>
                   <td className="py-3 pr-3 text-center">
                     <button
