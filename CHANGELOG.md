@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ## [0.5.0] - 2026-09-02
 
 ### Added
+- **Dynamic UPI QR Code & 1-Tap Mobile Intent Generator**: Embedded NPCI-compliant dynamic QR code generator with 1-tap mobile deep links (Google Pay, PhonePe, Paytm, BHIM) and instant webhook-driven capture simulation.
+- **RBI 6-Hour Disruption Incident Disclosure Generator (Form INC-01)**: 1-click statutory incident report export tool in the Acquiring Switch Radar complying with mandatory 6-hour regulatory outage disclosure timelines.
+- **Executive Daily Recovery Digest & Multi-Channel Dispatcher**: Proactive 10-second plain-English executive briefing (Design Gap #1) with simulated 1-click broadcast to Slack `#finance-revenue-digest` and WhatsApp Business.
 - **Bilingual 2-Way AI Voice Recovery Call Bot**: Real-time Speech-to-Text (`webkitSpeechRecognition`) and Speech Synthesis (`SpeechSynthesisUtterance`) supporting English and Hinglish with multi-turn state tracking and automated Promise-to-Pay (PTP) commitment recording.
 - **B2B Voice Bot Integration**: Dedicated voice recovery for corporate invoices in `B2BView` with PO verification notes.
 - **Live Razorpay Webhook Event Injector**: Interactive webhook simulation modal (`WebhookInjectorModal`) to inject payment failures (`payment.failed`, `order.paid`) and monitor live ingestion streams.
