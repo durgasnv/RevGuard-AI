@@ -15,6 +15,7 @@ import MandateLadderModal from './components/MandateLadderModal'
 import DevelopersView from './views/DevelopersView'
 import SecurityView from './views/SecurityView'
 import ResourcesView from './views/ResourcesView'
+import ExecutiveDigestModal from './components/ExecutiveDigestModal'
 
 type TabId =
   | 'overview'
@@ -177,6 +178,7 @@ export default function App() {
   const [showHackathonMatrix, setShowHackathonMatrix] = useState(false)
   const [showBatchSimulator, setShowBatchSimulator] = useState(false)
   const [showMandateLadder, setShowMandateLadder] = useState(false)
+  const [showExecutiveDigest, setShowExecutiveDigest] = useState(false)
   const [viewMode, setViewMode] = useState<'landing' | 'app'>('landing')
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('revguard_theme')
@@ -585,6 +587,16 @@ export default function App() {
                       </div>
                     </button>
                     <button
+                      onClick={() => setShowExecutiveDigest(true)}
+                      className="w-full flex items-center gap-2.5 rounded-lg p-2 text-left hover:bg-sky-50 dark:hover:bg-sky-950/40 text-sky-700 dark:text-sky-300 font-semibold transition-colors cursor-pointer"
+                    >
+                      <span>🗞️</span>
+                      <div>
+                        <div>Executive Daily Digest</div>
+                        <div className="text-[10px] text-slate-400 font-normal">10-Sec Slack/WhatsApp Briefing</div>
+                      </div>
+                    </button>
+                    <button
                       onClick={() => setShowMandateLadder(true)}
                       className="w-full flex items-center gap-2.5 rounded-lg p-2 text-left hover:bg-purple-50 dark:hover:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-semibold transition-colors cursor-pointer"
                     >
@@ -776,6 +788,14 @@ export default function App() {
         {showMandateLadder && (
           <MandateLadderModal
             onClose={() => setShowMandateLadder(false)}
+          />
+        )}
+
+        {/* Executive Daily Digest & Multi-Channel Dispatcher Modal */}
+        {showExecutiveDigest && (
+          <ExecutiveDigestModal
+            onClose={() => setShowExecutiveDigest(false)}
+            state={state}
           />
         )}
 
