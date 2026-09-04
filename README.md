@@ -33,11 +33,15 @@ In digital commerce and subscription businesses, **revenue loss rarely happens i
 - Ranks every recoverable transaction to prioritize high-value, high-probability recoveries first.
 
 ### 4. 🎙️ 2-Way Bilingual AI Voice Recovery Bot (Speech-to-Text & Speech Synthesis)
-- **Two-Way Voice Recognition (STT + TTS)**: Integrated microphone listener (`webkitSpeechRecognition`) supporting real-time voice input from the customer in **English** and **Hinglish**.
+- **Autonomous Prompt Flow (`Prompt v1`)**: Executes a complete conversational opening prompt via speech synthesis, then transitions into a **4-second customer speaking window** with dynamic countdown telemetry and active audio waveforms before recording the commitment.
+- **Two-Way Voice Recognition (STT + TTS)**: Continuous microphone listener (`webkitSpeechRecognition`) supporting real-time voice input from the customer in **English** and **Hinglish**.
+- **Dual Script & Phonetic Intent Parser**: Matches both Latin Hinglish (*"kal"*, *"friday"*, *"pay"*) and Devanagari Hindi (*"कल"*, *"शुक्रवार"*, *"पे"*, *"व्हाट्सएप"*) to ensure accurate recognition across diverse Indian accent profiles.
+- **Hardware Volume & Scenario Fallback**: Built-in Web Audio API volume telemetry that auto-commits spoken responses upon voice detection, plus 1-tap quick intent chips for 100% resilient video and demo execution.
 - **Real-Time Intent Understanding & Automatic Action**:
   - Voice commitments like *"Main kal pay kar dunga"* or *"I will pay tomorrow"* automatically extract the date and amount to **record an active Promise-to-Pay (PTP)** on the B2B tracker.
   - Alternate UPI or WhatsApp requests automatically dispatch 1-click payment links.
   - Customer decline stops retries immediately under safe mode SC-01.
+- **Roadmap & Multi-Turn Engineering**: Detailed architecture for Prompts v2–v5 and full-duplex WebRTC streaming documented in **[`docs/specifications/future_implementations.md`](docs/specifications/future_implementations.md)**.
 
 ### 5. 🚀 Live Autonomous Batch Simulator (A/B Ticker Engine)
 - **High-Speed Execution Theater**: Runs an animated end-to-end simulation across 600 transactions with speed controls (1x, 5x, 10x Turbo).
@@ -117,7 +121,7 @@ RevGuard-AI evaluates its economic performance against a deterministic baseline 
 - **Backend**: Python 3.10+, FastAPI, Uvicorn, Pydantic v2, Pandas, NumPy, OpenPyXL, HTTPX.
 - **Frontend**: React 18, TypeScript, Vite 5, Tailwind CSS 3 (Stripe Light Theme & Dark Slate Toggle), Recharts.
 - **Voice Engine**: Web Speech API (`window.speechSynthesis`) with multi-accent & bilingual fallback.
-- **Testing**: pytest (79/79 passed), Vitest (27/27 passed).
+- **Testing**: pytest (86/86 passed), Vitest (27/27 passed).
 
 ---
 
@@ -213,7 +217,7 @@ Interactive Swagger API docs are available at **`http://localhost:8000/docs`**.
 ## 🧪 Testing & Verification
 
 ```bash
-# Run Backend Pytest Suite (79 Tests)
+# Run Backend Pytest Suite (86 Tests)
 pytest -q
 
 # Run Frontend Vitest Suite (27 Tests)

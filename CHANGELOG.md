@@ -3,6 +3,15 @@
 All notable changes to RevGuard-AI are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-09-04
+
+### Added
+- **Autonomous Prompt Flow (`Prompt v1`)**: Enhanced 2-way voice bot with complete opening utterance speech synthesis, followed by a **4-second conversational customer speaking window** featuring live countdown telemetry and dynamic waveform animations.
+- **Continuous STT & Dual Devanagari/Latin Phonetic Intent Parser**: Continuous speech recognition (`rec.continuous = true`, `en-IN`) with dual-script regex parsing recognizing both Latin Hinglish (*"kal"*, *"friday"*, *"pay"*) and Devanagari Hindi (*"कल"*, *"शुक्रवार"*, *"पे"*, *"व्हाट्सएप"*).
+- **Hardware Volume & Scenario Fallback**: Integrated Web Audio API volume telemetry that auto-commits spoken recovery dialogue upon natural voice pauses, plus 1-tap quick intent chips for resilient pitch demo recording.
+- **Future Implementations & Voice Agent Roadmap Specification**: Authored [`docs/specifications/future_implementations.md`](docs/specifications/future_implementations.md) documenting the evolution from Prompt Flow v1 to dynamic multi-turn trees (Prompts v2–v5), full-duplex WebRTC LLM streaming (<400ms), and SIP trunking telephony.
+- **Comprehensive Test Suite Validation**: Expanded test coverage with 86/86 passing backend test suite across all 11 phases.
+
 ---
 
 ## [0.5.0] - 2026-09-02

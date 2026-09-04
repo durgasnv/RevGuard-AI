@@ -12,6 +12,7 @@ Welcome to the technical documentation for **RevGuard-AI**, an autonomous revenu
 - **[System Architecture Plan](specifications/system_plan.md)**: Master architectural plan and module interactions across detection, diagnosis, strategy, execution, and audit trail logging.
 - **[Design Gaps & Solutions](specifications/design_gaps_and_solutions.md)**: Architectural safeguards for race conditions, idempotency caching, and customer fatigue caps.
 - **[Razorpay Error Code Mappings](specifications/razorpay_problems_and_solutions.md)**: Categorization of Razorpay error codes (`BAD_REQUEST_ERROR`, `GATEWAY_ERROR`, `SERVER_ERROR`), webhook payloads, and mitigation pathways.
+- **[Future Implementations & Voice Agent Roadmap](specifications/future_implementations.md)**: Engineering evolution roadmap from Prompt Flow v1 deterministic pacing to dynamic multi-turn trees (Prompts v2–v5), full-duplex WebRTC LLM streaming, acoustic barge-in, and SIP trunking.
 
 ---
 
