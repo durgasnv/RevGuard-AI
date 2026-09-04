@@ -16,6 +16,7 @@ import DevelopersView from './views/DevelopersView'
 import SecurityView from './views/SecurityView'
 import ResourcesView from './views/ResourcesView'
 import ExecutiveDigestModal from './components/ExecutiveDigestModal'
+import JudgeTourModal from './components/JudgeTourModal'
 
 type TabId =
   | 'overview'
@@ -179,6 +180,7 @@ export default function App() {
   const [showBatchSimulator, setShowBatchSimulator] = useState(false)
   const [showMandateLadder, setShowMandateLadder] = useState(false)
   const [showExecutiveDigest, setShowExecutiveDigest] = useState(false)
+  const [showJudgeTour, setShowJudgeTour] = useState(false)
   const [viewMode, setViewMode] = useState<'landing' | 'app'>('landing')
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('revguard_theme')
@@ -560,6 +562,16 @@ export default function App() {
 
             {/* Right: Clean Grouped Actions & Profile */}
             <div className="flex items-center gap-2">
+              {/* Judge Walkthrough Tour Button */}
+              <button
+                onClick={() => setShowJudgeTour(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-600/15 hover:bg-purple-600/25 px-2.5 py-1.5 text-xs font-bold text-purple-700 dark:text-purple-300 transition-all shadow-xs cursor-pointer"
+                title="Launch Interactive 2-Minute Judge Walkthrough Tour"
+              >
+                <span>🎯</span>
+                <span className="hidden sm:inline">Judge Tour</span>
+              </button>
+
               {/* Quick Actions Dropdown (Shadcn Menubar Style) */}
               <div className="relative">
                 <button
@@ -576,6 +588,16 @@ export default function App() {
                     onClick={() => setShowActionsMenu(false)}
                     className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 shadow-2xl z-50 text-xs space-y-1 animate-fade-in"
                   >
+                    <button
+                      onClick={() => setShowJudgeTour(true)}
+                      className="w-full flex items-center gap-2.5 rounded-lg p-2 text-left hover:bg-purple-50 dark:hover:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-semibold transition-colors cursor-pointer"
+                    >
+                      <span>🎯</span>
+                      <div>
+                        <div>Judge 2-Min Walkthrough</div>
+                        <div className="text-[10px] text-slate-400 font-normal">Step-by-step evaluation tour</div>
+                      </div>
+                    </button>
                     <button
                       onClick={() => setShowBatchSimulator(true)}
                       className="w-full flex items-center gap-2.5 rounded-lg p-2 text-left hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-semibold transition-colors"
@@ -796,6 +818,17 @@ export default function App() {
           <ExecutiveDigestModal
             onClose={() => setShowExecutiveDigest(false)}
             state={state}
+          />
+        )}
+
+        {/* Judge 2-Minute Guided Walkthrough Tour Modal */}
+        {showJudgeTour && (
+          <JudgeTourModal
+            onClose={() => setShowJudgeTour(false)}
+            onNavigateTab={(targetTab) => {
+              setViewMode('app')
+              setTab(targetTab)
+            }}
           />
         )}
 
