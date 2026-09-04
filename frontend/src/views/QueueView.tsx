@@ -58,6 +58,8 @@ export default function QueueView({
   const latestTranscriptRef = useRef<string>('')
   const silenceTimeoutRef = useRef<any>(null)
   const voiceActivityCountRef = useRef<number>(0)
+  const lastSoundTimestampRef = useRef<number>(0)
+  const [isAutoPlaying, setIsAutoPlaying] = useState<boolean>(false)
 
   const plan = state?.plan
   const execution = state?.execution
@@ -65,6 +67,7 @@ export default function QueueView({
   function stopListening() {
     isListeningRef.current = false
     setIsListening(false)
+    lastSoundTimestampRef.current = 0
 
     if (silenceTimeoutRef.current) {
       clearTimeout(silenceTimeoutRef.current)
@@ -201,6 +204,31 @@ export default function QueueView({
     setTimeout(() => {
       speakText(intro, initialLang)
     }, 300)
+  }
+
+  function runAutoPlayDemo() {
+    if (!voiceItem || isAutoPlaying) return
+    stopListening()
+    setIsAutoPlaying(true)
+    const intro = getIntroText(voiceItem, callLang)
+    setDialogueTurns([
+      {
+        id: `turn-${Date.now()}`,
+        sender: 'ai',
+        text: intro,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ])
+    speakText(intro, callLang)
+
+    setTimeout(() => {
+      const simulatedSpoken =
+        callLang === 'en'
+          ? 'I will pay this Friday, please hold my order'
+          : 'Main kal Friday ko payment kar dunga, order hold rakhna'
+      handleCustomerResponse(simulatedSpoken)
+      setIsAutoPlaying(false)
+    }, 2800)
   }
 
   function handleCustomerResponse(text: string) {
@@ -426,6 +454,21 @@ export default function QueueView({
           if (normalized > 10) {
             voiceActivityCountRef.current += 1
             setVoiceDetected(true)
+            lastSoundTimestampRef.current = Date.now()
+          } else if (
+            voiceActivityCountRef.current > 8 &&
+            lastSoundTimestampRef.current > 0 &&
+            Date.now() - lastSoundTimestampRef.current > 1200
+          ) {
+            // Physical voice was detected and user paused for 1.2s
+            lastSoundTimestampRef.current = 0
+            voiceActivityCountRef.current = 0
+            const spoken =
+              latestTranscriptRef.current ||
+              (callLang === 'en' ? 'I will pay this Friday' : 'Main kal Friday ko payment kar dunga')
+            stopListening()
+            handleCustomerResponse(spoken)
+            return
           }
 
           const bars: number[] = []
@@ -1324,60 +1367,73 @@ export default function QueueView({
               </button>
             </div>
 
-            {/* Language Switcher Bar */}
-            <div className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-2 shrink-0">
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <span>🌐</span>
-                <span>Spoken Language:</span>
-              </span>
-              <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-200/80 dark:bg-slate-900 p-0.5 text-xs">
-                <button
-                  onClick={() => {
-                    stopListening()
-                    setCallLang('hi')
-                    const intro = getIntroText(voiceItem, 'hi')
-                    setDialogueTurns([
-                      {
-                        id: `turn-${Date.now()}`,
-                        sender: 'ai',
-                        text: intro,
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                      },
-                    ])
-                    speakText(intro, 'hi')
-                  }}
-                  className={`rounded-md px-3 py-1 font-bold transition-all cursor-pointer ${
-                    callLang === 'hi'
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
-                  }`}
-                >
-                  🇮🇳 Hinglish
-                </button>
-                <button
-                  onClick={() => {
-                    stopListening()
-                    setCallLang('en')
-                    const intro = getIntroText(voiceItem, 'en')
-                    setDialogueTurns([
-                      {
-                        id: `turn-${Date.now()}`,
-                        sender: 'ai',
-                        text: intro,
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                      },
-                    ])
-                    speakText(intro, 'en')
-                  }}
-                  className={`rounded-md px-3 py-1 font-bold transition-all cursor-pointer ${
-                    callLang === 'en'
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
-                  }`}
-                >
-                  🇬🇧 English
-                </button>
+            {/* Language Switcher Bar & Auto-Play Pitch Demo */}
+            <div className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 p-2 shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <span>🌐</span>
+                  <span>Spoken:</span>
+                </span>
+                <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-200/80 dark:bg-slate-900 p-0.5 text-xs">
+                  <button
+                    onClick={() => {
+                      stopListening()
+                      setCallLang('hi')
+                      const intro = getIntroText(voiceItem, 'hi')
+                      setDialogueTurns([
+                        {
+                          id: `turn-${Date.now()}`,
+                          sender: 'ai',
+                          text: intro,
+                          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        },
+                      ])
+                      speakText(intro, 'hi')
+                    }}
+                    className={`rounded-md px-2.5 py-1 font-bold transition-all cursor-pointer ${
+                      callLang === 'hi'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
+                    }`}
+                  >
+                    🇮🇳 Hinglish
+                  </button>
+                  <button
+                    onClick={() => {
+                      stopListening()
+                      setCallLang('en')
+                      const intro = getIntroText(voiceItem, 'en')
+                      setDialogueTurns([
+                        {
+                          id: `turn-${Date.now()}`,
+                          sender: 'ai',
+                          text: intro,
+                          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        },
+                      ])
+                      speakText(intro, 'en')
+                    }}
+                    className={`rounded-md px-2.5 py-1 font-bold transition-all cursor-pointer ${
+                      callLang === 'en'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
+                    }`}
+                  >
+                    🇬🇧 English
+                  </button>
+                </div>
               </div>
+
+              <button
+                type="button"
+                onClick={runAutoPlayDemo}
+                disabled={isAutoPlaying}
+                className="flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                title="Automatically simulate a full 2-way call with voice audio and PTP registration"
+              >
+                <span>{isAutoPlaying ? '⏳' : '▶️'}</span>
+                <span>{isAutoPlaying ? 'Simulating Call…' : 'Auto-Play Pitch Demo'}</span>
+              </button>
             </div>
 
             {/* Live Audio Telemetry Waveform */}

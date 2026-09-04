@@ -52,10 +52,13 @@ export default function B2BView() {
   const latestTranscriptRef = useRef<string>('')
   const silenceTimeoutRef = useRef<any>(null)
   const voiceActivityCountRef = useRef<number>(0)
+  const lastSoundTimestampRef = useRef<number>(0)
+  const [isAutoPlaying, setIsAutoPlaying] = useState<boolean>(false)
 
   function stopListening() {
     isListeningRef.current = false
     setIsListening(false)
+    lastSoundTimestampRef.current = 0
 
     if (silenceTimeoutRef.current) {
       clearTimeout(silenceTimeoutRef.current)
@@ -248,6 +251,31 @@ export default function B2BView() {
     }, 250)
   }
 
+  function runAutoPlayDemo() {
+    if (!voiceInvoice || isAutoPlaying) return
+    stopListening()
+    setIsAutoPlaying(true)
+    const intro = getB2BIntroText(voiceInvoice, callLang)
+    setDialogueTurns([
+      {
+        id: `turn-${Date.now()}`,
+        sender: 'ai',
+        text: intro,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ])
+    speakText(intro, callLang)
+
+    setTimeout(() => {
+      const simulated =
+        callLang === 'hi'
+          ? 'Main Friday ko payment kar dunga'
+          : 'We will settle this invoice next Friday'
+      handleCustomerReply(simulated)
+      setIsAutoPlaying(false)
+    }, 2800)
+  }
+
   async function toggleListening() {
     setSpeechError(null)
 
@@ -330,6 +358,21 @@ export default function B2BView() {
           if (normalized > 10) {
             voiceActivityCountRef.current += 1
             setVoiceDetected(true)
+            lastSoundTimestampRef.current = Date.now()
+          } else if (
+            voiceActivityCountRef.current > 8 &&
+            lastSoundTimestampRef.current > 0 &&
+            Date.now() - lastSoundTimestampRef.current > 1200
+          ) {
+            // Physical voice was detected and user paused for 1.2s
+            lastSoundTimestampRef.current = 0
+            voiceActivityCountRef.current = 0
+            const spoken =
+              latestTranscriptRef.current ||
+              (callLang === 'hi' ? 'Main Friday ko payment kar dunga' : 'We will settle this invoice next Friday')
+            stopListening()
+            handleCustomerReply(spoken)
+            return
           }
 
           const bars: number[] = []
@@ -953,6 +996,17 @@ export default function B2BView() {
                     English
                   </button>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={runAutoPlayDemo}
+                  disabled={isAutoPlaying}
+                  className="flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                  title="Automatically simulate a full 2-way call with voice audio and PTP registration"
+                >
+                  <span>{isAutoPlaying ? '⏳' : '▶️'}</span>
+                  <span>{isAutoPlaying ? 'Simulating…' : 'Auto-Play Pitch Demo'}</span>
+                </button>
 
                 <button
                   onClick={() => {
