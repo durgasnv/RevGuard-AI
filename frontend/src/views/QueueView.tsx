@@ -59,7 +59,16 @@ export default function QueueView({
   const silenceTimeoutRef = useRef<any>(null)
   const voiceActivityCountRef = useRef<number>(0)
   const lastSoundTimestampRef = useRef<number>(0)
-  const [isAutoPlaying, setIsAutoPlaying] = useState<boolean>(false)
+  const simCountdownIntervalRef = useRef<any>(null)
+  const [simulationState, setSimulationState] = useState<{
+    active: boolean
+    stage: 'idle' | 'ai_speaking' | 'customer_waiting' | 'done'
+    countdown: number
+  }>({
+    active: false,
+    stage: 'idle',
+    countdown: 0,
+  })
 
   const plan = state?.plan
   const execution = state?.execution
@@ -68,6 +77,11 @@ export default function QueueView({
     isListeningRef.current = false
     setIsListening(false)
     lastSoundTimestampRef.current = 0
+
+    if (simCountdownIntervalRef.current) {
+      clearInterval(simCountdownIntervalRef.current)
+      simCountdownIntervalRef.current = null
+    }
 
     if (silenceTimeoutRef.current) {
       clearTimeout(silenceTimeoutRef.current)
@@ -110,8 +124,11 @@ export default function QueueView({
     }
   }, [])
 
-  function speakText(text: string, lang: 'en' | 'hi' = callLang) {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+  function speakText(text: string, lang: 'en' | 'hi' = callLang, onEnd?: () => void) {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      if (onEnd) onEnd()
+      return
+    }
 
     try {
       window.speechSynthesis.cancel()
@@ -154,25 +171,42 @@ export default function QueueView({
         if (englishVoice) utterance.voice = englishVoice
       }
 
-      utterance.onstart = () => setIsSpeaking(true)
-      utterance.onend = () => {
-        setIsSpeaking(false)
-        utteranceRef.current = null
+      let callbackTriggered = false
+      const triggerEnd = () => {
+        if (!callbackTriggered) {
+          callbackTriggered = true
+          setIsSpeaking(false)
+          utteranceRef.current = null
+          if (onEnd) onEnd()
+        }
       }
+
+      utterance.onstart = () => setIsSpeaking(true)
+      utterance.onend = () => triggerEnd()
       utterance.onerror = (e) => {
         console.warn('SpeechSynthesis error:', e)
-        setIsSpeaking(false)
-        utteranceRef.current = null
+        triggerEnd()
       }
+
+      // Fallback safety timeout based on word count
+      const wordCount = clean.split(/\s+/).filter(Boolean).length
+      const estimatedMs = Math.max(3500, wordCount * 450)
+      const fallbackTimer = setTimeout(() => {
+        triggerEnd()
+      }, estimatedMs + 1000)
 
       setTimeout(() => {
         try {
           window.speechSynthesis.speak(utterance)
-        } catch {}
+        } catch {
+          clearTimeout(fallbackTimer)
+          triggerEnd()
+        }
       }, 50)
     } catch (e) {
       console.warn('speakText exception:', e)
       setIsSpeaking(false)
+      if (onEnd) onEnd()
     }
   }
 
@@ -206,10 +240,11 @@ export default function QueueView({
     }, 300)
   }
 
-  function runAutoPlayDemo() {
-    if (!voiceItem || isAutoPlaying) return
+  function runAutonomousFlow() {
+    if (!voiceItem || simulationState.active) return
     stopListening()
-    setIsAutoPlaying(true)
+    setSimulationState({ active: true, stage: 'ai_speaking', countdown: 4 })
+
     const intro = getIntroText(voiceItem, callLang)
     setDialogueTurns([
       {
@@ -219,16 +254,38 @@ export default function QueueView({
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       },
     ])
-    speakText(intro, callLang)
 
-    setTimeout(() => {
-      const simulatedSpoken =
-        callLang === 'en'
-          ? 'I will pay this Friday, please hold my order'
-          : 'Main kal Friday ko payment kar dunga, order hold rakhna'
-      handleCustomerResponse(simulatedSpoken)
-      setIsAutoPlaying(false)
-    }, 2800)
+    // 1. Speak the complete introductory message to the end
+    speakText(intro, callLang, () => {
+      // 2. AI finished reading the full message! Grant 4-second customer speaking window
+      setSimulationState({ active: true, stage: 'customer_waiting', countdown: 4 })
+
+      let remaining = 4
+      if (simCountdownIntervalRef.current) {
+        clearInterval(simCountdownIntervalRef.current)
+      }
+      simCountdownIntervalRef.current = setInterval(() => {
+        remaining -= 1
+        if (remaining > 0) {
+          setSimulationState((prev) => ({ ...prev, countdown: remaining }))
+        } else {
+          clearInterval(simCountdownIntervalRef.current)
+          simCountdownIntervalRef.current = null
+          setSimulationState({ active: true, stage: 'done', countdown: 0 })
+
+          // 3. 4 seconds elapsed: commit customer response and trigger AI reply
+          const customerText =
+            callLang === 'en'
+              ? 'I will pay this Friday, please hold my order'
+              : 'Main kal Friday ko payment kar dunga, order hold rakhna'
+          handleCustomerResponse(customerText)
+
+          setTimeout(() => {
+            setSimulationState({ active: false, stage: 'idle', countdown: 0 })
+          }, 1500)
+        }
+      }, 1000)
+    })
   }
 
   function handleCustomerResponse(text: string) {
@@ -1426,13 +1483,37 @@ export default function QueueView({
 
               <button
                 type="button"
-                onClick={runAutoPlayDemo}
-                disabled={isAutoPlaying}
-                className="flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
-                title="Automatically simulate a full 2-way call with voice audio and PTP registration"
+                onClick={runAutonomousFlow}
+                disabled={simulationState.active}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold shadow-xs transition-all cursor-pointer ${
+                  simulationState.stage === 'ai_speaking'
+                    ? 'bg-amber-600 text-white animate-pulse'
+                    : simulationState.stage === 'customer_waiting'
+                    ? 'bg-blue-600 text-white ring-2 ring-blue-400/50 animate-pulse'
+                    : simulationState.stage === 'done'
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                }`}
+                title="Run Prompt Simulation Flow v1 (Automated Hinglish PTP Negotiation)"
               >
-                <span>{isAutoPlaying ? '⏳' : '▶️'}</span>
-                <span>{isAutoPlaying ? 'Simulating Call…' : 'Auto-Play Pitch Demo'}</span>
+                <span>
+                  {simulationState.stage === 'ai_speaking'
+                    ? '🗣️'
+                    : simulationState.stage === 'customer_waiting'
+                    ? '🎙️'
+                    : simulationState.stage === 'done'
+                    ? '✓'
+                    : '▶️'}
+                </span>
+                <span>
+                  {simulationState.stage === 'ai_speaking'
+                    ? 'AI Speaking Prompt…'
+                    : simulationState.stage === 'customer_waiting'
+                    ? `Customer Speaking (${simulationState.countdown}s)…`
+                    : simulationState.stage === 'done'
+                    ? 'Prompt v1 Complete'
+                    : 'Autonomous Flow (Prompt v1)'}
+                </span>
               </button>
             </div>
 
@@ -1440,9 +1521,21 @@ export default function QueueView({
             <div className="rounded-xl border border-purple-200 dark:border-purple-500/20 bg-gradient-to-r from-purple-50/80 via-indigo-50/50 to-blue-50/80 dark:from-purple-950/40 dark:via-indigo-950/30 dark:to-blue-950/40 p-3 text-center shrink-0">
               <div className="flex items-center justify-between">
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
-                  <span className={`h-2 w-2 rounded-full ${isListening ? (micVolume > 10 ? 'bg-emerald-500 animate-ping' : 'bg-rose-500 animate-pulse') : 'bg-emerald-500 animate-pulse'}`} />
+                  <span className={`h-2 w-2 rounded-full ${
+                    simulationState.stage === 'customer_waiting'
+                      ? 'bg-blue-500 animate-ping'
+                      : simulationState.stage === 'ai_speaking'
+                      ? 'bg-amber-500 animate-pulse'
+                      : isListening
+                      ? micVolume > 10 ? 'bg-emerald-500 animate-ping' : 'bg-rose-500 animate-pulse'
+                      : 'bg-emerald-500 animate-pulse'
+                  }`} />
                   <span>
-                    {isListening
+                    {simulationState.stage === 'customer_waiting'
+                      ? `🎙️ Customer Speaking Window · ${simulationState.countdown}s remaining`
+                      : simulationState.stage === 'ai_speaking'
+                      ? '🗣️ AI Delivering Voice Prompt…'
+                      : isListening
                       ? micVolume > 10
                         ? `🎙️ Mic Capturing Voice (${micVolume}% Volume)`
                         : '🎙️ Physical Mic Active · Listening…'
@@ -1463,14 +1556,18 @@ export default function QueueView({
                   <span
                     key={i}
                     style={{
-                      height: isListening
+                      height: simulationState.stage === 'customer_waiting'
+                        ? `${[35, 75, 95, 55, 90, 45, 80, 65, 85, 40, 70, 35][i]}%`
+                        : isListening
                         ? `${Math.max(15, Math.min(100, Math.round((freq / 255) * 100)))}%`
                         : isSpeaking
                         ? `${[35, 65, 95, 50, 100, 40, 85, 60, 90, 45, 75, 30][i]}%`
                         : '20%',
                     }}
                     className={`w-1 rounded-full transition-all duration-75 ${
-                      isListening
+                      simulationState.stage === 'customer_waiting'
+                        ? 'bg-blue-500 shadow-xs shadow-blue-500/50'
+                        : isListening
                         ? micVolume > 10
                           ? 'bg-emerald-500 shadow-xs shadow-emerald-500/50'
                           : 'bg-rose-500'
@@ -1483,7 +1580,11 @@ export default function QueueView({
               </div>
 
               <div className="mt-1 text-[11px] font-medium text-purple-800 dark:text-purple-300">
-                {isListening
+                {simulationState.stage === 'customer_waiting'
+                  ? `🎙️ Customer Speaking Window (${simulationState.countdown}s) · Speak into your mic or wait for Prompt v1 auto-commit`
+                  : simulationState.stage === 'ai_speaking'
+                  ? '🗣️ AI Voice Assistant delivering prompt outreach…'
+                  : isListening
                   ? micVolume > 10
                     ? '🟢 Voice signal received! Speak freely or click "Done Speaking" below'
                     : '🎙️ Listening to your physical mic… Speak now in Hindi or English'

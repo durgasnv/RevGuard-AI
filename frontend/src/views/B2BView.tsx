@@ -53,12 +53,26 @@ export default function B2BView() {
   const silenceTimeoutRef = useRef<any>(null)
   const voiceActivityCountRef = useRef<number>(0)
   const lastSoundTimestampRef = useRef<number>(0)
-  const [isAutoPlaying, setIsAutoPlaying] = useState<boolean>(false)
+  const simCountdownIntervalRef = useRef<any>(null)
+  const [simulationState, setSimulationState] = useState<{
+    active: boolean
+    stage: 'idle' | 'ai_speaking' | 'customer_waiting' | 'done'
+    countdown: number
+  }>({
+    active: false,
+    stage: 'idle',
+    countdown: 0,
+  })
 
   function stopListening() {
     isListeningRef.current = false
     setIsListening(false)
     lastSoundTimestampRef.current = 0
+
+    if (simCountdownIntervalRef.current) {
+      clearInterval(simCountdownIntervalRef.current)
+      simCountdownIntervalRef.current = null
+    }
 
     if (silenceTimeoutRef.current) {
       clearTimeout(silenceTimeoutRef.current)
@@ -158,8 +172,11 @@ export default function B2BView() {
   }
 
   // ── Voice Bot Utilities ───────────────────────────────────────────
-  function speakText(text: string, lang: 'en' | 'hi' = callLang) {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+  function speakText(text: string, lang: 'en' | 'hi' = callLang, onEnd?: () => void) {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      if (onEnd) onEnd()
+      return
+    }
 
     try {
       window.speechSynthesis.cancel()
@@ -201,23 +218,38 @@ export default function B2BView() {
         if (englishVoice) utterance.voice = englishVoice
       }
 
+      let callbackTriggered = false
+      const triggerEnd = () => {
+        if (!callbackTriggered) {
+          callbackTriggered = true
+          setIsSpeaking(false)
+          utteranceRef.current = null
+          if (onEnd) onEnd()
+        }
+      }
+
       utterance.onstart = () => setIsSpeaking(true)
-      utterance.onend = () => {
-        setIsSpeaking(false)
-        utteranceRef.current = null
-      }
-      utterance.onerror = () => {
-        setIsSpeaking(false)
-        utteranceRef.current = null
-      }
+      utterance.onend = () => triggerEnd()
+      utterance.onerror = () => triggerEnd()
+
+      // Fallback safety timer based on word count
+      const wordCount = clean.split(/\s+/).filter(Boolean).length
+      const estimatedMs = Math.max(3500, wordCount * 450)
+      const fallbackTimer = setTimeout(() => {
+        triggerEnd()
+      }, estimatedMs + 1000)
 
       setTimeout(() => {
         try {
           window.speechSynthesis.speak(utterance)
-        } catch {}
+        } catch {
+          clearTimeout(fallbackTimer)
+          triggerEnd()
+        }
       }, 50)
     } catch {
       setIsSpeaking(false)
+      if (onEnd) onEnd()
     }
   }
 
@@ -251,10 +283,11 @@ export default function B2BView() {
     }, 250)
   }
 
-  function runAutoPlayDemo() {
-    if (!voiceInvoice || isAutoPlaying) return
+  function runAutonomousFlow() {
+    if (!voiceInvoice || simulationState.active) return
     stopListening()
-    setIsAutoPlaying(true)
+    setSimulationState({ active: true, stage: 'ai_speaking', countdown: 4 })
+
     const intro = getB2BIntroText(voiceInvoice, callLang)
     setDialogueTurns([
       {
@@ -264,16 +297,38 @@ export default function B2BView() {
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       },
     ])
-    speakText(intro, callLang)
 
-    setTimeout(() => {
-      const simulated =
-        callLang === 'hi'
-          ? 'Main Friday ko payment kar dunga'
-          : 'We will settle this invoice next Friday'
-      handleCustomerReply(simulated)
-      setIsAutoPlaying(false)
-    }, 2800)
+    // 1. Speak the complete introductory message to the end
+    speakText(intro, callLang, () => {
+      // 2. AI finished reading the full message! Grant 4-second customer speaking window
+      setSimulationState({ active: true, stage: 'customer_waiting', countdown: 4 })
+
+      let remaining = 4
+      if (simCountdownIntervalRef.current) {
+        clearInterval(simCountdownIntervalRef.current)
+      }
+      simCountdownIntervalRef.current = setInterval(() => {
+        remaining -= 1
+        if (remaining > 0) {
+          setSimulationState((prev) => ({ ...prev, countdown: remaining }))
+        } else {
+          clearInterval(simCountdownIntervalRef.current)
+          simCountdownIntervalRef.current = null
+          setSimulationState({ active: true, stage: 'done', countdown: 0 })
+
+          // 3. 4 seconds elapsed: commit customer response and trigger AI reply
+          const simulated =
+            callLang === 'hi'
+              ? 'Main Friday ko payment kar dunga'
+              : 'We will settle this invoice next Friday'
+          handleCustomerReply(simulated)
+
+          setTimeout(() => {
+            setSimulationState({ active: false, stage: 'idle', countdown: 0 })
+          }, 1500)
+        }
+      }, 1000)
+    })
   }
 
   async function toggleListening() {
@@ -999,13 +1054,37 @@ export default function B2BView() {
 
                 <button
                   type="button"
-                  onClick={runAutoPlayDemo}
-                  disabled={isAutoPlaying}
-                  className="flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
-                  title="Automatically simulate a full 2-way call with voice audio and PTP registration"
+                  onClick={runAutonomousFlow}
+                  disabled={simulationState.active}
+                  className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold shadow-xs transition-all cursor-pointer ${
+                    simulationState.stage === 'ai_speaking'
+                      ? 'bg-amber-600 text-white animate-pulse'
+                      : simulationState.stage === 'customer_waiting'
+                      ? 'bg-blue-600 text-white ring-2 ring-blue-400/50 animate-pulse'
+                      : simulationState.stage === 'done'
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-purple-600 hover:bg-purple-500 text-white'
+                  }`}
+                  title="Run Prompt Simulation Flow v1 (Automated Hinglish PTP Negotiation)"
                 >
-                  <span>{isAutoPlaying ? '⏳' : '▶️'}</span>
-                  <span>{isAutoPlaying ? 'Simulating…' : 'Auto-Play Pitch Demo'}</span>
+                  <span>
+                    {simulationState.stage === 'ai_speaking'
+                      ? '🗣️'
+                      : simulationState.stage === 'customer_waiting'
+                      ? '🎙️'
+                      : simulationState.stage === 'done'
+                      ? '✓'
+                      : '▶️'}
+                  </span>
+                  <span>
+                    {simulationState.stage === 'ai_speaking'
+                      ? 'AI Speaking…'
+                      : simulationState.stage === 'customer_waiting'
+                      ? `Customer Speaking (${simulationState.countdown}s)…`
+                      : simulationState.stage === 'done'
+                      ? 'Prompt v1 Complete'
+                      : 'Autonomous Flow (Prompt v1)'}
+                  </span>
                 </button>
 
                 <button
@@ -1026,9 +1105,21 @@ export default function B2BView() {
             {/* Live Audio Telemetry Waveform Bar */}
             <div className="rounded-xl border border-slate-200 dark:border-[#1C202B] bg-slate-50 dark:bg-[#14171F] p-3 text-xs flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
-                <span className={`h-2.5 w-2.5 rounded-full ${isListening ? (micVolume > 10 ? 'bg-emerald-500 animate-ping' : 'bg-rose-500 animate-pulse') : 'bg-emerald-500 animate-pulse'}`} />
+                <span className={`h-2.5 w-2.5 rounded-full ${
+                  simulationState.stage === 'customer_waiting'
+                    ? 'bg-blue-500 animate-ping'
+                    : simulationState.stage === 'ai_speaking'
+                    ? 'bg-amber-500 animate-pulse'
+                    : isListening
+                    ? micVolume > 10 ? 'bg-emerald-500 animate-ping' : 'bg-rose-500 animate-pulse'
+                    : 'bg-emerald-500 animate-pulse'
+                }`} />
                 <span className="font-semibold text-slate-700 dark:text-slate-300">
-                  {isListening
+                  {simulationState.stage === 'customer_waiting'
+                    ? `🎙️ Customer Speaking Window · ${simulationState.countdown}s remaining`
+                    : simulationState.stage === 'ai_speaking'
+                    ? '🗣️ AI AR Assistant Speaking Prompt…'
+                    : isListening
                     ? micVolume > 10
                       ? `🎙️ Voice Captured (${micVolume}% Volume)`
                       : '🎙️ Physical Mic Active · Listening…'
@@ -1047,7 +1138,9 @@ export default function B2BView() {
                   <span
                     key={i}
                     className={`w-1 rounded-full transition-all duration-75 ${
-                      isListening
+                      simulationState.stage === 'customer_waiting'
+                        ? 'bg-blue-500 shadow-xs shadow-blue-500/50'
+                        : isListening
                         ? micVolume > 10
                           ? 'bg-emerald-500 shadow-xs shadow-emerald-500/50'
                           : 'bg-rose-500'
@@ -1056,7 +1149,9 @@ export default function B2BView() {
                         : 'bg-slate-300 dark:bg-slate-700'
                     }`}
                     style={{
-                      height: isListening
+                      height: simulationState.stage === 'customer_waiting'
+                        ? `${[35, 75, 95, 55, 90, 45, 80, 65, 85, 40, 70, 35][i]}%`
+                        : isListening
                         ? `${Math.max(15, Math.min(100, Math.round((freq / 255) * 100)))}%`
                         : isSpeaking
                         ? `${[35, 65, 95, 50, 100, 40, 85, 60, 90, 45, 75, 30][i]}%`
