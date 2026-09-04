@@ -36,9 +36,59 @@ export default function B2BView() {
   const [dialogueTurns, setDialogueTurns] = useState<DialogueTurn[]>([])
   const [customReply, setCustomReply] = useState('')
 
+  // Real Hardware Microphone & Web Audio API Telemetry
+  const [micVolume, setMicVolume] = useState<number>(0)
+  const [audioFrequencies, setAudioFrequencies] = useState<number[]>([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+  const [_voiceDetected, setVoiceDetected] = useState<boolean>(false)
+
   const recognitionRef = useRef<any>(null)
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
   const chatBottomRef = useRef<HTMLDivElement | null>(null)
+  const mediaStreamRef = useRef<MediaStream | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const animFrameRef = useRef<number | null>(null)
+  const isListeningRef = useRef<boolean>(false)
+
+  function stopListening() {
+    isListeningRef.current = false
+    setIsListening(false)
+
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current)
+      animFrameRef.current = null
+    }
+
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop()
+      } catch {}
+      recognitionRef.current = null
+    }
+
+    if (mediaStreamRef.current) {
+      try {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop())
+      } catch {}
+      mediaStreamRef.current = null
+    }
+
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      try {
+        audioContextRef.current.close()
+      } catch {}
+      audioContextRef.current = null
+    }
+
+    setMicVolume(0)
+    setAudioFrequencies([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+  }
+
+  useEffect(() => {
+    return () => {
+      stopListening()
+    }
+  }, [])
 
   async function loadData() {
     try {
@@ -168,12 +218,12 @@ export default function B2BView() {
   }
 
   function startB2BVoiceCall(inv: B2BInvoice, initialLang: 'en' | 'hi' = callLang) {
+    stopListening()
     setVoiceInvoice(inv)
     setCallLang(initialLang)
     setSpeechTranscript('')
     setSpeechError(null)
     setCustomReply('')
-    setIsListening(false)
 
     const intro = getB2BIntroText(inv, initialLang)
     setDialogueTurns([
@@ -190,40 +240,117 @@ export default function B2BView() {
     }, 250)
   }
 
-  function toggleListening() {
+  async function toggleListening() {
+    setSpeechError(null)
+
     if (isListening) {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop()
+      stopListening()
+      return
+    }
+
+    if (typeof window === 'undefined') return
+
+    // 1. Request physical microphone device access via getUserMedia
+    let stream: MediaStream
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('MediaDevices API not supported in this browser')
+      }
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      mediaStreamRef.current = stream
+    } catch (err: any) {
+      console.warn('getUserMedia error:', err)
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setSpeechError('Microphone permission blocked. Please allow microphone access in your browser address bar.')
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        setSpeechError('No physical microphone hardware detected. Please connect a headset or microphone device.')
+      } else {
+        setSpeechError(`Could not access microphone (${err.message || err.name}).`)
       }
       setIsListening(false)
       return
     }
 
-    if (typeof window === 'undefined') return
+    // 2. Attach Web Audio API AnalyserNode for live sound telemetry
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+      if (AudioCtx) {
+        const audioCtx = new AudioCtx()
+        audioContextRef.current = audioCtx
+        if (audioCtx.state === 'suspended') {
+          await audioCtx.resume()
+        }
+        const analyser = audioCtx.createAnalyser()
+        analyser.fftSize = 64
+        analyserRef.current = analyser
+
+        const source = audioCtx.createMediaStreamSource(stream)
+        source.connect(analyser)
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount)
+        isListeningRef.current = true
+        setIsListening(true)
+        setVoiceDetected(false)
+
+        const sampleAudio = () => {
+          if (!isListeningRef.current) return
+          analyser.getByteFrequencyData(dataArray)
+          let sum = 0
+          for (let i = 0; i < dataArray.length; i++) {
+            sum += dataArray[i]
+          }
+          const avg = sum / dataArray.length
+          const normalized = Math.min(100, Math.round((avg / 128) * 100))
+          setMicVolume(normalized)
+
+          if (normalized > 12) {
+            setVoiceDetected(true)
+          }
+
+          const bars: number[] = []
+          const step = Math.max(1, Math.floor(dataArray.length / 12))
+          for (let i = 0; i < 12; i++) {
+            bars.push(dataArray[i * step] || 0)
+          }
+          setAudioFrequencies(bars)
+
+          animFrameRef.current = requestAnimationFrame(sampleAudio)
+        }
+        sampleAudio()
+      }
+    } catch (audioErr) {
+      console.warn('AudioContext telemetry error:', audioErr)
+      isListeningRef.current = true
+      setIsListening(true)
+    }
+
+    // 3. Stop active TTS speech
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+    }
+
+    // 4. Start SpeechRecognition
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
 
     if (!SpeechRecognition) {
-      setSpeechError('Speech recognition is not supported in this browser. Please use the quick response chips or typing below.')
+      setSpeechError(
+        'Physical mic connected & listening! Note: Web Speech STT is not supported by your browser engine. Tap any quick reply below.',
+      )
       return
     }
 
     try {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel()
-        setIsSpeaking(false)
-      }
-
       const recognition = new SpeechRecognition()
       recognitionRef.current = recognition
       recognition.continuous = false
       recognition.interimResults = true
-      recognition.lang = callLang === 'hi' ? 'hi-IN' : 'en-IN'
+      recognition.lang = callLang === 'hi' ? 'hi-IN' : (navigator.language || 'en-US')
 
       recognition.onstart = () => {
-        setIsListening(true)
-        setSpeechError(null)
         setSpeechTranscript('')
+        setSpeechError(null)
       }
 
       recognition.onresult = (event: any) => {
@@ -240,34 +367,40 @@ export default function B2BView() {
         setSpeechTranscript(currentText)
 
         if (finalTranscript) {
+          stopListening()
           handleCustomerReply(finalTranscript)
         }
       }
 
       recognition.onerror = (event: any) => {
+        console.warn('SpeechRecognition error:', event.error)
         if (event.error === 'network') {
-          setSpeechError('Cloud speech service unreachable (network/firewall). Click any 1-tap response chip below to continue!')
+          setSpeechError(
+            'Physical microphone active & capturing sound! (Google Cloud Speech endpoint blocked by browser/firewall, e.g. Brave Shields). Click "Done Speaking" or tap your spoken intent below.'
+          )
         } else if (event.error === 'not-allowed') {
-          setSpeechError('Microphone permission blocked. Please use the quick response chips below.')
-        } else if (event.error !== 'no-speech') {
-          setSpeechError(`Microphone note (${event.error}). You can reply via the quick buttons below.`)
+          setSpeechError('Microphone permission blocked in browser settings. Please allow mic in address bar.')
+          stopListening()
+        } else if (event.error === 'no-speech') {
+          // Keep listening
+        } else {
+          setSpeechError(`Microphone notice: ${event.error}. You can reply via the quick buttons below.`)
         }
-        setIsListening(false)
       }
 
       recognition.onend = () => {
-        setIsListening(false)
+        // Recognition completed
       }
 
       recognition.start()
-    } catch {
-      setSpeechError('Could not access microphone. Please test with the interactive response chips below.')
-      setIsListening(false)
+    } catch (e: any) {
+      console.warn('Failed to start SpeechRecognition:', e)
     }
   }
 
   function handleCustomerReply(userText: string) {
     if (!userText.trim() || !voiceInvoice) return
+    stopListening()
 
     const userTurn: DialogueTurn = {
       id: `turn-${Date.now()}`,
@@ -713,6 +846,7 @@ export default function B2BView() {
                 <div className="flex items-center rounded-lg border border-slate-200 dark:border-[#242937] bg-slate-50 dark:bg-[#14171F] p-0.5 text-xs font-semibold">
                   <button
                     onClick={() => {
+                      stopListening()
                       setCallLang('hi')
                       startB2BVoiceCall(voiceInvoice, 'hi')
                     }}
@@ -726,6 +860,7 @@ export default function B2BView() {
                   </button>
                   <button
                     onClick={() => {
+                      stopListening()
                       setCallLang('en')
                       startB2BVoiceCall(voiceInvoice, 'en')
                     }}
@@ -744,9 +879,7 @@ export default function B2BView() {
                     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
                       window.speechSynthesis.cancel()
                     }
-                    if (recognitionRef.current) {
-                      recognitionRef.current.stop()
-                    }
+                    stopListening()
                     setVoiceInvoice(null)
                   }}
                   className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-[#151821] hover:text-white cursor-pointer"
@@ -759,29 +892,41 @@ export default function B2BView() {
             {/* Live Audio Telemetry Waveform Bar */}
             <div className="rounded-xl border border-slate-200 dark:border-[#1C202B] bg-slate-50 dark:bg-[#14171F] p-3 text-xs flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
+                <span className={`h-2.5 w-2.5 rounded-full ${isListening ? (micVolume > 10 ? 'bg-emerald-500 animate-ping' : 'bg-rose-500 animate-pulse') : 'bg-emerald-500 animate-pulse'}`} />
                 <span className="font-semibold text-slate-700 dark:text-slate-300">
-                  {isSpeaking ? '🗣️ AI Speaking…' : isListening ? '🎙️ Listening to Client…' : '🟢 Call Connected'}
+                  {isListening
+                    ? micVolume > 10
+                      ? `🎙️ Voice Captured (${micVolume}% Volume)`
+                      : '🎙️ Physical Mic Active · Listening…'
+                    : isSpeaking
+                    ? '🗣️ AI AR Bot Speaking…'
+                    : '🟢 Call Connected (2-Way)'}
                 </span>
                 <span className="text-[10px] text-slate-400 font-mono">
-                  {callLang === 'hi' ? 'hi-IN (Hinglish)' : 'en-IN (Indian English)'}
+                  {callLang === 'hi' ? 'hi-IN (Hinglish)' : 'en-US (English)'}
                 </span>
               </div>
 
-              {/* Dynamic Sound Wave Bars */}
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
+              {/* Dynamic Sound Wave Bars Driven by Real Hardware Microphone */}
+              <div className="flex items-center gap-1 h-5">
+                {audioFrequencies.map((freq, i) => (
                   <span
                     key={i}
-                    className={`w-1 rounded-full transition-all duration-150 ${
-                      isSpeaking
-                        ? 'bg-purple-500 animate-pulse'
-                        : isListening
-                        ? 'bg-emerald-500 animate-bounce'
-                        : 'bg-slate-300 dark:bg-slate-700 h-2'
+                    className={`w-1 rounded-full transition-all duration-75 ${
+                      isListening
+                        ? micVolume > 10
+                          ? 'bg-emerald-500 shadow-xs shadow-emerald-500/50'
+                          : 'bg-rose-500'
+                        : isSpeaking
+                        ? 'bg-purple-600 dark:bg-purple-400'
+                        : 'bg-slate-300 dark:bg-slate-700'
                     }`}
                     style={{
-                      height: isSpeaking || isListening ? `${Math.max(6, (i * 5) % 22 + 8)}px` : '6px',
-                      animationDelay: `${i * 80}ms`,
+                      height: isListening
+                        ? `${Math.max(15, Math.min(100, Math.round((freq / 255) * 100)))}%`
+                        : isSpeaking
+                        ? `${[35, 65, 95, 50, 100, 40, 85, 60, 90, 45, 75, 30][i]}%`
+                        : '20%',
                     }}
                   />
                 ))}
@@ -847,8 +992,66 @@ export default function B2BView() {
             )}
 
             {speechError && (
-              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 text-[11px] text-amber-700 dark:text-amber-300 shrink-0">
-                ⚠️ {speechError}
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-700 dark:text-amber-300 space-y-1.5 shrink-0">
+                <div className="flex items-center justify-between font-semibold">
+                  <div className="flex items-center gap-1.5">
+                    <span>🎙️</span>
+                    <span>Microphone Status &amp; Spoken Intent Matcher</span>
+                  </div>
+                  <button
+                    onClick={() => setSpeechError(null)}
+                    className="text-amber-600 dark:text-amber-400 font-bold hover:underline cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p className="text-[11px] leading-snug">
+                  {speechError}
+                </p>
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400 self-center">
+                    Quick Intent:
+                  </span>
+                  <button
+                    onClick={() => {
+                      stopListening()
+                      handleCustomerReply(
+                        callLang === 'hi'
+                          ? 'Main Friday ko payment kar dunga'
+                          : 'We will settle this invoice next Friday',
+                      )
+                    }}
+                    className="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-[11px] font-semibold hover:bg-emerald-200 cursor-pointer"
+                  >
+                    📅 "Pay Next Friday (PTP)"
+                  </button>
+                  <button
+                    onClick={() => {
+                      stopListening()
+                      handleCustomerReply(
+                        callLang === 'hi'
+                          ? 'Haan, payment link WhatsApp pe share kar do'
+                          : 'Please dispatch the 1-click Razorpay link to WhatsApp',
+                      )
+                    }}
+                    className="px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 text-[11px] font-semibold hover:bg-blue-200 cursor-pointer"
+                  >
+                    ⚡ "Send 1-Click Link"
+                  </button>
+                  <button
+                    onClick={() => {
+                      stopListening()
+                      handleCustomerReply(
+                        callLang === 'hi'
+                          ? 'PO copy send karo validation ke liye'
+                          : 'Please resend the signed PO copy for validation',
+                      )
+                    }}
+                    className="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 text-[11px] font-semibold hover:bg-purple-200 cursor-pointer"
+                  >
+                    📋 "Resend PO Copy"
+                  </button>
+                </div>
               </div>
             )}
 
@@ -886,14 +1089,15 @@ export default function B2BView() {
               <div className="flex items-center gap-2 pt-1">
                 <button
                   onClick={toggleListening}
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold shadow-sm transition-all cursor-pointer ${
+                  className={`flex h-9 px-3 shrink-0 items-center justify-center gap-1.5 rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer ${
                     isListening
                       ? 'bg-rose-600 text-white animate-pulse ring-2 ring-rose-500/50'
                       : 'bg-emerald-600 text-white hover:bg-emerald-500'
                   }`}
-                  title={isListening ? 'Stop Listening' : 'Speak into Microphone'}
+                  title={isListening ? 'Done Speaking' : 'Speak into Microphone'}
                 >
-                  {isListening ? '🛑' : '🎙️'}
+                  <span className="text-sm">{isListening ? '⏹️' : '🎙️'}</span>
+                  <span>{isListening ? 'Done Speaking' : 'Speak into Mic'}</span>
                 </button>
 
                 <input

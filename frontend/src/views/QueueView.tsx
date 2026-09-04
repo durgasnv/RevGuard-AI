@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import { api, inr } from '../api'
 import type { AppState, QueueItem } from '../types'
 import { ActionPill, Card, ConfidenceBar, Pagination, Alert, AlertTitle, AlertDescription } from '../components/ui'
@@ -42,12 +42,62 @@ export default function QueueView({
   const [outreachChannel, setOutreachChannel] = useState<'whatsapp' | 'upi_qr'>('whatsapp')
   const [upiSettled, setUpiSettled] = useState(false)
 
+  // Real Hardware Microphone & Web Audio API Telemetry
+  const [micVolume, setMicVolume] = useState<number>(0)
+  const [audioFrequencies, setAudioFrequencies] = useState<number[]>([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+  const [_voiceDetected, setVoiceDetected] = useState<boolean>(false)
+
   const recognitionRef = useRef<any>(null)
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
   const chatBottomRef = useRef<HTMLDivElement | null>(null)
+  const mediaStreamRef = useRef<MediaStream | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const animFrameRef = useRef<number | null>(null)
+  const isListeningRef = useRef<boolean>(false)
 
   const plan = state?.plan
   const execution = state?.execution
+
+  function stopListening() {
+    isListeningRef.current = false
+    setIsListening(false)
+
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current)
+      animFrameRef.current = null
+    }
+
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop()
+      } catch {}
+      recognitionRef.current = null
+    }
+
+    if (mediaStreamRef.current) {
+      try {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop())
+      } catch {}
+      mediaStreamRef.current = null
+    }
+
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      try {
+        audioContextRef.current.close()
+      } catch {}
+      audioContextRef.current = null
+    }
+
+    setMicVolume(0)
+    setAudioFrequencies([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+  }
+
+  useEffect(() => {
+    return () => {
+      stopListening()
+    }
+  }, [])
 
   function speakText(text: string, lang: 'en' | 'hi' = callLang) {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
@@ -123,12 +173,12 @@ export default function QueueView({
   }
 
   function startVoiceCall(d: QueueItem, initialLang: 'en' | 'hi' = callLang) {
+    stopListening()
     setVoiceItem(d)
     setCallLang(initialLang)
     setSpeechTranscript('')
     setSpeechError(null)
     setCustomReply('')
-    setIsListening(false)
 
     const intro = getIntroText(d, initialLang)
     setDialogueTurns([
@@ -149,7 +199,7 @@ export default function QueueView({
     if (!text.trim()) return
     const lower = text.toLowerCase()
     setSpeechTranscript(text)
-    setIsListening(false)
+    stopListening()
     setSpeechError(null)
 
     let aiReply = ''
@@ -268,19 +318,95 @@ export default function QueueView({
     }, 100)
   }
 
-  function toggleSpeechRecognition() {
+  async function toggleSpeechRecognition() {
     setSpeechError(null)
 
     if (isListening) {
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop()
-        } catch {}
+      stopListening()
+      return
+    }
+
+    // 1. Request physical microphone device access via getUserMedia
+    let stream: MediaStream
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('MediaDevices API is not available in this browser environment')
+      }
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      mediaStreamRef.current = stream
+    } catch (err: any) {
+      console.warn('getUserMedia error:', err)
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setSpeechError('Microphone permission blocked. Please click the microphone/lock icon in your browser address bar and choose "Allow".')
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        setSpeechError('No physical microphone hardware detected. Please connect a headset or microphone device.')
+      } else {
+        setSpeechError(`Could not access microphone (${err.message || err.name}). You can use quick replies below.`)
       }
       setIsListening(false)
       return
     }
 
+    // 2. Attach Web Audio API AnalyserNode for real-time sound telemetry & waveform
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+      if (AudioCtx) {
+        const audioCtx = new AudioCtx()
+        audioContextRef.current = audioCtx
+        if (audioCtx.state === 'suspended') {
+          await audioCtx.resume()
+        }
+        const analyser = audioCtx.createAnalyser()
+        analyser.fftSize = 64
+        analyserRef.current = analyser
+
+        const source = audioCtx.createMediaStreamSource(stream)
+        source.connect(analyser)
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount)
+        isListeningRef.current = true
+        setIsListening(true)
+        setVoiceDetected(false)
+
+        const sampleAudio = () => {
+          if (!isListeningRef.current) return
+          analyser.getByteFrequencyData(dataArray)
+          let sum = 0
+          for (let i = 0; i < dataArray.length; i++) {
+            sum += dataArray[i]
+          }
+          const avg = sum / dataArray.length
+          const normalized = Math.min(100, Math.round((avg / 128) * 100))
+          setMicVolume(normalized)
+
+          if (normalized > 12) {
+            setVoiceDetected(true)
+          }
+
+          const bars: number[] = []
+          const step = Math.max(1, Math.floor(dataArray.length / 12))
+          for (let i = 0; i < 12; i++) {
+            bars.push(dataArray[i * step] || 0)
+          }
+          setAudioFrequencies(bars)
+
+          animFrameRef.current = requestAnimationFrame(sampleAudio)
+        }
+        sampleAudio()
+      }
+    } catch (audioErr) {
+      console.warn('AudioContext telemetry error:', audioErr)
+      isListeningRef.current = true
+      setIsListening(true)
+    }
+
+    // 3. Stop active TTS speech if speaking
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+    }
+
+    // 4. Connect Web Speech Recognition engine
     const SpeechRec =
       (window as unknown as { SpeechRecognition?: any; webkitSpeechRecognition?: any })
         .SpeechRecognition ||
@@ -289,62 +415,65 @@ export default function QueueView({
 
     if (!SpeechRec) {
       setSpeechError(
-        'Speech Recognition API is not supported in this browser. Please use Chrome/Edge or click/type responses below.',
+        'Physical microphone active & listening! Note: Automated cloud STT is not supported by your browser engine. Speak or tap any quick reply below.',
       )
       return
     }
 
     try {
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel()
-      setIsSpeaking(false)
-
       const rec = new SpeechRec()
       recognitionRef.current = rec
       rec.continuous = false
       rec.interimResults = true
-      rec.lang = callLang === 'hi' ? 'hi-IN' : 'en-IN'
+      rec.lang = callLang === 'hi' ? 'hi-IN' : (navigator.language || 'en-US')
 
       rec.onstart = () => {
-        setIsListening(true)
         setSpeechTranscript('')
         setSpeechError(null)
       }
 
       rec.onresult = (event: any) => {
         let finalTranscript = ''
+        let interimTranscript = ''
         for (let i = event.resultIndex; i < event.results.length; ++i) {
-          finalTranscript += event.results[i][0].transcript
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript
+          } else {
+            interimTranscript += event.results[i][0].transcript
+          }
         }
-        setSpeechTranscript(finalTranscript)
+        const currentText = finalTranscript || interimTranscript
+        setSpeechTranscript(currentText)
 
-        if (event.results[0].isFinal) {
+        if (finalTranscript) {
+          stopListening()
           handleCustomerResponse(finalTranscript)
         }
       }
 
       rec.onerror = (event: any) => {
         console.warn('Speech recognition error:', event.error)
-        setIsListening(false)
         if (event.error === 'network') {
-          setSpeechError('Cloud speech service unreachable (network/firewall). Click any 1-tap quick reply below to test the dialogue!')
+          setSpeechError(
+            'Physical microphone active & capturing sound! (Google Cloud Speech endpoint blocked by browser/firewall, e.g. Brave Shields). Click "Done Speaking" or tap your spoken intent below.'
+          )
         } else if (event.error === 'not-allowed') {
-          setSpeechError('Microphone permission blocked. Click any preset reply below or type directly.')
+          setSpeechError('Microphone permission blocked in browser settings. Please allow mic in address bar.')
+          stopListening()
         } else if (event.error === 'no-speech') {
-          setSpeechError('No speech detected. Click the mic again or use preset replies.')
+          // Keep hardware mic alive
         } else {
-          setSpeechError(`Microphone note (${event.error}). Click any preset reply below to continue.`)
+          setSpeechError(`Microphone notice: ${event.error}. You can speak or use quick replies below.`)
         }
       }
 
       rec.onend = () => {
-        setIsListening(false)
+        // Recognition completed
       }
 
       rec.start()
     } catch (e: any) {
-      console.error('Failed to start speech recognition:', e)
-      setIsListening(false)
-      setSpeechError('Could not initialize microphone. Click any preset reply below to converse.')
+      console.warn('Failed to start speech recognition engine:', e)
     }
   }
 
@@ -1118,10 +1247,7 @@ export default function QueueView({
               <button
                 onClick={() => {
                   if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel()
-                  if (recognitionRef.current) {
-                    try { recognitionRef.current.stop() } catch {}
-                  }
-                  setIsListening(false)
+                  stopListening()
                   setVoiceItem(null)
                 }}
                 className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors"
@@ -1139,6 +1265,7 @@ export default function QueueView({
               <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-200/80 dark:bg-slate-900 p-0.5 text-xs">
                 <button
                   onClick={() => {
+                    stopListening()
                     setCallLang('hi')
                     const intro = getIntroText(voiceItem, 'hi')
                     setDialogueTurns([
@@ -1161,6 +1288,7 @@ export default function QueueView({
                 </button>
                 <button
                   onClick={() => {
+                    stopListening()
                     setCallLang('en')
                     const intro = getIntroText(voiceItem, 'en')
                     setDialogueTurns([
@@ -1188,27 +1316,40 @@ export default function QueueView({
             <div className="rounded-xl border border-purple-200 dark:border-purple-500/20 bg-gradient-to-r from-purple-50/80 via-indigo-50/50 to-blue-50/80 dark:from-purple-950/40 dark:via-indigo-950/30 dark:to-blue-950/40 p-3 text-center shrink-0">
               <div className="flex items-center justify-between">
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Call Active (2-Way STT + TTS)</span>
+                  <span className={`h-2 w-2 rounded-full ${isListening ? (micVolume > 10 ? 'bg-emerald-500 animate-ping' : 'bg-rose-500 animate-pulse') : 'bg-emerald-500 animate-pulse'}`} />
+                  <span>
+                    {isListening
+                      ? micVolume > 10
+                        ? `🎙️ Mic Capturing Voice (${micVolume}% Volume)`
+                        : '🎙️ Physical Mic Active · Listening…'
+                      : isSpeaking
+                      ? '🗣️ AI Voice Assistant Speaking…'
+                      : 'Call Active (2-Way STT + TTS)'}
+                  </span>
                 </div>
 
                 <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
-                  {callLang === 'hi' ? 'Bilingual Voice Engine (hi-IN)' : 'English Voice Engine (en-IN)'}
+                  {callLang === 'hi' ? 'Bilingual Voice Engine (hi-IN)' : 'English Voice Engine (en-US)'}
                 </span>
               </div>
 
-              {/* Dynamic Sound Waveform */}
+              {/* Dynamic Sound Waveform Driven by Real Hardware Microphone */}
               <div className="mt-2.5 flex items-center justify-center gap-1 h-6">
-                {[35, 65, 95, 50, 100, 40, 85, 60, 90, 45, 75, 30].map((h, i) => (
+                {audioFrequencies.map((freq, i) => (
                   <span
                     key={i}
                     style={{
-                      height: isSpeaking || isListening ? `${h}%` : '20%',
-                      animationDuration: `${0.4 + (i % 4) * 0.15}s`,
+                      height: isListening
+                        ? `${Math.max(15, Math.min(100, Math.round((freq / 255) * 100)))}%`
+                        : isSpeaking
+                        ? `${[35, 65, 95, 50, 100, 40, 85, 60, 90, 45, 75, 30][i]}%`
+                        : '20%',
                     }}
-                    className={`w-1 rounded-full transition-all duration-150 ${
+                    className={`w-1 rounded-full transition-all duration-75 ${
                       isListening
-                        ? 'bg-rose-500 animate-pulse'
+                        ? micVolume > 10
+                          ? 'bg-emerald-500 shadow-xs shadow-emerald-500/50'
+                          : 'bg-rose-500'
                         : isSpeaking
                         ? 'bg-purple-600 dark:bg-purple-400'
                         : 'bg-slate-300 dark:bg-slate-700'
@@ -1219,7 +1360,9 @@ export default function QueueView({
 
               <div className="mt-1 text-[11px] font-medium text-purple-800 dark:text-purple-300">
                 {isListening
-                  ? '🎙️ Listening to your voice… Speak now in Hindi or English'
+                  ? micVolume > 10
+                    ? '🟢 Voice signal received! Speak freely or click "Done Speaking" below'
+                    : '🎙️ Listening to your physical mic… Speak now in Hindi or English'
                   : isSpeaking
                   ? `AI Voice Speaking in ${callLang === 'en' ? 'English' : 'Hinglish'}…`
                   : 'Call Connected · Speak into mic or choose a response below'}
@@ -1228,17 +1371,66 @@ export default function QueueView({
 
             {/* Error Notification banner if mic permissions blocked */}
             {speechError && (
-              <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 p-2 text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-1.5">
-                  <span>⚠️</span>
-                  <span>{speechError}</span>
+              <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 p-2.5 text-xs text-amber-800 dark:text-amber-300 flex flex-col gap-1.5 shrink-0">
+                <div className="flex items-center justify-between font-semibold">
+                  <div className="flex items-center gap-1.5">
+                    <span>🎙️</span>
+                    <span>Microphone Status &amp; Spoken Intent Matcher</span>
+                  </div>
+                  <button
+                    onClick={() => setSpeechError(null)}
+                    className="text-amber-600 dark:text-amber-400 font-bold hover:underline cursor-pointer"
+                  >
+                    ✕
+                  </button>
                 </div>
-                <button
-                  onClick={() => setSpeechError(null)}
-                  className="text-amber-600 dark:text-amber-400 font-bold hover:underline"
-                >
-                  Dismiss
-                </button>
+                <p className="text-[11px] leading-snug text-slate-700 dark:text-slate-300">
+                  {speechError}
+                </p>
+                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400">
+                    Quick Match Spoken Intent:
+                  </span>
+                  <button
+                    onClick={() => {
+                      stopListening()
+                      handleCustomerResponse(
+                        callLang === 'en'
+                          ? 'Yes, send the 1-click link to my WhatsApp'
+                          : 'Haan, mere WhatsApp pe 1-click link send kar do',
+                      )
+                    }}
+                    className="rounded-md bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-200 cursor-pointer"
+                  >
+                    💬 {callLang === 'en' ? 'Send Link to WhatsApp' : 'WhatsApp pe link bhej do'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      stopListening()
+                      handleCustomerResponse(
+                        callLang === 'en'
+                          ? 'I will pay this Friday'
+                          : 'Main kal Friday ko payment kar dunga',
+                      )
+                    }}
+                    className="rounded-md bg-blue-100 dark:bg-blue-950/80 px-2 py-0.5 text-[11px] font-semibold text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-700 hover:bg-blue-200 cursor-pointer"
+                  >
+                    📅 {callLang === 'en' ? 'Pay Friday (Promise to Pay)' : 'Friday ko pay karunga (PTP)'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      stopListening()
+                      handleCustomerResponse(
+                        callLang === 'en'
+                          ? 'Please raise a collect request on an alternate UPI ID'
+                          : 'Alternate UPI ID pe collect request raise karo',
+                      )
+                    }}
+                    className="rounded-md bg-purple-100 dark:bg-purple-950/80 px-2 py-0.5 text-[11px] font-semibold text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-700 hover:bg-purple-200 cursor-pointer"
+                  >
+                    ⚡ {callLang === 'en' ? 'Alternate UPI Rail' : 'Alternate UPI ID'}
+                  </button>
+                </div>
               </div>
             )}
 
@@ -1309,12 +1501,12 @@ export default function QueueView({
                   onClick={toggleSpeechRecognition}
                   className={`inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold shadow-md transition-all shrink-0 cursor-pointer ${
                     isListening
-                      ? 'bg-rose-600 text-white animate-pulse shadow-rose-600/30'
+                      ? 'bg-rose-600 text-white animate-pulse shadow-rose-600/30 ring-2 ring-rose-500/50'
                       : 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-600/25'
                   }`}
                 >
                   <span className="text-base">{isListening ? '⏹️' : '🎙️'}</span>
-                  <span>{isListening ? 'Listening… (Speak)' : 'Speak into Mic'}</span>
+                  <span>{isListening ? 'Done Speaking' : 'Speak into Mic'}</span>
                 </button>
 
                 {/* Custom Text input as fallback/testing */}
@@ -1452,10 +1644,7 @@ export default function QueueView({
               <button
                 onClick={() => {
                   if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel()
-                  if (recognitionRef.current) {
-                    try { recognitionRef.current.stop() } catch {}
-                  }
-                  setIsListening(false)
+                  stopListening()
                   setVoiceItem(null)
                 }}
                 className="rounded-lg bg-rose-600 hover:bg-rose-500 active:bg-rose-700 px-4 py-1.5 text-xs font-bold text-white shadow-sm transition-colors cursor-pointer"
