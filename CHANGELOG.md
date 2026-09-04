@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ## [0.5.0] - 2026-09-02
 
 ### Added
+- **Interactive 2-Minute Judge Walkthrough Guided Tour**: Multi-step interactive evaluation modal (`JudgeTourModal`) guiding judges through the 6 core innovations of RevGuard-AI with 1-click tab jumps and action triggers.
+- **Interactive Razorpay Error Code Diagnostic Sandbox**: Developer testing playground in `DevelopersView` with real-time decision-tree analysis, Rule SC-01/02/04 compliance mapping, EV math formulas, and 1-click live event injection for 6 top Razorpay failure codes (`U69`, `ZA`, `RB`, `BT`, `EX`, `U30`).
+- **NPCI 24-Hour Switch Liquidity & Core Banking Maintenance Heatmap**: Hourly grid visualizer in `BankSwitchHealthRadar` contrasting nighttime CBS maintenance failure rates (42%) against prime business liquidity windows (99%).
 - **Dynamic UPI QR Code & 1-Tap Mobile Intent Generator**: Embedded NPCI-compliant dynamic QR code generator with 1-tap mobile deep links (Google Pay, PhonePe, Paytm, BHIM) and instant webhook-driven capture simulation.
 - **RBI 6-Hour Disruption Incident Disclosure Generator (Form INC-01)**: 1-click statutory incident report export tool in the Acquiring Switch Radar complying with mandatory 6-hour regulatory outage disclosure timelines.
 - **Executive Daily Recovery Digest & Multi-Channel Dispatcher**: Proactive 10-second plain-English executive briefing (Design Gap #1) with simulated 1-click broadcast to Slack `#finance-revenue-digest` and WhatsApp Business.
