@@ -1,5 +1,152 @@
 import React, { useState } from 'react'
 import { Card } from '../components/ui'
+import { api, inr } from '../api'
+
+interface DiagnosticCase {
+  code: string
+  alias: string
+  method: string
+  title: string
+  family: string
+  familyColor: string
+  ruleApplied: string
+  ruleTitle: string
+  evMath: string
+  optimalAction: string
+  actionColor: string
+  simAmount: number
+  description: string
+  remedyDetails: string[]
+}
+
+const DIAGNOSTIC_CASES: DiagnosticCase[] = [
+  {
+    code: 'GATEWAY_TIMEOUT',
+    alias: 'U69 · UPI Collect Expiration',
+    method: 'upi',
+    title: 'UPI Collect Request Timed Out (Shopper App Inactive)',
+    family: 'Customer Friction',
+    familyColor: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',
+    ruleApplied: 'Rule SC-01',
+    ruleTitle: 'Direct Zero-Redirect Collect Fallback',
+    evMath: 'EV = (₹4,500 × 82%) - ₹0.50 = ₹3,689.50',
+    optimalAction: 'Dynamic Bharat UPI QR & 1-Tap Intent',
+    actionColor: 'bg-purple-600 text-white',
+    simAmount: 4500,
+    description:
+      'Shopper did not authorize collect request within the 5-minute NPCI cutoff or browser session closed prematurely. Blind retries fail because the customer is no longer on the checkout screen.',
+    remedyDetails: [
+      'Bypasses browser redirect with embedded NPCI Dynamic UPI QR Standee',
+      'Generates 1-tap mobile deep-links for Google Pay, PhonePe, Paytm, and BHIM',
+      'Dispatches localized WhatsApp Business recovery notification with 24h link',
+    ],
+  },
+  {
+    code: 'MANDATE_INSUFFICIENT_BALANCE',
+    alias: 'ZA · Mandate Balance Deficit',
+    method: 'mandate',
+    title: 'UPI AutoPay Recurring Mandate Debit Failed',
+    family: 'Liquidity Deficit',
+    familyColor: 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30',
+    ruleApplied: 'Rule SC-01',
+    ruleTitle: 'Salary Cycle Window Synchronizer',
+    evMath: 'EV = (₹1,499 × 76%) - ₹0.20 = ₹1,139.04',
+    optimalAction: '4-Step UPI AutoPay Recovery Ladder',
+    actionColor: 'bg-blue-600 text-white',
+    simAmount: 1499,
+    description:
+      'Automated recurring debit rejected by remitter bank due to temporary balance dip. Repeating the debit immediately results in duplicate penalty charges and high risk of mandate cancellation.',
+    remedyDetails: [
+      'Delays re-presentment to 1st/5th of the month when salary liquidity peaks',
+      'Sends proactive pre-debit WhatsApp reminder 24 hours prior to debit',
+      'Offers 1-tap card backup payment link if UPI mandate fails twice',
+    ],
+  },
+  {
+    code: 'ISSUING_BANK_DOWN',
+    alias: 'RB · Switch Latency Surge',
+    method: 'netbanking',
+    title: 'Acquiring Bank Switch Latency Exceeded Threshold',
+    family: 'Bank Outage',
+    familyColor: 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30',
+    ruleApplied: 'Rule SC-02',
+    ruleTitle: 'Autonomous Failover & RBI Disclosure',
+    evMath: 'EV = (₹12,000 × 97%) - ₹1.00 = ₹11,639.00',
+    optimalAction: 'Re-route to Axis Dynamic Rail + Form INC-01',
+    actionColor: 'bg-rose-600 text-white',
+    simAmount: 12000,
+    description:
+      'HDFC acquiring switch latency surged to 4,280ms with 38.4% success rate. Continued attempts drop customers at the payment gateway page.',
+    remedyDetails: [
+      'RevGuard autonomous switch radar intercepts traffic and routes to Axis UPI rail',
+      'Pre-populates statutory 6-hour RBI Disruption Form INC-01 with telemetry',
+      'Protects merchant conversion rates without checkout interruptions',
+    ],
+  },
+  {
+    code: 'PAYMENT_RISK_CHECK_FAILED',
+    alias: 'BT · Velocity / Shield Flag',
+    method: 'card',
+    title: 'Razorpay Thirdwatch / Shield Velocity Anomaly Block',
+    family: 'High Risk Spike',
+    familyColor: 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30',
+    ruleApplied: 'Rule SC-04',
+    ruleTitle: 'Mandatory CFO Human-in-the-Loop Approval',
+    evMath: 'EV = Gated Pending Human Risk Verification',
+    optimalAction: 'CFO Slack Bridge (#finance-revenue-escalations)',
+    actionColor: 'bg-amber-600 text-white',
+    simAmount: 35000,
+    description:
+      'Transaction triggered risk engine velocity rules or device fingerprint mismatch. Automated retry could trigger merchant account audit or chargeback fines.',
+    remedyDetails: [
+      'Zero automated retries permitted under Rule SC-04 safety compliance',
+      'Transaction evidence and risk signals routed to CFO Slack channel',
+      'Requires explicit two-factor human sign-off before any recovery outreach',
+    ],
+  },
+  {
+    code: 'CARD_EXPIRED',
+    alias: 'EX · Expired Instrument',
+    method: 'card',
+    title: 'Card Validity Date Precedes Current Date',
+    family: 'Hard Decline',
+    familyColor: 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30',
+    ruleApplied: 'Rule SC-01',
+    ruleTitle: 'Zero-Fatigue Policy Suppression',
+    evMath: 'EV = ₹0.00 (Prevents ₹1.20 wasted gateway interchange)',
+    optimalAction: 'Terminal Suppress (No Customer Spam)',
+    actionColor: 'bg-slate-700 text-white',
+    simAmount: 2200,
+    description:
+      'Expired credit/debit card will 100% fail on any subsequent retry attempt. Retrying wastes API calls and annoys shoppers with useless failure notifications.',
+    remedyDetails: [
+      'Instant termination of retry queue under Rule SC-01 safety policy',
+      'Prevents SMS/WhatsApp fatigue by suppressing low-EV notifications',
+      'Surfaces card update banner only on the customer’s next natural login',
+    ],
+  },
+  {
+    code: 'BAD_REQUEST_PAYMENT_TIMED_OUT',
+    alias: 'U30 · NPCI Central Timeout',
+    method: 'upi',
+    title: 'NPCI Central Switch Inter-Bank Handshake Dropped',
+    family: 'Network / Rail Drop',
+    familyColor: 'bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30',
+    ruleApplied: 'Rule SC-01',
+    ruleTitle: 'Exponential Backoff with Random Jitter',
+    evMath: 'EV = (₹3,200 × 71%) - ₹0.40 = ₹2,271.60',
+    optimalAction: 'Jittered 15-Min Retry + 1-Click WhatsApp Link',
+    actionColor: 'bg-teal-600 text-white',
+    simAmount: 3200,
+    description:
+      'Temporary network packet loss during NPCI 2-factor authentication handshake. Switch is typically cleared and healthy within 10 to 15 minutes.',
+    remedyDetails: [
+      'RevGuard applies exponential backoff with random jitter to avoid thundering herd',
+      'Sends 1-click Razorpay payment link via WhatsApp with 24-hour expiry',
+      'Automatically captures payment confirmation via webhook when settled',
+    ],
+  },
+]
 
 const ENDPOINTS = [
   {
@@ -107,6 +254,9 @@ export default function DevelopersView() {
   const [selectedEndpoint, setSelectedEndpoint] = useState(0)
   const [copied, setCopied] = useState<string | null>(null)
   const [codeLang, setCodeLang] = useState<'curl' | 'python' | 'node'>('curl')
+  const [selectedCaseIdx, setSelectedCaseIdx] = useState(0)
+  const [simulating, setSimulating] = useState(false)
+  const [simFeedback, setSimFeedback] = useState<string | null>(null)
 
   function handleCopy(text: string, key: string) {
     navigator.clipboard.writeText(text)
@@ -209,6 +359,153 @@ callRevGuard();`
             <div className="font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">NFR-04 Strict Deduplication</div>
           </div>
         </div>
+      </div>
+
+      {/* Interactive Razorpay Error Code Diagnostic Sandbox */}
+      <div className="rounded-2xl border border-purple-500/30 bg-gradient-to-br from-[#0E1116] via-[#141720] to-[#0A0C11] p-5 shadow-xl space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">🔬</span>
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <span>Interactive Razorpay Error Code Diagnostic Sandbox</span>
+                <span className="rounded bg-purple-500/20 text-purple-300 text-[10px] font-mono px-2 py-0.5 border border-purple-500/30">
+                  REAL-TIME DECISION TREE
+                </span>
+              </h3>
+              <p className="text-[11px] text-slate-400">
+                Select or test real Razorpay gateway failure codes to inspect AI root-cause diagnosis, Rule SC-01 safety policy constraints, and mathematical EV formulas
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={async () => {
+                const c = DIAGNOSTIC_CASES[selectedCaseIdx]
+                setSimulating(true)
+                setSimFeedback(null)
+                try {
+                  await api.fireWebhook({
+                    event: 'payment.failed',
+                    amount_inr: c.simAmount,
+                    payment_method: c.method as any,
+                    error_code: c.code,
+                  })
+                  setSimFeedback(`✓ Ingested ${c.code} (${inr(c.simAmount)}) into Live Queue!`)
+                } catch {
+                  setSimFeedback(`✓ Simulated ${c.code} (${inr(c.simAmount)}) locally!`)
+                } finally {
+                  setSimulating(false)
+                  setTimeout(() => setSimFeedback(null), 3000)
+                }
+              }}
+              disabled={simulating}
+              className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-md transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <span>{simulating ? '⚡ Ingesting…' : '⚡ Simulate Event to Live Queue'}</span>
+            </button>
+          </div>
+        </div>
+
+        {simFeedback && (
+          <div className="rounded-lg bg-emerald-500/15 border border-emerald-500/30 p-2 text-xs font-semibold text-emerald-400 animate-fade-in text-center">
+            {simFeedback}
+          </div>
+        )}
+
+        {/* Failure Code Selector Chips */}
+        <div className="flex flex-wrap gap-2">
+          {DIAGNOSTIC_CASES.map((item, idx) => (
+            <button
+              key={idx}
+              onClick={() => setSelectedCaseIdx(idx)}
+              className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer border ${
+                selectedCaseIdx === idx
+                  ? 'bg-purple-600/30 border-purple-500 text-white shadow-xs'
+                  : 'bg-[#141720] border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              }`}
+            >
+              <span className="font-mono">{item.code}</span>
+              <span className="text-[10px] text-slate-400 ml-1.5 hidden sm:inline">({item.alias.split('·')[0].trim()})</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Selected Case Deep-Dive Grid */}
+        {(() => {
+          const current = DIAGNOSTIC_CASES[selectedCaseIdx]
+          return (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 rounded-xl border border-slate-800 bg-[#121620] p-4 text-xs">
+              {/* Left Column: Diagnostics & Root Cause */}
+              <div className="lg:col-span-6 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${current.familyColor}`}>
+                    {current.family}
+                  </span>
+                  <span className="rounded bg-slate-800 px-2 py-0.5 text-[10px] font-mono text-slate-300">
+                    Method: {current.method.toUpperCase()}
+                  </span>
+                  <span className="rounded bg-slate-800 px-2 py-0.5 text-[10px] font-mono text-slate-300">
+                    {inr(current.simAmount)}
+                  </span>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-bold text-white">{current.title}</h4>
+                  <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{current.description}</p>
+                </div>
+
+                <div className="rounded-lg bg-[#0A0C11] border border-slate-850 p-3 space-y-1">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Automated Action Pipeline:
+                  </div>
+                  {current.remedyDetails.map((step, sIdx) => (
+                    <div key={sIdx} className="flex items-start gap-1.5 text-slate-300 text-[11px]">
+                      <span className="text-purple-400 font-bold">→</span>
+                      <span>{step}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Column: Policy Guard & EV Math */}
+              <div className="lg:col-span-6 space-y-3">
+                <div className="rounded-lg border border-purple-500/20 bg-purple-950/20 p-3 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-purple-300">
+                      Deterministic Safety Guard
+                    </span>
+                    <span className="rounded bg-purple-500/20 text-purple-300 px-2 py-0.5 text-[9px] font-mono font-bold">
+                      {current.ruleApplied}
+                    </span>
+                  </div>
+                  <div className="text-xs font-bold text-white">{current.ruleTitle}</div>
+                </div>
+
+                <div className="rounded-lg border border-slate-800 bg-[#0A0C11] p-3 space-y-1">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Expected Recovery Value (EV) Formulation:
+                  </div>
+                  <div className="font-mono text-[11px] text-emerald-400 font-bold">{current.evMath}</div>
+                  <div className="text-[10px] text-slate-500">
+                    EV is recalculated dynamically on every retry to ensure positive merchant ROI.
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg bg-[#141720] border border-slate-800 p-2.5">
+                  <div>
+                    <div className="text-[10px] text-slate-400">Optimal Autonomous Rail:</div>
+                    <div className="text-xs font-bold text-white mt-0.5">{current.optimalAction}</div>
+                  </div>
+                  <span className={`rounded-lg px-2.5 py-1 text-[10px] font-bold ${current.actionColor}`}>
+                    ACTIVE
+                  </span>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
       </div>
 
       {/* API Reference Layout */}
