@@ -245,8 +245,12 @@ export default function B2BView() {
       }
 
       recognition.onerror = (event: any) => {
-        if (event.error !== 'no-speech') {
-          setSpeechError(`Mic status: ${event.error}. You can reply via the quick buttons below.`)
+        if (event.error === 'network') {
+          setSpeechError('Cloud speech service unreachable (network/firewall). Click any 1-tap response chip below to continue!')
+        } else if (event.error === 'not-allowed') {
+          setSpeechError('Microphone permission blocked. Please use the quick response chips below.')
+        } else if (event.error !== 'no-speech') {
+          setSpeechError(`Microphone note (${event.error}). You can reply via the quick buttons below.`)
         }
         setIsListening(false)
       }

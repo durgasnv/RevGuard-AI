@@ -325,12 +325,14 @@ export default function QueueView({
       rec.onerror = (event: any) => {
         console.warn('Speech recognition error:', event.error)
         setIsListening(false)
-        if (event.error === 'not-allowed') {
-          setSpeechError('Microphone access blocked. Click the preset replies or type below.')
+        if (event.error === 'network') {
+          setSpeechError('Cloud speech service unreachable (network/firewall). Click any 1-tap quick reply below to test the dialogue!')
+        } else if (event.error === 'not-allowed') {
+          setSpeechError('Microphone permission blocked. Click any preset reply below or type directly.')
         } else if (event.error === 'no-speech') {
           setSpeechError('No speech detected. Click the mic again or use preset replies.')
         } else {
-          setSpeechError(`Speech recognition note: ${event.error}. You can use preset replies.`)
+          setSpeechError(`Microphone note (${event.error}). Click any preset reply below to continue.`)
         }
       }
 
@@ -342,7 +344,7 @@ export default function QueueView({
     } catch (e: any) {
       console.error('Failed to start speech recognition:', e)
       setIsListening(false)
-      setSpeechError('Could not initialize microphone. Use Chrome/Edge or click preset replies.')
+      setSpeechError('Could not initialize microphone. Click any preset reply below to converse.')
     }
   }
 
