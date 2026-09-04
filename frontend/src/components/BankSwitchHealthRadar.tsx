@@ -12,10 +12,38 @@ export interface SwitchHealth {
   reroutedCount?: number
 }
 
+const HOURLY_LIQUIDITY = [
+  { hour: 0, rate: 76, label: '00:00', status: 'maintenance', note: 'Batch settlement roll' },
+  { hour: 1, rate: 58, label: '01:00', status: 'maintenance', note: 'Core Banking System (CBS) backup' },
+  { hour: 2, rate: 46, label: '02:00', status: 'maintenance', note: 'NPCI central switch maintenance' },
+  { hour: 3, rate: 42, label: '03:00', status: 'maintenance', note: 'Inter-bank batch clearing' },
+  { hour: 4, rate: 64, label: '04:00', status: 'maintenance', note: 'CBS node restart window' },
+  { hour: 5, rate: 82, label: '05:00', status: 'warmup', note: 'Early switch warm-up' },
+  { hour: 6, rate: 89, label: '06:00', status: 'healthy', note: 'Morning transit volume' },
+  { hour: 7, rate: 93, label: '07:00', status: 'healthy', note: 'Breakfast & bill payments' },
+  { hour: 8, rate: 96, label: '08:00', status: 'healthy', note: 'SC-01 Contact Window opens' },
+  { hour: 9, rate: 98, label: '09:00', status: 'prime', note: 'Peak salary & commercial liquidity' },
+  { hour: 10, rate: 99, label: '10:00', status: 'prime', note: 'Optimal retry execution window' },
+  { hour: 11, rate: 99, label: '11:00', status: 'prime', note: 'B2B wire reconciliation peak' },
+  { hour: 12, rate: 98, label: '12:00', status: 'prime', note: 'E-commerce lunch rush' },
+  { hour: 13, rate: 97, label: '13:00', status: 'healthy', note: 'High switch throughput' },
+  { hour: 14, rate: 96, label: '14:00', status: 'healthy', note: 'Midday retail collect' },
+  { hour: 15, rate: 98, label: '15:00', status: 'prime', note: 'Afternoon corporate AR clearing' },
+  { hour: 16, rate: 98, label: '16:00', status: 'prime', note: 'High mandate debit success' },
+  { hour: 17, rate: 99, label: '17:00', status: 'prime', note: 'Prime salary credit arrivals' },
+  { hour: 18, rate: 98, label: '18:00', status: 'prime', note: 'Evening rush payments' },
+  { hour: 19, rate: 97, label: '19:00', status: 'healthy', note: 'Dinner / quick commerce peak' },
+  { hour: 20, rate: 96, label: '20:00', status: 'healthy', note: 'High UPI QR scan volume' },
+  { hour: 21, rate: 94, label: '21:00', status: 'healthy', note: 'SC-01 Contact Window closes' },
+  { hour: 22, rate: 88, label: '22:00', status: 'warmup', note: 'Late night volume taper' },
+  { hour: 23, rate: 79, label: '23:00', status: 'maintenance', note: 'Pre-midnight reconciliation' },
+]
+
 export default function BankSwitchHealthRadar({ onSimulateReroute }: { onSimulateReroute?: () => void }) {
   const [isDegraded, setIsDegraded] = useState(true)
   const [rerouted] = useState(true)
   const [showRbiModal, setShowRbiModal] = useState(false)
+  const [hoveredHour, setHoveredHour] = useState<number | null>(null)
 
   const switches: SwitchHealth[] = [
     {
@@ -180,6 +208,106 @@ export default function BankSwitchHealthRadar({ onSimulateReroute }: { onSimulat
             ) : null}
           </div>
         ))}
+      </div>
+
+      {/* NPCI 24-Hour Inter-Bank Switch Liquidity & Maintenance Heatmap */}
+      <div className="mt-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 p-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 dark:border-slate-800/80 pb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="text-sm">📊</span>
+            <div>
+              <div className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <span>NPCI 24-Hour Inter-Bank Switch Liquidity & Maintenance Heatmap</span>
+                <span className="rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[9px] font-bold px-1.5 py-0.2 border border-emerald-500/30">
+                  ALGORITHMIC ADVANTAGE
+                </span>
+              </div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                Core Banking System (CBS) downtime windows vs. prime liquidity retry slots
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 text-[10px]">
+            <div className="flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="text-slate-600 dark:text-slate-400">Prime (97-99%)</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-blue-500" />
+              <span className="text-slate-600 dark:text-slate-400">Healthy (90-96%)</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-rose-500" />
+              <span className="text-slate-600 dark:text-slate-400">CBS Maintenance (42-76%)</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 24-Hour Grid */}
+        <div className="grid grid-cols-12 sm:grid-cols-24 gap-1 items-end pt-2 pb-1">
+          {HOURLY_LIQUIDITY.map((item) => {
+            const isHovered = hoveredHour === item.hour
+            let color = 'bg-emerald-500 dark:bg-emerald-400'
+            if (item.status === 'maintenance') color = 'bg-rose-500 dark:bg-rose-400'
+            else if (item.status === 'warmup') color = 'bg-amber-500 dark:bg-amber-400'
+            else if (item.status === 'healthy') color = 'bg-blue-500 dark:bg-blue-400'
+
+            const heightPct = Math.max(25, item.rate)
+
+            return (
+              <div
+                key={item.hour}
+                onMouseEnter={() => setHoveredHour(item.hour)}
+                onMouseLeave={() => setHoveredHour(null)}
+                className="group relative flex flex-col items-center cursor-pointer"
+              >
+                <div className="w-full flex items-end justify-center h-16 bg-slate-200/50 dark:bg-slate-800/40 rounded-t-sm overflow-hidden">
+                  <div
+                    style={{ height: `${heightPct}%` }}
+                    className={`w-full ${color} transition-all duration-200 group-hover:opacity-80 rounded-t-xs`}
+                  />
+                </div>
+                <span className="text-[9px] font-mono text-slate-500 dark:text-slate-400 mt-1">
+                  {item.hour.toString().padStart(2, '0')}
+                </span>
+
+                {/* Tooltip */}
+                {isHovered && (
+                  <div className="absolute bottom-20 z-30 w-44 rounded-lg bg-slate-900 border border-slate-700 p-2 text-[10px] text-white shadow-xl pointer-events-none -translate-x-1/2 left-1/2">
+                    <div className="font-bold flex items-center justify-between">
+                      <span>{item.label} Window</span>
+                      <span className="text-emerald-400">{item.rate}% Success</span>
+                    </div>
+                    <div className="text-slate-300 mt-0.5">{item.note}</div>
+                    <div className="text-[9px] text-purple-300 font-mono mt-1 pt-1 border-t border-slate-800">
+                      {item.status === 'maintenance'
+                        ? '⛔ Retries Suppressed (Rule SC-01)'
+                        : '✓ Recommended Recovery Window'}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Dynamic Detail Card when Hour is Hovered or Default */}
+        <div className="rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-slate-700 dark:text-slate-300">
+              {hoveredHour !== null
+                ? `Hour ${HOURLY_LIQUIDITY[hoveredHour].label}: ${HOURLY_LIQUIDITY[hoveredHour].note}`
+                : 'Hover over any hour to inspect bank core-banking maintenance and optimal retry windows'}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 text-[11px] font-mono">
+            <span className="text-rose-600 dark:text-rose-400">01h–04h: 42% Success (Blind Retries Fail)</span>
+            <span className="text-slate-300 dark:text-slate-700">|</span>
+            <span className="text-emerald-600 dark:text-emerald-400">09h–18h: 99% Success (+28.4% Uplift)</span>
+          </div>
+        </div>
       </div>
 
       {showRbiModal && (
