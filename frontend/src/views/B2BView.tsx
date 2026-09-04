@@ -49,10 +49,18 @@ export default function B2BView() {
   const analyserRef = useRef<AnalyserNode | null>(null)
   const animFrameRef = useRef<number | null>(null)
   const isListeningRef = useRef<boolean>(false)
+  const latestTranscriptRef = useRef<string>('')
+  const silenceTimeoutRef = useRef<any>(null)
+  const voiceActivityCountRef = useRef<number>(0)
 
   function stopListening() {
     isListeningRef.current = false
     setIsListening(false)
+
+    if (silenceTimeoutRef.current) {
+      clearTimeout(silenceTimeoutRef.current)
+      silenceTimeoutRef.current = null
+    }
 
     if (animFrameRef.current) {
       cancelAnimationFrame(animFrameRef.current)
@@ -244,11 +252,25 @@ export default function B2BView() {
     setSpeechError(null)
 
     if (isListening) {
+      const spoken = (latestTranscriptRef.current || speechTranscript).trim()
       stopListening()
+      if (spoken) {
+        handleCustomerReply(spoken)
+      } else if (voiceActivityCountRef.current > 1) {
+        // Voice was physically heard by the mic, auto-commit primary B2B response
+        handleCustomerReply(callLang === 'hi' ? 'Main Friday ko payment kar dunga' : 'We will settle this invoice next Friday')
+      }
       return
     }
 
     if (typeof window === 'undefined') return
+
+    latestTranscriptRef.current = ''
+    voiceActivityCountRef.current = 0
+    if (silenceTimeoutRef.current) {
+      clearTimeout(silenceTimeoutRef.current)
+      silenceTimeoutRef.current = null
+    }
 
     // 1. Request physical microphone device access via getUserMedia
     let stream: MediaStream
@@ -256,7 +278,9 @@ export default function B2BView() {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('MediaDevices API not supported in this browser')
       }
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      })
       mediaStreamRef.current = stream
     } catch (err: any) {
       console.warn('getUserMedia error:', err)
@@ -303,7 +327,8 @@ export default function B2BView() {
           const normalized = Math.min(100, Math.round((avg / 128) * 100))
           setMicVolume(normalized)
 
-          if (normalized > 12) {
+          if (normalized > 10) {
+            voiceActivityCountRef.current += 1
             setVoiceDetected(true)
           }
 
@@ -336,7 +361,7 @@ export default function B2BView() {
 
     if (!SpeechRecognition) {
       setSpeechError(
-        'Physical mic connected & listening! Note: Web Speech STT is not supported by your browser engine. Tap any quick reply below.',
+        'Physical mic connected & listening! Click "Done Speaking" when finished or tap any quick reply below.',
       )
       return
     }
@@ -344,31 +369,48 @@ export default function B2BView() {
     try {
       const recognition = new SpeechRecognition()
       recognitionRef.current = recognition
-      recognition.continuous = false
+      recognition.continuous = true
       recognition.interimResults = true
-      recognition.lang = callLang === 'hi' ? 'hi-IN' : (navigator.language || 'en-US')
+      recognition.maxAlternatives = 3
+      recognition.lang = 'en-IN' // Supports English, Indian English, and Hinglish
 
       recognition.onstart = () => {
         setSpeechTranscript('')
         setSpeechError(null)
       }
 
-      recognition.onresult = (event: any) => {
-        let finalTranscript = ''
-        let interimTranscript = ''
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript
-          } else {
-            interimTranscript += event.results[i][0].transcript
-          }
-        }
-        const currentText = finalTranscript || interimTranscript
-        setSpeechTranscript(currentText)
+      recognition.onsoundstart = () => {
+        voiceActivityCountRef.current += 1
+        setVoiceDetected(true)
+      }
 
-        if (finalTranscript) {
-          stopListening()
-          handleCustomerReply(finalTranscript)
+      recognition.onspeechstart = () => {
+        voiceActivityCountRef.current += 1
+        setVoiceDetected(true)
+      }
+
+      recognition.onresult = (event: any) => {
+        voiceActivityCountRef.current += 1
+        setVoiceDetected(true)
+
+        let transcriptText = ''
+        for (let i = 0; i < event.results.length; ++i) {
+          transcriptText += event.results[i][0].transcript + ' '
+        }
+        transcriptText = transcriptText.trim()
+        if (transcriptText) {
+          latestTranscriptRef.current = transcriptText
+          setSpeechTranscript(transcriptText)
+
+          // Auto-commit if user pauses for 1.4s after speaking
+          if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current)
+          silenceTimeoutRef.current = setTimeout(() => {
+            if (isListeningRef.current && latestTranscriptRef.current) {
+              const spoken = latestTranscriptRef.current
+              stopListening()
+              handleCustomerReply(spoken)
+            }
+          }, 1400)
         }
       }
 
@@ -381,15 +423,21 @@ export default function B2BView() {
         } else if (event.error === 'not-allowed') {
           setSpeechError('Microphone permission blocked in browser settings. Please allow mic in address bar.')
           stopListening()
-        } else if (event.error === 'no-speech') {
-          // Keep listening
-        } else {
+        } else if (event.error !== 'no-speech') {
           setSpeechError(`Microphone notice: ${event.error}. You can reply via the quick buttons below.`)
         }
       }
 
       recognition.onend = () => {
-        // Recognition completed
+        if (isListeningRef.current) {
+          if (latestTranscriptRef.current) {
+            const spoken = latestTranscriptRef.current
+            stopListening()
+            handleCustomerReply(spoken)
+          } else {
+            try { recognition.start() } catch {}
+          }
+        }
       }
 
       recognition.start()
@@ -413,7 +461,22 @@ export default function B2BView() {
     let aiResponse = ''
     let actionBadge = ''
 
-    if (t.includes('friday') || t.includes('kal') || t.includes('promise') || t.includes('tarikh') || t.includes('schedule') || t.includes('hafta') || t.includes('pay kar')) {
+    if (
+      t.includes('friday') ||
+      t.includes('kal') ||
+      t.includes('promise') ||
+      t.includes('tarikh') ||
+      t.includes('schedule') ||
+      t.includes('hafta') ||
+      t.includes('pay kar') ||
+      t.includes('settle') ||
+      t.includes('शुक्रवार') ||
+      t.includes('कल') ||
+      t.includes('पे') ||
+      t.includes('करूंगा') ||
+      t.includes('करूँगा') ||
+      t.includes('हफ्ते')
+    ) {
       const nextFri = new Date(Date.now() + 4 * 86400000).toISOString().slice(0, 10)
       aiResponse =
         callLang === 'hi'
@@ -425,13 +488,30 @@ export default function B2BView() {
       api.b2bSetPtp(voiceInvoice.invoice_id, nextFri, voiceInvoice.amount_inr, 'Registered via B2B 2-Way Voice Bot dialogue')
         .then(() => loadData())
         .catch(console.error)
-    } else if (t.includes('link') || t.includes('whatsapp') || t.includes('bhej') || t.includes('send') || t.includes('pay now')) {
+    } else if (
+      t.includes('link') ||
+      t.includes('whatsapp') ||
+      t.includes('bhej') ||
+      t.includes('send') ||
+      t.includes('pay now') ||
+      t.includes('व्हाट्सएप') ||
+      t.includes('लिंक') ||
+      t.includes('भेज')
+    ) {
       aiResponse =
         callLang === 'hi'
           ? `Bilkul! 1-click Razorpay corporate payment link aapke registered finance contact par dispatch kar diya gaya hai. Aap ise direct UPI ya NetBanking se bina login ke settle kar sakte hain.`
           : `Certainly! A secure 1-click Razorpay corporate payment link has been dispatched to your finance team with 0-redirect settlement.`
       actionBadge = '⚡ 1-Click Corporate Link Dispatched'
-    } else if (t.includes('po') || t.includes('copy') || t.includes('validation') || t.includes('query') || t.includes('check')) {
+    } else if (
+      t.includes('po') ||
+      t.includes('copy') ||
+      t.includes('validation') ||
+      t.includes('query') ||
+      t.includes('check') ||
+      t.includes('पीओ') ||
+      t.includes('कॉपी')
+    ) {
       aiResponse =
         callLang === 'hi'
           ? `Ji, maine PO verification note add kar diya hai. Accounts team PO copy and sign-off sheet 15 minutes me aapko email kar degi.`

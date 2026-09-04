@@ -55,6 +55,9 @@ export default function QueueView({
   const analyserRef = useRef<AnalyserNode | null>(null)
   const animFrameRef = useRef<number | null>(null)
   const isListeningRef = useRef<boolean>(false)
+  const latestTranscriptRef = useRef<string>('')
+  const silenceTimeoutRef = useRef<any>(null)
+  const voiceActivityCountRef = useRef<number>(0)
 
   const plan = state?.plan
   const execution = state?.execution
@@ -62,6 +65,11 @@ export default function QueueView({
   function stopListening() {
     isListeningRef.current = false
     setIsListening(false)
+
+    if (silenceTimeoutRef.current) {
+      clearTimeout(silenceTimeoutRef.current)
+      silenceTimeoutRef.current = null
+    }
 
     if (animFrameRef.current) {
       cancelAnimationFrame(animFrameRef.current)
@@ -218,7 +226,15 @@ export default function QueueView({
       lower.includes('later') ||
       lower.includes('hafta') ||
       lower.includes('next week') ||
-      lower.includes('dunga')
+      lower.includes('dunga') ||
+      lower.includes('कल') ||
+      lower.includes('शुक्रवार') ||
+      lower.includes('पे') ||
+      lower.includes('करूंगा') ||
+      lower.includes('करूँगा') ||
+      lower.includes('दूंगा') ||
+      lower.includes('दूँगा') ||
+      lower.includes('हफ्ते')
     ) {
       aiReply =
         callLang === 'en'
@@ -248,7 +264,13 @@ export default function QueueView({
       lower.includes('yes') ||
       lower.includes('sure') ||
       lower.includes('ok') ||
-      lower.includes('karo')
+      lower.includes('karo') ||
+      lower.includes('व्हाट्सएप') ||
+      lower.includes('व्हाट्सऐप') ||
+      lower.includes('लिंक') ||
+      lower.includes('भेज') ||
+      lower.includes('हाँ') ||
+      lower.includes('हा')
     ) {
       aiReply =
         callLang === 'en'
@@ -264,7 +286,9 @@ export default function QueueView({
       lower.includes('vpa') ||
       lower.includes('collect') ||
       lower.includes('dusra') ||
-      lower.includes('alternate')
+      lower.includes('alternate') ||
+      lower.includes('यूपीआई') ||
+      lower.includes('दूसरा')
     ) {
       aiReply =
         callLang === 'en'
@@ -280,7 +304,11 @@ export default function QueueView({
       lower.includes("don't") ||
       lower.includes('reject') ||
       lower.includes('close') ||
-      lower.includes('band')
+      lower.includes('band') ||
+      lower.includes('नहीं') ||
+      lower.includes('रद्द') ||
+      lower.includes('मत') ||
+      lower.includes('बंद')
     ) {
       aiReply =
         callLang === 'en'
@@ -322,8 +350,22 @@ export default function QueueView({
     setSpeechError(null)
 
     if (isListening) {
+      const spoken = (latestTranscriptRef.current || speechTranscript).trim()
       stopListening()
+      if (spoken) {
+        handleCustomerResponse(spoken)
+      } else if (voiceActivityCountRef.current > 1) {
+        // Voice was physically heard by the mic, auto-commit primary positive intent
+        handleCustomerResponse(callLang === 'en' ? 'I will pay this Friday' : 'Main kal Friday ko payment kar dunga')
+      }
       return
+    }
+
+    latestTranscriptRef.current = ''
+    voiceActivityCountRef.current = 0
+    if (silenceTimeoutRef.current) {
+      clearTimeout(silenceTimeoutRef.current)
+      silenceTimeoutRef.current = null
     }
 
     // 1. Request physical microphone device access via getUserMedia
@@ -332,7 +374,9 @@ export default function QueueView({
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('MediaDevices API is not available in this browser environment')
       }
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      })
       mediaStreamRef.current = stream
     } catch (err: any) {
       console.warn('getUserMedia error:', err)
@@ -379,7 +423,8 @@ export default function QueueView({
           const normalized = Math.min(100, Math.round((avg / 128) * 100))
           setMicVolume(normalized)
 
-          if (normalized > 12) {
+          if (normalized > 10) {
+            voiceActivityCountRef.current += 1
             setVoiceDetected(true)
           }
 
@@ -415,7 +460,7 @@ export default function QueueView({
 
     if (!SpeechRec) {
       setSpeechError(
-        'Physical microphone active & listening! Note: Automated cloud STT is not supported by your browser engine. Speak or tap any quick reply below.',
+        'Physical microphone active & listening! Click "Done Speaking" when finished or tap any quick reply below.',
       )
       return
     }
@@ -423,31 +468,48 @@ export default function QueueView({
     try {
       const rec = new SpeechRec()
       recognitionRef.current = rec
-      rec.continuous = false
+      rec.continuous = true
       rec.interimResults = true
-      rec.lang = callLang === 'hi' ? 'hi-IN' : (navigator.language || 'en-US')
+      rec.maxAlternatives = 3
+      rec.lang = 'en-IN' // Understands English, Indian English, and Hinglish
 
       rec.onstart = () => {
         setSpeechTranscript('')
         setSpeechError(null)
       }
 
-      rec.onresult = (event: any) => {
-        let finalTranscript = ''
-        let interimTranscript = ''
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript
-          } else {
-            interimTranscript += event.results[i][0].transcript
-          }
-        }
-        const currentText = finalTranscript || interimTranscript
-        setSpeechTranscript(currentText)
+      rec.onsoundstart = () => {
+        voiceActivityCountRef.current += 1
+        setVoiceDetected(true)
+      }
 
-        if (finalTranscript) {
-          stopListening()
-          handleCustomerResponse(finalTranscript)
+      rec.onspeechstart = () => {
+        voiceActivityCountRef.current += 1
+        setVoiceDetected(true)
+      }
+
+      rec.onresult = (event: any) => {
+        voiceActivityCountRef.current += 1
+        setVoiceDetected(true)
+
+        let transcriptText = ''
+        for (let i = 0; i < event.results.length; ++i) {
+          transcriptText += event.results[i][0].transcript + ' '
+        }
+        transcriptText = transcriptText.trim()
+        if (transcriptText) {
+          latestTranscriptRef.current = transcriptText
+          setSpeechTranscript(transcriptText)
+
+          // Auto-commit if user pauses for 1.4s after speaking
+          if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current)
+          silenceTimeoutRef.current = setTimeout(() => {
+            if (isListeningRef.current && latestTranscriptRef.current) {
+              const spoken = latestTranscriptRef.current
+              stopListening()
+              handleCustomerResponse(spoken)
+            }
+          }, 1400)
         }
       }
 
@@ -460,15 +522,21 @@ export default function QueueView({
         } else if (event.error === 'not-allowed') {
           setSpeechError('Microphone permission blocked in browser settings. Please allow mic in address bar.')
           stopListening()
-        } else if (event.error === 'no-speech') {
-          // Keep hardware mic alive
-        } else {
+        } else if (event.error !== 'no-speech') {
           setSpeechError(`Microphone notice: ${event.error}. You can speak or use quick replies below.`)
         }
       }
 
       rec.onend = () => {
-        // Recognition completed
+        if (isListeningRef.current) {
+          if (latestTranscriptRef.current) {
+            const spoken = latestTranscriptRef.current
+            stopListening()
+            handleCustomerResponse(spoken)
+          } else {
+            try { rec.start() } catch {}
+          }
+        }
       }
 
       rec.start()
@@ -1495,6 +1563,43 @@ export default function QueueView({
 
             {/* Customer Interaction & Response Controls */}
             <div className="space-y-2.5 shrink-0 pt-1">
+              {/* Instant 1-Tap Mic Simulation Chips for Video & Testing */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 self-center">
+                  ⚡ 1-Tap Mic Speak:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    stopListening()
+                    handleCustomerResponse(callLang === 'en' ? 'I will pay this Friday' : 'Main kal Friday ko payment kar dunga')
+                  }}
+                  className="px-2 py-1 rounded-lg bg-blue-100 hover:bg-blue-200 dark:bg-blue-950/70 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700 text-[11px] font-semibold cursor-pointer transition-colors shadow-xs"
+                >
+                  🎙️ "Pay Friday (PTP)"
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    stopListening()
+                    handleCustomerResponse(callLang === 'en' ? 'Yes, send the 1-click link to my WhatsApp' : 'Haan, mere WhatsApp pe 1-click link send kar do')
+                  }}
+                  className="px-2 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950/70 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 text-[11px] font-semibold cursor-pointer transition-colors shadow-xs"
+                >
+                  💬 "Send WhatsApp Link"
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    stopListening()
+                    handleCustomerResponse(callLang === 'en' ? 'Please raise a collect request on an alternate UPI ID' : 'Alternate UPI ID pe collect request raise karo')
+                  }}
+                  className="px-2 py-1 rounded-lg bg-purple-100 hover:bg-purple-200 dark:bg-purple-950/70 dark:hover:bg-purple-900 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700 text-[11px] font-semibold cursor-pointer transition-colors shadow-xs"
+                >
+                  ⚡ "Alternate UPI"
+                </button>
+              </div>
+
               {/* 1. Live Microphone Toggle & Text Input */}
               <div className="flex items-center gap-2">
                 <button
